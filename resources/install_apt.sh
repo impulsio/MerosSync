@@ -1,5 +1,5 @@
 #!/bin/bash
-PROGRESS_FILE=/tmp/jeedom/MerossIOT2/dependance
+PROGRESS_FILE=/tmp/jeedom/MerosSync/dependance
 if [ ! -z $1 ]; then
 	PROGRESS_FILE=$1
 fi

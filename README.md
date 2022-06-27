@@ -1,6 +1,6 @@
 Plugin jeedom MerosSync
 ========================
-<img src="docs/images/MerossIOT2_icon.png" width="150" />
+<img src="docs/images/MerosSync_icon.png" width="150" />
 Plugin jeedom permettant de contrôler les équipements Meross.
 
 # Documentation complète:
@@ -23,6 +23,9 @@ Plugin jeedom permettant de contrôler les équipements Meross.
 0.1 :
 - Fork depuis le [plugin de Jeremie-C](https://github.com/Jeremie-C/plugin-MerossIOT)
 - Update version [merossIOT 0.4.4.7](https://github.com/albertogeniola/MerossIot)
+
+
+
 
 N'hésitez pas à me contacter pour toutes questions
 

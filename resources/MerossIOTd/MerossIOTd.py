@@ -601,7 +601,7 @@ parser.add_argument('--apikey', help='API Key', default='nokey')
 parser.add_argument('--loglevel', help='LOG Level', default='error')
 parser.add_argument('--pidfile', help='PID File', default='/tmp/MerossIOTd.pid')
 parser.add_argument('--socket', help='Daemon socket', default='/tmp/MerossIOTd.sock')
-parser.add_argument('--logfile', help='Log file', default='/tmp/MerossIOT2.log')
+parser.add_argument('--logfile', help='Log file', default='/tmp/MerosSync.log')
 args = parser.parse_args()
 
 # create logger

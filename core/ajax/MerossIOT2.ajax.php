@@ -29,12 +29,12 @@
    ajax::init();
    // SYNC
    if (init('action') == 'syncMeross') {
-       MerossIOT2::syncMeross(false);
+       MerosSync::syncMeross(false);
        ajax::success();
    }
    // Delete
    if (init('action') == 'deleteAll') {
-       MerossIOT2::deleteAll();
+       MerosSync::deleteAll();
        ajax::success();
    }
    // Lève une exception si la requête n'a pas été traitée avec succès (Appel de la fonction ajax::success());

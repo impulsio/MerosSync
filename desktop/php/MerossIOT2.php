@@ -19,7 +19,7 @@ include_file('core', 'authentification', 'php');
 if (!isConnect('admin')) {
     throw new \Exception('{{401 - Accès non autorisé}}');
 }
-$plugin = plugin::byId('MerossIOT2');
+$plugin = plugin::byId('MerosSync');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
 ?>
@@ -29,13 +29,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
     <div class="col-xs-12 eqLogicThumbnailDisplay">
         <legend><i class="fa fa-cog"></i> {{Gestion}}</legend>
         <div class="eqLogicThumbnailContainer">
-            <div class="cursor eqLogicAction logoPrimary" data-action="syncMerossIOT2">
+            <div class="cursor eqLogicAction logoPrimary" data-action="syncMerosSync">
                 <i class="fas fa-sync"></i><br /><span>{{Synchroniser}}</span>
             </div>
             <div class="cursor eqLogicAction logoSecondary" data-action="gotoPluginConf">
                 <i class="fas fa-wrench"></i><br /><span>{{Configuration}}</span>
             </div>
-            <div class="cursor eqLogicAction logoSecondary" data-action="healthMerossIOT2">
+            <div class="cursor eqLogicAction logoSecondary" data-action="healthMerosSync">
                 <i class="fas fa-medkit"></i><br /><span>{{Santé}}</span>
             </div>
             <div class="cursor eqLogicAction danger" data-action="deleteAll">
@@ -51,7 +51,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
 				echo '<div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '">';
                 if (file_exists(dirname(__FILE__) . '/../../desktop/images/' . $eqLogic->getConfiguration('type') . '.png')) {
-                    echo '<img src="plugins/MerossIOT2/desktop/images/' . $eqLogic->getConfiguration('type') . '.png' . '" height="105" width="105" />';
+                    echo '<img src="plugins/MerosSync/desktop/images/' . $eqLogic->getConfiguration('type') . '.png' . '" height="105" width="105" />';
                 } else {
                     echo '<img src="' . $plugin->getPathImgIcon() . '" height="105" width="95" />';
                 }
@@ -165,5 +165,5 @@ $eqLogics = eqLogic::byType($plugin->getId());
     </div>
 </div>
 <?php
-include_file('desktop', 'MerossIOT2', 'js', 'MerossIOT2');
+include_file('desktop', 'MerosSync', 'js', 'MerosSync');
 include_file('core', 'plugin.template', 'js');

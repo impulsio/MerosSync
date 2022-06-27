@@ -18,7 +18,7 @@
 /* * ***************************Includes********************************* */
 require_once dirname(__FILE__).'/../../../../core/php/core.inc.php';
 
-class MerossIOT2 extends eqLogic {
+class MerosSync extends eqLogic {
     /*
      * Fonction exécutée automatiquement par Jeedom
      */
@@ -34,10 +34,10 @@ class MerossIOT2 extends eqLogic {
      * @return array  Result of the callMeross.
      */
     public static function callMeross($action, $args = '') {
-        log::add('MerossIOT2', 'debug', 'callMeross ' . print_r($action, true) . ' ' .print_r($args, true));
-        $apikey = jeedom::getApiKey('MerossIOT2');
-        $sock = 'unix://' . jeedom::getTmpFolder('MerossIOT2') . '/daemon.sock';
-        log::add('MerossIOT2', 'debug', 'Socket ' . $sock);
+        log::add('MerosSync', 'debug', 'callMeross ' . print_r($action, true) . ' ' .print_r($args, true));
+        $apikey = jeedom::getApiKey('MerosSync');
+        $sock = 'unix://' . jeedom::getTmpFolder('MerosSync') . '/daemon.sock';
+        log::add('MerosSync', 'debug', 'Socket ' . $sock);
         $fp = stream_socket_client($sock, $errno, $errstr);
         $result = '';
         if ($fp) {
@@ -50,11 +50,11 @@ class MerossIOT2 extends eqLogic {
             fclose($fp);
         }
         else {
-          log::add('MerossIOT2', 'info', 'noStreamSocket ' . $errno . ' - ' . $errstr);
-          log::add('MerossIOT2', 'error', 'Merci de démarrer le démon !');
+          log::add('MerosSync', 'info', 'noStreamSocket ' . $errno . ' - ' . $errstr);
+          log::add('MerosSync', 'error', 'Merci de démarrer le démon !');
         }
         $result = (is_json($result)) ? json_decode($result, true) : $result;
-        log::add('MerossIOT2', 'debug', 'result callMeross '.print_r($result, true));
+        log::add('MerosSync', 'debug', 'result callMeross '.print_r($result, true));
         return $result;
     }
     /**
@@ -62,12 +62,12 @@ class MerossIOT2 extends eqLogic {
      * @return none
      */
     public static function syncMeross() {
-        log::add('MerossIOT2', 'info', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
+        log::add('MerosSync', 'info', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
         $results = self::callMeross('syncMeross');
         foreach( $results['result'] as $key=>$device ) {
             self::syncOneMeross($device);
         }
-        log::add('MerossIOT2', 'info', __('syncMeross: synchronisation terminée.', __FILE__));
+        log::add('MerosSync', 'info', __('syncMeross: synchronisation terminée.', __FILE__));
     }
     /**
      * Sync one meross devices.
@@ -75,13 +75,13 @@ class MerossIOT2 extends eqLogic {
      */
     public static function syncOneMeross($device) {
         $key = $device['uuid'];
-        $eqLogic = self::byLogicalId($key, 'MerossIOT2');
+        $eqLogic = self::byLogicalId($key, 'MerosSync');
         # Création ou Update
         if (!is_object($eqLogic)) {
-            log::add('MerossIOT2', 'info', __('syncMeross: Ajout de ', __FILE__) . $device["name"] . ' - ' . $key);
-            $eqLogic = new MerossIOT2();
+            log::add('MerosSync', 'info', __('syncMeross: Ajout de ', __FILE__) . $device["name"] . ' - ' . $key);
+            $eqLogic = new MerosSync();
             $eqLogic->setName($device['name']);
-            $eqLogic->setEqType_name('MerossIOT2');
+            $eqLogic->setEqType_name('MerosSync');
             $eqLogic->setLogicalId($key);
             if ($device['type'] != '') {
                 $eqLogic->setConfiguration('type', $device['type']);
@@ -95,7 +95,7 @@ class MerossIOT2 extends eqLogic {
                 $eqLogic->setConfiguration('online', '0');
             }
         } else {
-            log::add('MerossIOT2', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
+            log::add('MerosSync', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             if ($device['online'] != '') {
                 $eqLogic->setConfiguration('online', $device['online']);
             } else {
@@ -103,7 +103,7 @@ class MerossIOT2 extends eqLogic {
             }
         }
         # Si online, on continue
-        log::add('MerossIOT2', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
+        log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
         if( $device['online'] == '1' ) {
             if ($device['ip'] != '') {
                 $eqLogic->setConfiguration('ip', $device['ip']);
@@ -120,7 +120,7 @@ class MerossIOT2 extends eqLogic {
             $eqLogic->setIsEnable(0);
             $eqLogic->save();
             $humanName = $eqLogic->getHumanName();
-            message::add('MerossIOT2', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
+            message::add('MerosSync', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
         }
     }
     /**
@@ -129,7 +129,7 @@ class MerossIOT2 extends eqLogic {
      */
     public static function updateEqLogicVals($_eqLogic, $values) {
         # Valeurs
-        log::add('MerossIOT2', 'debug', 'updateEqLogicVals: Update eqLogic values');
+        log::add('MerosSync', 'debug', 'updateEqLogicVals: Update eqLogic values');
         foreach ($values as $key => $value) {
             if( $key == 'switch' ) {
                 foreach( $value as $id=>$state )
@@ -165,7 +165,7 @@ class MerossIOT2 extends eqLogic {
      * @return none
      */
     public static function updateEqLogicCmds($_eqLogic, $_device) {
-        log::add('MerossIOT2', 'debug', 'updateEqLogicCmds: Update eqLogic commands');
+        log::add('MerosSync', 'debug', 'updateEqLogicCmds: Update eqLogic commands');
         $i = 0;
         $order = 1;
         $familly = $_device['famille'];
@@ -176,8 +176,8 @@ class MerossIOT2 extends eqLogic {
                 # All On
                 $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
                 if (!is_object($cmd)) {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=on_'.$i);
-                    $cmd = new MerossIOT2Cmd();
+                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=on_'.$i);
+                    $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
                     $cmd->setTemplate('dashboard', 'default');
@@ -186,7 +186,7 @@ class MerossIOT2 extends eqLogic {
                     $cmd->setLogicalId('on_'.$i);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=on_'.$i);
+                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
                 }
                 $cmd->setName($value.' '.__('Marche', __FILE__));
                 $cmd->setOrder($order);
@@ -195,8 +195,8 @@ class MerossIOT2 extends eqLogic {
                 # All off
                 $cmd = $_eqLogic->getCmd(null, 'off_'.$i);
                 if (!is_object($cmd)) {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=off_'.$i);
-                    $cmd = new MerossIOT2Cmd();
+                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=off_'.$i);
+                    $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
                     $cmd->setTemplate('dashboard', 'default');
@@ -205,7 +205,7 @@ class MerossIOT2 extends eqLogic {
                     $cmd->setLogicalId('off_'.$i);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=off_'.$i);
+                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
                 }
                 $cmd->setName($value.' '.__('Arrêt', __FILE__));
                 $cmd->setOrder($order);
@@ -216,8 +216,8 @@ class MerossIOT2 extends eqLogic {
                 # status
                 $cmd = $_eqLogic->getCmd(null, 'onoff_'.$i);
                 if (!is_object($cmd)) {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=onoff_'.$i);
-                    $cmd = new MerossIOT2Cmd();
+                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=onoff_'.$i);
+                    $cmd = new MerosSyncCmd();
                     $cmd->setType('info');
                     $cmd->setSubType('binary');
                     if( $familly == 'GenericGarageDoorOpener' ) {
@@ -232,7 +232,7 @@ class MerossIOT2 extends eqLogic {
                     $cmd->setLogicalId('onoff_'.$i);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=onoff_'.$i);
+                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=onoff_'.$i);
                 }
                 $cmd->setName($value);
                 $cmd->setOrder($order);
@@ -242,8 +242,8 @@ class MerossIOT2 extends eqLogic {
                 # off
                 $cmd = $_eqLogic->getCmd(null, 'off_'.$i);
                 if (!is_object($cmd)) {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=off_'.$i);
-                    $cmd = new MerossIOT2Cmd();
+                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=off_'.$i);
+                    $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
                     if( $familly == 'GenericGarageDoorOpener' ) {
@@ -264,7 +264,7 @@ class MerossIOT2 extends eqLogic {
                     $cmd->setLogicalId('off_'.$i);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=off_'.$i);
+                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
                 }
                 $cmd->setOrder($order);
                 $cmd->save();
@@ -274,8 +274,8 @@ class MerossIOT2 extends eqLogic {
                 # on
                 $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
                 if (!is_object($cmd)) {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=on_'.$i);
-                    $cmd = new MerossIOT2Cmd();
+                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=on_'.$i);
+                    $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
                     if( $familly == 'GenericGarageDoorOpener' ) {
@@ -296,7 +296,7 @@ class MerossIOT2 extends eqLogic {
                     $cmd->setLogicalId('on_'.$i);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
-                    log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=on_'.$i);
+                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
                 }
                 $cmd->setOrder($order);
                 $cmd->save();
@@ -309,8 +309,8 @@ class MerossIOT2 extends eqLogic {
         # Refresh
         $cmd = $_eqLogic->getCmd(null, 'refresh');
         if (!is_object($cmd)) {
-            log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=refresh');
-            $cmd = new MerossIOT2Cmd();
+            log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=refresh');
+            $cmd = new MerosSyncCmd();
             $cmd->setName('Refresh');
             $cmd->setType('action');
             $cmd->setSubType('other');
@@ -320,7 +320,7 @@ class MerossIOT2 extends eqLogic {
             $cmd->setLogicalId('refresh');
             $cmd->setEqLogic_id($_eqLogic->getId());
         } else {
-            log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=refresh');
+            log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=refresh');
         }
         $cmd->setOrder($order);
         $cmd->save();
@@ -330,8 +330,8 @@ class MerossIOT2 extends eqLogic {
             # Puissance
             $cmd = $_eqLogic->getCmd(null, 'power');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=power');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=power');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Puissance', __FILE__));
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
@@ -346,7 +346,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setUnite('W');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=power');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=power');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -354,8 +354,8 @@ class MerossIOT2 extends eqLogic {
             # Courant
             $cmd = $_eqLogic->getCmd(null, 'current');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=current');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=current');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Courant', __FILE__));
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
@@ -370,7 +370,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setUnite('A');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=current');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=current');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -378,8 +378,8 @@ class MerossIOT2 extends eqLogic {
             # Tension
             $cmd = $_eqLogic->getCmd(null, 'tension');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=tension');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tension');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Tension', __FILE__));
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
@@ -394,7 +394,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setUnite('V');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=tension');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tension');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -405,8 +405,8 @@ class MerossIOT2 extends eqLogic {
             # Ce Jour
             $cmd = $_eqLogic->getCmd(null, 'conso_totale');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=conso_totale');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=conso_totale');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Consommation', __FILE__));
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
@@ -419,7 +419,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setUnite('kWh');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=conso_totale');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=conso_totale');
             }
             $cmd->setConfiguration('repeatEventManagement','always');
             $cmd->setOrder($order);
@@ -431,8 +431,8 @@ class MerossIOT2 extends eqLogic {
             # Luminance information
             $cmd = $_eqLogic->getCmd(null, 'lumival');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=lumival');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lumival');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName('lumi');
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
@@ -442,7 +442,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setLogicalId('lumival');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=lumival');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=lumival');
             }
             $cmd->setConfiguration('minValue', 1);
             $cmd->setConfiguration('maxValue', 100);
@@ -454,8 +454,8 @@ class MerossIOT2 extends eqLogic {
             # Luminance setter
             $cmd = $_eqLogic->getCmd(null, 'lumiset');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=lumiset');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lumiset');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Luminosité', __FILE__));
                 $cmd->setType('action');
                 $cmd->setSubType('slider');
@@ -467,7 +467,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setTemplate('mobile', 'light');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=lumiset');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=lumiset');
             }
             $cmd->setConfiguration('minValue', 1);
             $cmd->setConfiguration('maxValue', 100);
@@ -481,8 +481,8 @@ class MerossIOT2 extends eqLogic {
             # Temperature information
             $cmd = $_eqLogic->getCmd(null, 'tempval');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=tempval');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempval');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName('temp');
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
@@ -492,7 +492,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setLogicalId('tempval');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=tempval');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempval');
             }
             $cmd->setConfiguration('minValue', 1);
             $cmd->setConfiguration('maxValue', 100);
@@ -503,8 +503,8 @@ class MerossIOT2 extends eqLogic {
             # Temperature setter
             $cmd = $_eqLogic->getCmd(null, 'tempset');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=tempset');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempset');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Température', __FILE__));
                 $cmd->setType('action');
                 $cmd->setSubType('slider');
@@ -516,7 +516,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setTemplate('mobile', 'light');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=tempset');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempset');
             }
             $cmd->setConfiguration('minValue', 1);
             $cmd->setConfiguration('maxValue', 100);
@@ -530,8 +530,8 @@ class MerossIOT2 extends eqLogic {
             # Color information
             $cmd = $_eqLogic->getCmd(null, 'rgbval');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=rgbval');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=rgbval');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName('rgb');
                 $cmd->setType('info');
                 $cmd->setSubType('string');
@@ -541,7 +541,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setLogicalId('rgbval');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=rgbval');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=rgbval');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -550,8 +550,8 @@ class MerossIOT2 extends eqLogic {
             # Color setter
             $cmd = $_eqLogic->getCmd(null, 'rgbset');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=rgbset');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=rgbset');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Couleur', __FILE__));
                 $cmd->setType('action');
                 $cmd->setSubType('color');
@@ -563,7 +563,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setLogicalId('rgbset');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=rgbset');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=rgbset');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -576,8 +576,8 @@ class MerossIOT2 extends eqLogic {
             # information
             $cmd = $_eqLogic->getCmd(null, 'capacity');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=capacity');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=capacity');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Mode', __FILE__));
                 $cmd->setType('info');
                 $cmd->setSubType('string');
@@ -590,7 +590,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setLogicalId('capacity');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=capacity');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=capacity');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -601,8 +601,8 @@ class MerossIOT2 extends eqLogic {
             # Spray OFF
             $cmd = $_eqLogic->getCmd(null, 'spray_0');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=spray_0');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_0');
+                $cmd = new MerosSyncCmd();
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -612,7 +612,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName(__('Arrêt', __FILE__));
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=spray_0');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_0');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -620,8 +620,8 @@ class MerossIOT2 extends eqLogic {
             # Spray continue
             $cmd = $_eqLogic->getCmd(null, 'spray_1');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=spray_1');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_1');
+                $cmd = new MerosSyncCmd();
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -631,7 +631,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName(__('Continu', __FILE__));
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=spray_1');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_1');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -639,8 +639,8 @@ class MerossIOT2 extends eqLogic {
             # Spray intermitent
             $cmd = $_eqLogic->getCmd(null, 'spray_2');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=spray_2');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_2');
+                $cmd = new MerosSyncCmd();
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -650,7 +650,7 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName(__('Intermittent', __FILE__));
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=spray_2');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_2');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -658,8 +658,8 @@ class MerossIOT2 extends eqLogic {
             # Spray information
             $cmd = $_eqLogic->getCmd(null, 'spray');
             if (!is_object($cmd)) {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Add cmd=spray');
-                $cmd = new MerossIOT2Cmd();
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray');
+                $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Mode', __FILE__));
                 $cmd->setType('info');
                 $cmd->setSubType('string');
@@ -672,13 +672,13 @@ class MerossIOT2 extends eqLogic {
                 $cmd->setLogicalId('spray');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
-                log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=spray');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray');
             }
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
         }
-        log::add('MerossIOT2', 'debug', 'updateEqLogicCmdVal: Update eqLogic informations Completed');
+        log::add('MerosSync', 'debug', 'updateEqLogicCmdVal: Update eqLogic informations Completed');
     }
     /**
      * Effacer tous les EqLogic
@@ -686,8 +686,8 @@ class MerossIOT2 extends eqLogic {
      */
     public function deleteAll()
     {
-        log::add('MerossIOT2','debug','***** DELETE ALL *****');
-        $eqLogics = eqLogic::byType('MerossIOT2');
+        log::add('MerosSync','debug','***** DELETE ALL *****');
+        $eqLogics = eqLogic::byType('MerosSync');
         foreach ($eqLogics as $eqLogic) {
             $eqLogic->remove();
         }
@@ -700,8 +700,8 @@ class MerossIOT2 extends eqLogic {
     public static function dependancy_info() {
         $return = [
             'state' => 'nok',
-            'log' => 'MerossIOT2_update',
-            'progress_file' => jeedom::getTmpFolder('MerossIOT2') . '/dependance'
+            'log' => 'MerosSync_update',
+            'progress_file' => jeedom::getTmpFolder('MerosSync') . '/dependance'
         ];
         $meross_version = trim(file_get_contents(dirname(__FILE__) . '/../../resources/meross-iot_version.txt'));
         $cmd = "/usr/bin/python3 -c 'from distutils.version import LooseVersion;import pkg_resources,meross_iot,sys;" .
@@ -719,7 +719,7 @@ class MerossIOT2 extends eqLogic {
     public static function dependancy_install() {
         log::remove(__CLASS__ . '_update');
         return [
-            'script' => dirname(__FILE__) . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder('MerossIOT2') . '/dependance',
+            'script' => dirname(__FILE__) . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder('MerosSync') . '/dependance',
             'log' => log::getPathToLog(__CLASS__ . '_update')
         ];
     }
@@ -732,25 +732,25 @@ class MerossIOT2 extends eqLogic {
         if ($deamon_info['launchable'] != 'ok') {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
         }
-        $user = config::byKey('MerossUSR', 'MerossIOT2');
-        $pswd = quotemeta(config::byKey('MerossPWD', 'MerossIOT2'));
+        $user = config::byKey('MerossUSR', 'MerosSync');
+        $pswd = quotemeta(config::byKey('MerossPWD', 'MerosSync'));
 
-        $MerossIOT2_path = realpath(dirname(__FILE__) . '/../../resources');
-        $callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/MerossIOT2/core/php/jeeMerossIOT2.php';
+        $MerosSync_path = realpath(dirname(__FILE__) . '/../../resources');
+        $callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/MerosSync/core/php/jeeMerosSync.php';
 
-        $cmd = '/usr/bin/python3 ' . $MerossIOT2_path . '/MerossIOTd/MerossIOTd.py';
+        $cmd = '/usr/bin/python3 ' . $MerosSync_path . '/MerossIOTd/MerossIOTd.py';
         $cmd.= ' --muser "'.$user.'"';
         $cmd.= ' --mpswd "'.$pswd.'"';
         $cmd.= ' --callback '.$callback;
-        $cmd.= ' --apikey '.jeedom::getApiKey('MerossIOT2');
-        $cmd.= ' --loglevel '.log::convertLogLevel(log::getLogLevel('MerossIOT2'));
-        $cmd.= ' --pid '.jeedom::getTmpFolder('MerossIOT2') . '/daemon.pid';
-        $cmd.= ' --socket '.jeedom::getTmpFolder('MerossIOT2') . '/daemon.sock';
-        $cmd.= ' --logfile '.log::getPathToLog('MerossIOT2');
+        $cmd.= ' --apikey '.jeedom::getApiKey('MerosSync');
+        $cmd.= ' --loglevel '.log::convertLogLevel(log::getLogLevel('MerosSync'));
+        $cmd.= ' --pid '.jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
+        $cmd.= ' --socket '.jeedom::getTmpFolder('MerosSync') . '/daemon.sock';
+        $cmd.= ' --logfile '.log::getPathToLog('MerosSync');
 
         $log = str_replace($pswd, 'xxx', str_replace($user, 'xxx', $cmd));
-        log::add('MerossIOT2','info',__('Lancement démon meross :', __FILE__).' '.$log);
-        $result = exec($cmd . ' >> ' . log::getPathToLog('MerossIOT2') . ' 2>&1 &');
+        log::add('MerosSync','info',__('Lancement démon meross :', __FILE__).' '.$log);
+        $result = exec($cmd . ' >> ' . log::getPathToLog('MerosSync') . ' 2>&1 &');
         $i = 0;
         while ($i < 30) {
             $deamon_info = self::deamon_info();
@@ -761,11 +761,11 @@ class MerossIOT2 extends eqLogic {
             $i++;
         }
         if ($i >= 10) {
-            log::add('MerossIOT2', 'error', __('Impossible de lancer le démon meross, vérifiez le log', __FILE__), 'unableStartDeamon');
+            log::add('MerosSync', 'error', __('Impossible de lancer le démon meross, vérifiez le log', __FILE__), 'unableStartDeamon');
             return false;
         }
-        message::removeAll('MerossIOT2', 'unableStartDeamon');
-        log::add('MerossIOT2','info',__('Démon meross lancé.', __FILE__));
+        message::removeAll('MerosSync', 'unableStartDeamon');
+        log::add('MerosSync','info',__('Démon meross lancé.', __FILE__));
         return true;
     }
     /**
@@ -773,7 +773,7 @@ class MerossIOT2 extends eqLogic {
      * @return array Shell command return.
      */
     public static function deamon_stop() {
-        $pid_file = jeedom::getTmpFolder('MerossIOT2') . '/daemon.pid';
+        $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
         if (file_exists($pid_file)) {
             $pid = intval(trim(file_get_contents($pid_file)));
             system::kill($pid);
@@ -788,7 +788,7 @@ class MerossIOT2 extends eqLogic {
             $i++;
         }
         if ($i >= 5) {
-            log::add('MerossIOT2', 'error', __('Impossible de stopper le démon meross, tuons le', __FILE__));
+            log::add('MerosSync', 'error', __('Impossible de stopper le démon meross, tuons le', __FILE__));
             system::kill('MerossIOTd.py');
         }
     }
@@ -797,7 +797,7 @@ class MerossIOT2 extends eqLogic {
      * @return array Shell command return.
      */
     public static function deamon_info() {
-        $pid_file = jeedom::getTmpFolder('MerossIOT2') . '/daemon.pid';
+        $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
         $return = ['state' => 'nok'];
 
         if (file_exists($pid_file)) {
@@ -810,7 +810,7 @@ class MerossIOT2 extends eqLogic {
         $return['launchable'] = 'ok';
 
         if (self::dependancy_info()['state'] == 'nok') {
-            $cache = cache::byKey('dependancy' . 'MerossIOT2');
+            $cache = cache::byKey('dependancy' . 'MerosSync');
             $cache->remove();
             $return['launchable'] = 'nok';
             $return['launchable_message'] = __('Veuillez (ré-)installer les dépendances', __FILE__);
@@ -819,11 +819,11 @@ class MerossIOT2 extends eqLogic {
     }
 }
 
-class MerossIOT2Cmd extends cmd {
+class MerosSyncCmd extends cmd {
     public function execute($_options = array()) {
         $eqLogic = $this->getEqLogic();
         $action = $this->getLogicalId();
-        log::add('MerossIOT2', 'debug', $eqLogic->getLogicalId().' = action: '. $action.' - params '.json_encode($_options) );
+        log::add('MerosSync', 'debug', $eqLogic->getLogicalId().' = action: '. $action.' - params '.json_encode($_options) );
         $execute = false;
         // Handle actions like on_x off_x
         $splitAction = explode("_", $action);
@@ -831,43 +831,43 @@ class MerossIOT2Cmd extends cmd {
         $channel = $splitAction[1];
         switch ($action) {
             case "on":
-                $res = MerossIOT2::callMeross('setOn', [$eqLogic->getLogicalId(), $channel]);
-                log::add('MerossIOT2', 'debug', 'setOn: '.json_encode($res['result']));
+                $res = MerosSync::callMeross('setOn', [$eqLogic->getLogicalId(), $channel]);
+                log::add('MerosSync', 'debug', 'setOn: '.json_encode($res['result']));
                 $eqLogic->checkAndUpdateCmd('onoff_'.$channel, $res['result']);
                 break;
             case "off":
-                $res = MerossIOT2::callMeross('setOff', [$eqLogic->getLogicalId(), $channel]);
-                log::add('MerossIOT2', 'debug', 'setOff: '.json_encode($res['result']));
+                $res = MerosSync::callMeross('setOff', [$eqLogic->getLogicalId(), $channel]);
+                log::add('MerosSync', 'debug', 'setOff: '.json_encode($res['result']));
                 $eqLogic->checkAndUpdateCmd('onoff_'.$channel, $res['result']);
                 break;
             case "lumiset":
-                $res = MerossIOT2::callMeross('setLumi', [$eqLogic->getLogicalId(), $_options['slider']]);
-                log::add('MerossIOT2', 'debug', 'setLumi '.$_options['slider'].': '.$res['result']);
+                $res = MerosSync::callMeross('setLumi', [$eqLogic->getLogicalId(), $_options['slider']]);
+                log::add('MerosSync', 'debug', 'setLumi '.$_options['slider'].': '.$res['result']);
                 break;
             case "tempset":
                 $cmd = $eqLogic->getCmd(null, 'lumival');
                 $lumi = $cmd->execCmd();
-                $res = MerossIOT2::callMeross('setTemp', [$eqLogic->getLogicalId(), $_options['slider'], $lumi]);
-                log::add('MerossIOT2', 'debug', 'setTemp '.$_options['slider'].': '.$res['result']);
+                $res = MerosSync::callMeross('setTemp', [$eqLogic->getLogicalId(), $_options['slider'], $lumi]);
+                log::add('MerosSync', 'debug', 'setTemp '.$_options['slider'].': '.$res['result']);
                 break;
             case "rgbset":
                 $cmd = $eqLogic->getCmd(null, 'lumival');
                 $lumi = $cmd->execCmd();
                 $rgb = hexdec($_options['color']);
-                $res = MerossIOT2::callMeross('setRGB', [$eqLogic->getLogicalId(), $rgb, $lumi]);
-                log::add('MerossIOT2', 'debug', 'setRGB '.$_options['color'].' ('.$rgb.'): '.$res['result']);
+                $res = MerosSync::callMeross('setRGB', [$eqLogic->getLogicalId(), $rgb, $lumi]);
+                log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' ('.$rgb.'): '.$res['result']);
                 break;
             case "spray":
-                $res = MerossIOT2::callMeross('setSpray', [$eqLogic->getLogicalId(), $channel]);
-                log::add('MerossIOT2', 'debug', 'setSpray: '.json_encode($res['result']));
+                $res = MerosSync::callMeross('setSpray', [$eqLogic->getLogicalId(), $channel]);
+                log::add('MerosSync', 'debug', 'setSpray: '.json_encode($res['result']));
                 break;
             case "refresh":
-                $res = MerossIOT2::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                MerossIOT2::syncOneMeross($res['result']);
-                log::add('MerossIOT2', 'debug', 'refresh: '.json_encode($res['result']));
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                MerosSync::syncOneMeross($res['result']);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
                 break;
             default:
-                log::add('MerossIOT2','debug','action: Action='.$action.' '.__('non implementée.', __FILE__));
+                log::add('MerosSync','debug','action: Action='.$action.' '.__('non implementée.', __FILE__));
                 break;
         }
     }

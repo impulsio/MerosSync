@@ -17,8 +17,8 @@
 if (!isConnect('admin')) {
     throw new \Exception('{{401 - Accès non autorisé}}');
 }
-$plugin = plugin::byId('MerossIOT2');
-$eqLogics = MerossIOT2::byType('MerossIOT2');
+$plugin = plugin::byId('MerosSync');
+$eqLogics = MerosSync::byType('MerosSync');
 ?>
 <table class="table table-condensed tablesorter" id="table_healthmeross">
     <thead>
@@ -38,7 +38,7 @@ $eqLogics = MerossIOT2::byType('MerossIOT2');
     foreach( $eqLogics as $eqLogic ) {
         $opacity = ($eqLogic->getIsEnable()) ? '' : 'opacity:0.3';
         if( file_exists(dirname(__FILE__) . '/../../desktop/images/' . $eqLogic->getConfiguration('type') . '.png')) {
-            $image = '<img src="plugins/MerossIOT2/desktop/images/' . $eqLogic->getConfiguration('type') . '.png" height="55" width="55" style="' . $opacity . '" />';
+            $image = '<img src="plugins/MerosSync/desktop/images/' . $eqLogic->getConfiguration('type') . '.png" height="55" width="55" style="' . $opacity . '" />';
         } else {
             $image = '<img src="' . $plugin->getPathImgIcon() . '" height="55" width="55" style="' . $opacity . '" />';
         }

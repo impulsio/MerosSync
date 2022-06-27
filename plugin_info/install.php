@@ -18,38 +18,38 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 /**
  * Jeedom plugin installation function.
  */
-function MerossIOT2_install()
+function MerosSync_install()
 {
-    message::removeAll('MerossIOT2');
-    message::add('MerossIOT2', '{{Installation du plugin MerossIOT2 terminée}}''.', null, null);
+    message::removeAll('MerosSync');
+    message::add('MerosSync', '{{Installation du plugin MerosSync terminée}}''.', null, null);
 }
 /**
  * Jeedom plugin update function.
  */
-function MerossIOT2_update()
+function MerosSync_update()
 {
-    log::add('MerossIOT2', 'debug', 'MerossIOT2_update');
-    $daemonInfo = MerossIOT2::deamon_info();
+    log::add('MerosSync', 'debug', 'MerosSync_update');
+    $daemonInfo = MerosSync::deamon_info();
     if( $daemonInfo['state'] == 'ok' ) {
-        MerossIOT2::deamon_stop();
+        MerosSync::deamon_stop();
     }
-    $cache = cache::byKey('dependancy' . 'MerossIOT2');
+    $cache = cache::byKey('dependancy' . 'MerosSync');
     $cache->remove();
-    MerossIOT2::dependancy_install();
-    message::removeAll('MerossIOT2');
-    message::add('MerossIOT2', '{{Mise à jour du plugin MerossIOT2 terminée}}''.', null, null);
-    MerossIOT2::deamon_start();
+    MerosSync::dependancy_install();
+    message::removeAll('MerosSync');
+    message::add('MerosSync', '{{Mise à jour du plugin MerosSync terminée}}''.', null, null);
+    MerosSync::deamon_start();
 }
 /**
  * Jeedom plugin remove function.
  */
-function MerossIOT2_remove()
+function MerosSync_remove()
 {
-    log::add('MerossIOT2', 'debug', 'MerossIOT2_remove');
-    $daemonInfo = MerossIOT2::deamon_info();
+    log::add('MerosSync', 'debug', 'MerosSync_remove');
+    $daemonInfo = MerosSync::deamon_info();
     if( $daemonInfo['state'] == 'ok' ) {
-        MerossIOT2::deamon_stop();
+        MerosSync::deamon_stop();
     }
-    message::removeAll('MerossIOT2');
-    message::add('MerossIOT2', '{{Désinstallation du plugin MerossIOT2 terminée}}''.', null, null);
+    message::removeAll('MerosSync');
+    message::add('MerosSync', '{{Désinstallation du plugin MerosSync terminée}}''.', null, null);
 }

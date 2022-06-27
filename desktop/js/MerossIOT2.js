@@ -1,7 +1,7 @@
-$('.eqLogicAction[data-action=syncMerossIOT2]').on('click', function () {
+$('.eqLogicAction[data-action=syncMerosSync]').on('click', function () {
     $('#div_alert').showAlert({message: '{{Synchronisation avec le cloud Meross en cours...}}', level: 'warning'});
     $.post({
-        url: 'plugins/MerossIOT2/core/ajax/MerossIOT2.ajax.php',
+        url: 'plugins/MerosSync/core/ajax/MerosSync.ajax.php',
         data: {
             action: 'syncMeross'
         },
@@ -20,15 +20,15 @@ $('.eqLogicAction[data-action=syncMerossIOT2]').on('click', function () {
     });
 });
 
-$('.eqLogicAction[data-action=healthMerossIOT2]').on('click', function () {
+$('.eqLogicAction[data-action=healthMerosSync]').on('click', function () {
     $('#md_modal').dialog({title: "{{Santé Meross}}"});
-    $('#md_modal').load('index.php?v=d&plugin=MerossIOT2&modal=health').dialog('open');
+    $('#md_modal').load('index.php?v=d&plugin=MerosSync&modal=health').dialog('open');
 });
 
 $('.eqLogicAction[data-action=deleteAll]').on('click', function () {
     $('#div_alert').showAlert({message: '{{Suppression en cours...}}', level: 'warning'});
     $.post({
-        url: 'plugins/MerossIOT2/core/ajax/MerossIOT2.ajax.php',
+        url: 'plugins/MerosSync/core/ajax/MerosSync.ajax.php',
         data: {
             action: 'deleteAll'
         },

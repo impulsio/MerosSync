@@ -1,15 +1,15 @@
 {
-  "plugins\/MerossIOT2\/plugin_info\/configuration.php": {
+  "plugins\/MerosSync\/plugin_info\/configuration.php": {
     "Email": "Email",
     "Mot de passe": "Mot de passe",
     "Cycle mise à jour puissance (secondes)": "Cycle mise à jour puissance (secondes)"
   },
-  "plugins\/MerossIOT2\/plugin_info\/install.php": {
+  "plugins\/MerosSync\/plugin_info\/install.php": {
     "Installation du plugin MerossIOT terminée": "Installation du plugin MerossIOT terminée",
     "Mise à jour du plugin MerossIOT terminée": "Mise à jour du plugin MerossIOT terminée",
     "Désinstallation du plugin MerossIOT terminée": "Désinstallation du plugin MerossIOT terminée"
   },
-  "plugins\/MerossIOT2\/desktop\/js\/MerossIOT.js": {
+  "plugins\/MerosSync\/desktop\/js\/MerossIOT.js": {
     "Synchronisation avec le cloud Meross en cours...": "Synchronisation avec le cloud Meross en cours...",
     "Synchronisation terminée": "Synchronisation terminée",
     "Santé Meross": "Santé Meross",
@@ -29,7 +29,7 @@
     "Max": "Max",
     "Tester": "Tester"
   },
-  "plugins\/MerossIOT2\/desktop\/modal\/health.php": {
+  "plugins\/MerosSync\/desktop\/modal\/health.php": {
     "Image": "Image",
     "Nom": "Nom",
     "ID": "ID",
@@ -41,7 +41,7 @@
     "OUI": "OUI",
     "NON": "NON"
   },
-  "plugins\/MerossIOT2\/desktop\/php\/MerossIOT.php": {
+  "plugins\/MerosSync\/desktop\/php\/MerossIOT.php": {
     "Gestion": "Gestion",
     "Synchroniser": "Synchroniser",
     "Configuration": "Configuration",
@@ -67,10 +67,10 @@
     "Paramètres": "Paramètres",
     "Action": "Action"
   },
-  "plugins\/MerossIOT2\/core\/ajax\/MerossIOT.ajax.php": {
+  "plugins\/MerosSync\/core\/ajax\/MerossIOT.ajax.php": {
     "Aucune méthode correspondante à : ": "Aucune méthode correspondante à : "
   },
-  "plugins\/MerossIOT2\/core\/php\/jeeMerossIOT.php": {
+  "plugins\/MerosSync\/core\/php\/jeeMerossIOT.php": {
     "Vous n\'êtes pas autorisé à effectuer cette action": "Vous n\'êtes pas autorisé à effectuer cette action",
     "Nouvel équipement Meross disponible: Merci de lancer une synchronisation.": "Nouvel équipement Meross disponible: Merci de lancer une synchronisation.",
     "Traitement de ": "Traitement de ",
@@ -78,7 +78,7 @@
     "Intermittent": "Intermittent",
     "Arrêt": "Arrêt"
   },
-  "plugins\/MerossIOT2\/core\/class\/MerossIOT.class.php": {
+  "plugins\/MerosSync\/core\/class\/MerossIOT.class.php": {
     "Mise à jour des consommations des équipements depuis le Cloud Meross": "Mise à jour des consommations des équipements depuis le Cloud Meross",
     "Mise à jour des consommations terminées.": "Mise à jour des consommations terminées.",
     "Synchronisation des équipements depuis le Cloud Meross": "Synchronisation des équipements depuis le Cloud Meross",

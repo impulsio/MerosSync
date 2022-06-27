@@ -16,19 +16,19 @@
  */
 require_once dirname(__FILE__) . "/../../../../core/php/core.inc.php";
 
-if (!jeedom::apiAccess(init('apikey'), 'MerossIOT2')) {
+if (!jeedom::apiAccess(init('apikey'), 'MerosSync')) {
     echo __('Vous n\'êtes pas autorisé à effectuer cette action', __FILE__);
     die();
 }
 
 $result = json_decode(file_get_contents("php://input"), true);
 $response = array('success' => true);
-log::add('MerossIOT2', 'debug', print_r($result, true));
+log::add('MerosSync', 'debug', print_r($result, true));
 $action = $result['action'];
 
 if( $action == 'online' ) {
-    log::add('MerossIOT2', 'debug', 'Traitement de '.$action);
-    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerossIOT2');
+    log::add('MerosSync', 'debug', 'Traitement de '.$action);
+    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerosSync');
     if( is_object($eqLogic) ) {
         if( $result['status'] == 'online' ) {
             $eqLogic->setStatus('warning', 0);
@@ -42,17 +42,17 @@ if( $action == 'online' ) {
         }
     } else {
         $uuid = $result['uuid'];
-        message::add('MerossIOT2', __('Nouvel équipement Meross disponible: Merci de lancer une synchronisation.', __FILE__));
+        message::add('MerosSync', __('Nouvel équipement Meross disponible: Merci de lancer une synchronisation.', __FILE__));
     }
 } elseif( $action == 'switch' ) {
-    log::add('MerossIOT2', 'debug', 'Traitement de '.$action);
-    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerossIOT2');
+    log::add('MerosSync', 'debug', 'Traitement de '.$action);
+    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerosSync');
     if( is_object($eqLogic) ) {
         $eqLogic->checkAndUpdateCmd("onoff_".$result['channel'], $result['status']);
     }
 } elseif( $action == 'door') {
-    log::add('MerossIOT2', 'debug', 'Traitement de '.$action);
-    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerossIOT2');
+    log::add('MerosSync', 'debug', 'Traitement de '.$action);
+    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerosSync');
     if (is_object($eqLogic)) {
         if( $result['status'] == 'open' ) {
             $eqLogic->checkAndUpdateCmd("onoff_".$result['channel'], 0);
@@ -61,28 +61,28 @@ if( $action == 'online' ) {
         }
     }
 } elseif( $action == 'bulb' ) {
-    log::add('MerossIOT2', 'debug', __('Traitement de ', __FILE__).$action);
-    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerossIOT2');
+    log::add('MerosSync', 'debug', __('Traitement de ', __FILE__).$action);
+    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerosSync');
     $data = $result['status'];
     if( is_object($eqLogic) ) {
         $eqLogic->checkAndUpdateCmd("lumival", $data['luminance']);
-        log::add('MerossIOT2', 'debug', 'Luminance: '.$data['luminance']);
+        log::add('MerosSync', 'debug', 'Luminance: '.$data['luminance']);
         $eqLogic->checkAndUpdateCmd("tempval", $data['temperature']);
-        log::add('MerossIOT2', 'debug', 'Temperature: '.$data['temperature']);
+        log::add('MerosSync', 'debug', 'Temperature: '.$data['temperature']);
         $eqLogic->checkAndUpdateCmd("rgbval", '#'.substr('000000'.dechex($data['rgb']),-6));
-        log::add('MerossIOT2', 'debug', 'RGB: '.'#'.substr('000000'.dechex($data['rgb']),-6));
+        log::add('MerosSync', 'debug', 'RGB: '.'#'.substr('000000'.dechex($data['rgb']),-6));
         # Light Mode
         if( $data['capacity'] == 1 || $data['capacity'] == 5 ) {
             $eqLogic->checkAndUpdateCmd("capacity", __('Couleur', __FILE__));
         } else {
             $eqLogic->checkAndUpdateCmd("capacity", __('Blanc', __FILE__));
         }
-        log::add('MerossIOT2', 'debug', 'Capacity: '.$data['capacity']);
+        log::add('MerosSync', 'debug', 'Capacity: '.$data['capacity']);
     }
 } elseif( $action == 'electricity' ) {
-    log::add('MerossIOT2', 'debug', __('Traitement de ', __FILE__).$action);
+    log::add('MerosSync', 'debug', __('Traitement de ', __FILE__).$action);
     foreach( $result['values'] as $uuid=>$data ) {
-        $eqLogic = eqLogic::byLogicalId($uuid, 'MerossIOT2');
+        $eqLogic = eqLogic::byLogicalId($uuid, 'MerosSync');
         if( is_object($eqLogic) ) {
             $eqLogic->checkAndUpdateCmd("power", $data['power']);
             $eqLogic->checkAndUpdateCmd("current", $data['current']);
@@ -90,19 +90,19 @@ if( $action == 'online' ) {
         }
     }
 } elseif( $action == 'hlight' ) {
-    log::add('MerossIOT2', 'debug', __('Traitement de ', __FILE__).$action);
-    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerossIOT2');
+    log::add('MerosSync', 'debug', __('Traitement de ', __FILE__).$action);
+    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerosSync');
     if( is_object($eqLogic) ) {
         $eqLogic->checkAndUpdateCmd("onoff_".$result['channel'], $result['status']);
-        log::add('MerossIOT2', 'debug', 'Light: '.$result['status']);
+        log::add('MerosSync', 'debug', 'Light: '.$result['status']);
         $eqLogic->checkAndUpdateCmd("lumival", $result['luminance']);
-        log::add('MerossIOT2', 'debug', 'Luminance: '.$result['luminance']);
+        log::add('MerosSync', 'debug', 'Luminance: '.$result['luminance']);
         $eqLogic->checkAndUpdateCmd("rgbval", '#'.substr('000000'.dechex($result['rgb']),-6));
-        log::add('MerossIOT2', 'debug', 'RGB: '.'#'.substr('000000'.dechex($result['rgb']),-6));
+        log::add('MerosSync', 'debug', 'RGB: '.'#'.substr('000000'.dechex($result['rgb']),-6));
     }
 } elseif( $action == 'hspray') {
-    log::add('MerossIOT2', 'debug', __('Traitement de ', __FILE__).$action);
-    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerossIOT2');
+    log::add('MerosSync', 'debug', __('Traitement de ', __FILE__).$action);
+    $eqLogic = eqLogic::byLogicalId($result['uuid'], 'MerosSync');
     if( $result['status'] == 1 ) {
         $eqLogic->checkAndUpdateCmd("spray", __('Continu', __FILE__));
     } elseif( $result['status'] == 2 ) {
@@ -111,10 +111,10 @@ if( $action == 'online' ) {
         $eqLogic->checkAndUpdateCmd("spray", __('Arrêt', __FILE__));
     }
 } elseif( $action == 'connect' ) {
-    log::add('MerossIOT2', 'info', 'CONNECT: '.$result['status']);
+    log::add('MerosSync', 'info', 'CONNECT: '.$result['status']);
 } elseif( $action == 'bind' ) {
-    log::add('MerossIOT2', 'info', $result['uuid'].' Bind: '.$result['data']);
+    log::add('MerosSync', 'info', $result['uuid'].' Bind: '.$result['data']);
 } elseif( $action == 'unbind' ) {
-    log::add('MerossIOT2', 'info', $result['uuid'].' Unbind');
+    log::add('MerosSync', 'info', $result['uuid'].' Unbind');
 }
 echo json_encode($response);

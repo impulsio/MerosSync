@@ -1,5 +1,5 @@
 {
-  "id" : "MerossIOT2",
+  "id" : "MerosSync",
   "name": "Meross IOT V2",
   "version": "0.1",
   "description": "Plugin pour contrôler les appareils MEROSS",
