@@ -43,13 +43,10 @@ class MerossIOT2 extends eqLogic {
         if ($fp) {
             $query = [ 'action' => $action, 'args' => $args, 'apikey' => $apikey ];
             fwrite($fp, json_encode($query));
-            log::add('MerossIOT2', 'debug', 'lecture retour');
             while (!feof($fp))
             {
                 $result .= fgets($fp, 1024);
-                log::add('MerossIOT2', 'debug', 'ligne lue');
             }
-            log::add('MerossIOT2', 'debug', 'fin retour');
             fclose($fp);
         }
         else {
@@ -65,12 +62,12 @@ class MerossIOT2 extends eqLogic {
      * @return none
      */
     public static function syncMeross() {
-        log::add('MerossIOT2', 'debug', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
+        log::add('MerossIOT2', 'info', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
         $results = self::callMeross('syncMeross');
         foreach( $results['result'] as $key=>$device ) {
             self::syncOneMeross($device);
         }
-        log::add('MerossIOT2', 'debug', __('syncMeross: synchronisation terminée.', __FILE__));
+        log::add('MerossIOT2', 'info', __('syncMeross: synchronisation terminée.', __FILE__));
     }
     /**
      * Sync one meross devices.
@@ -81,7 +78,7 @@ class MerossIOT2 extends eqLogic {
         $eqLogic = self::byLogicalId($key, 'MerossIOT2');
         # Création ou Update
         if (!is_object($eqLogic)) {
-            log::add('MerossIOT2', 'debug', __('syncMeross: Ajout de ', __FILE__) . $device["name"] . ' - ' . $key);
+            log::add('MerossIOT2', 'info', __('syncMeross: Ajout de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic = new MerossIOT2();
             $eqLogic->setName($device['name']);
             $eqLogic->setEqType_name('MerossIOT2');
@@ -98,7 +95,7 @@ class MerossIOT2 extends eqLogic {
                 $eqLogic->setConfiguration('online', '0');
             }
         } else {
-            log::add('MerossIOT2', 'debug', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
+            log::add('MerossIOT2', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             if ($device['online'] != '') {
                 $eqLogic->setConfiguration('online', $device['online']);
             } else {
@@ -424,6 +421,7 @@ class MerossIOT2 extends eqLogic {
             } else {
                 log::add('MerossIOT2', 'debug', 'syncMeross: - Update cmd=conso_totale');
             }
+            $cmd->setConfiguration('repeatEventManagement','always');
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
@@ -736,22 +734,13 @@ class MerossIOT2 extends eqLogic {
         }
         $user = config::byKey('MerossUSR', 'MerossIOT2');
         $pswd = quotemeta(config::byKey('MerossPWD', 'MerossIOT2'));
-        $updp = intval(config::byKey('MerossUPD', 'MerossIOT2'));
-        if( is_int($updp) ) {
-            if( $updp < 5 ) {
-                $updp = 30;
-                log::add('MerossIOT2','info',__('Cycle mise à jour puissance inférieur à 5 secondes.', __FILE__));
-            }
-        } else {
-            $updp = 30;
-        }
+
         $MerossIOT2_path = realpath(dirname(__FILE__) . '/../../resources');
         $callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/MerossIOT2/core/php/jeeMerossIOT2.php';
 
         $cmd = '/usr/bin/python3 ' . $MerossIOT2_path . '/MerossIOTd/MerossIOTd.py';
         $cmd.= ' --muser "'.$user.'"';
         $cmd.= ' --mpswd "'.$pswd.'"';
-        $cmd.= ' --mupdp '.$updp;
         $cmd.= ' --callback '.$callback;
         $cmd.= ' --apikey '.jeedom::getApiKey('MerossIOT2');
         $cmd.= ' --loglevel '.log::convertLogLevel(log::getLogLevel('MerossIOT2'));

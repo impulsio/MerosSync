@@ -596,7 +596,6 @@ async def testConnection(args):
 parser = argparse.ArgumentParser()
 parser.add_argument('--muser', help='Compte Meross', default='')
 parser.add_argument('--mpswd', help='Mot de passe Meross', default='')
-parser.add_argument('--mupdp', help='Fréquence actualisation puissance', type=int, default=30)
 parser.add_argument('--callback', help='Jeedom callback', default='http://localhost')
 parser.add_argument('--apikey', help='API Key', default='nokey')
 parser.add_argument('--loglevel', help='LOG Level', default='error')
@@ -610,24 +609,30 @@ args = parser.parse_args()
 # create logger
 logger = logging.getLogger('DemonPython')
 logger.setLevel(convert_log_level(args.loglevel))
-# create console handler and set level to debug
 ch = logging.StreamHandler()
 ch.setLevel(convert_log_level(args.loglevel))
-#create formatter
 FORMAT = '[%(asctime)s][%(levelname)s][%(name)s] : %(message)s'
 formatter = logging.Formatter(FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-# add formatter to ch
 ch.setFormatter(formatter)
-# add ch to logger
 logger.addHandler(ch)
 logger.propagate = False
+
+
+# create loggerMerossIOT
+meross_root_logger = logging.getLogger('meross_iot')
+meross_root_logger.setLevel(convert_log_level(args.loglevel))
+chMeross = logging.StreamHandler()
+chMeross.setLevel(convert_log_level(args.loglevel))
+chMeross.setFormatter(formatter)
+meross_root_logger.addHandler(chMeross)
+meross_root_logger.propagate = True
+meross_root_logger.debug('Test logger merossIOT')
 
 logger.info('Start MerossIOTd')
 logger.info('Log level : {}'.format(args.loglevel))
 logger.info('Socket : {}'.format(args.socket))
 logger.info('PID file : {}'.format(args.pidfile))
 logger.info('Apikey : {}'.format(args.apikey))
-logger.info('Update Power : {}'.format(args.mupdp))
 logger.info('Callback : {}'.format(args.callback))
 logger.info('Python version : {}'.format(sys.version))
 
@@ -664,13 +669,7 @@ pid = str(os.getpid())
 logger.debug("Ecriture du PID " + pid + " dans " + str(args.pidfile))
 with open(args.pidfile, 'w') as fp:
     fp.write("%s\n" % pid)
-# manager.register_event_handler(jc.event_handler)
-# manager.start()
-# Thread for JeedomHandler
+
 logger.debug('Ouverture socket')
 t = threading.Thread(target=server.serve_forever())
 t.start()
-
-
-# Update Conso Power
-# updateElec = UpdateAllElectricity(float(args.mupdp))

@@ -35,11 +35,5 @@ if (!isConnect()) {
                 <input type="password" class="configKey form-control" data-l1key="MerossPWD" placeholder="{{Mot de passe Meross}}" />
             </div>
         </div>
-       <div class="form-group">
-            <label class="col-lg-4 control-label">{{Cycle mise à jour puissance (secondes)}}</label>
-            <div class="col-lg-2">
-                <input class="configKey form-control" data-l1key="MerossUPD" placeholder="30" />
-            </div>
-        </div>
     </fieldset>
 </form>
