@@ -604,8 +604,6 @@ parser.add_argument('--socket', help='Daemon socket', default='/tmp/MerossIOTd.s
 parser.add_argument('--logfile', help='Log file', default='/tmp/MerossIOT2.log')
 args = parser.parse_args()
 
-
-
 # create logger
 logger = logging.getLogger('DemonPython')
 logger.setLevel(convert_log_level(args.loglevel))
@@ -617,7 +615,6 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.propagate = False
 
-
 # create loggerMerossIOT
 meross_root_logger = logging.getLogger('meross_iot')
 meross_root_logger.setLevel(convert_log_level(args.loglevel))
@@ -625,7 +622,7 @@ chMeross = logging.StreamHandler()
 chMeross.setLevel(convert_log_level(args.loglevel))
 chMeross.setFormatter(formatter)
 meross_root_logger.addHandler(chMeross)
-meross_root_logger.propagate = True
+meross_root_logger.propagate = False
 meross_root_logger.debug('Test logger merossIOT')
 
 logger.info('Start MerossIOTd')
@@ -654,7 +651,6 @@ if os.path.exists(args.socket):
     os.unlink(args.socket)
 
 server = socketserver.UnixStreamServer(args.socket, JeedomHandler)
-
 
 logger.debug('Test connection Meross')
 asyncio.set_event_loop(asyncio.new_event_loop())
