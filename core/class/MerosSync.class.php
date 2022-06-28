@@ -64,8 +64,28 @@ class MerosSync extends eqLogic {
     public static function syncMeross() {
         log::add('MerosSync', 'info', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
         $results = self::callMeross('syncMeross');
-        foreach( $results['result'] as $key=>$device ) {
+        foreach( $results['result'] as $key=>$device )
+        {
             self::syncOneMeross($device);
+        }
+        log::add('MerosSync', 'debug', 'Check offline components');
+        foreach (self::byType('MerosSync') as $eqLogic)
+        {
+          log::add('MerosSync', 'debug', 'ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
+          $inArray = false;
+          foreach( $results['result'] as $key=>$device )
+          {
+              if ($device['uuid'] == $eqLogic->getLogicalId())
+              {
+                $inArray = true;
+              }
+          }
+          if (!$inArray)
+          {
+            log::add('MerosSync', 'debug', 'offline');
+            $eqLogic->setConfiguration('online', '0');
+            $eqLogic->save();
+          }
         }
         log::add('MerosSync', 'info', __('syncMeross: synchronisation terminée.', __FILE__));
     }
