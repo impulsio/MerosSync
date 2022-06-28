@@ -1,4 +1,4 @@
-MEROSS IOT
+MerosSync
 ==========
 
 Description
@@ -6,9 +6,9 @@ Description
 
 Plugin permettant de contrôler les équipements Meross.
 
-![MerossIOT icon](../images/MerossIOT_icon.png)
+![MerosSync icon](../images/MerosSync_icon.png)
 
-Installation 
+Installation
 ============
 
 a. Installation

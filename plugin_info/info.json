@@ -1,6 +1,6 @@
 {
   "id" : "MerosSync",
-  "name": "Meross IOT V2",
+  "name": "MerosSync",
   "version": "0.1",
   "description": "Plugin pour contrôler les appareils MEROSS",
   "licence": "GPL",

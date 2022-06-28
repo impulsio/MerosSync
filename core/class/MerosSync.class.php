@@ -96,6 +96,7 @@ class MerosSync extends eqLogic {
             }
         } else {
             log::add('MerosSync', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
+            $eqLogic->setName($device['name']);
             if ($device['online'] != '') {
                 $eqLogic->setConfiguration('online', $device['online']);
             } else {
@@ -348,6 +349,8 @@ class MerosSync extends eqLogic {
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=power');
             }
+            $cmd->setConfiguration('historyPurge','-2 years');
+            $cmd->setConfiguration('repeatEventManagement','always');
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
@@ -372,6 +375,7 @@ class MerosSync extends eqLogic {
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=current');
             }
+            $cmd->setConfiguration('historyPurge','-2 years');
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
@@ -396,6 +400,7 @@ class MerosSync extends eqLogic {
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tension');
             }
+            $cmd->setConfiguration('historyPurge','-2 years');
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
@@ -421,6 +426,7 @@ class MerosSync extends eqLogic {
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=conso_totale');
             }
+            $cmd->setConfiguration('historyPurge','-2 years');
             $cmd->setConfiguration('repeatEventManagement','always');
             $cmd->setOrder($order);
             $cmd->save();
