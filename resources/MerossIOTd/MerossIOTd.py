@@ -442,22 +442,22 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         return d
 
     async def aSyncMeross(self):
-        logger.debug("SyncMeross called")
+        logger.debug("aSyncMeross called")
         global manager
         global args
         await initConnection(args)
         d_devices=[]
-        logger.debug("SyncMeross connected")
+        logger.debug("aSyncMeross connected")
         try:
             await manager.async_device_discovery()
             meross_devices = manager.find_devices()
-            logger.debug("SyncMeross - " + str(len(meross_devices)) + " devices found")
+            logger.debug("aSyncMeross - " + str(len(meross_devices)) + " devices found")
             for dev in meross_devices:
-                logger.debug("SyncMeross - " + dev.name + "(" + dev.type + "):" + str(dev.online_status))
+                logger.debug("aSyncMeross - " + dev.name + "(" + dev.type + "):" + str(dev.online_status))
                 d = await self.aSyncOneMeross(dev)
                 d_devices.append(d)
         except:
-            logger.error("SyncMeross Failed: " + str(sys.exc_info()[1]))
+            logger.error("aSyncMeross Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return d_devices
 
@@ -475,23 +475,38 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         except:
             logger.error("syncMeross Failed: " + str(sys.exc_info()[1]))
 
-    def syncDevice(self, uuid):
-        d_device = {}
-        device = manager.get_device_by_uuid(uuid)
-        d = self.syncOneMeross(device)
-        d_device = d
-        return d_device
 
-    def syncMerossConso(self):
-        d_devices = {}
-        devices = manager.get_supported_devices()
-        for num in range(len(devices)):
-            device = devices[num]
-            if device.online and device.supports_consumption_reading():
-                d = self.getMerossConso(device)
-                uuid = device.uuid
-                d_devices[uuid] = d
-        return d_devices
+    async def aSyncDevice(self, uuid):
+        logger.debug("aSyncDevice called")
+        global manager
+        global args
+        await initConnection(args)
+        device=0
+        logger.debug("aSyncDevice connected")
+        try:
+            await manager.async_device_discovery()
+            meross_device = manager.find_devices(device_uuids="["+uuid+"]")
+            logger.debug("aSyncDevice - " + str(len(meross_device)) + " devices found")
+            if (len(meross_device) == 1):
+                device = await self.aSyncOneMeross(meross_device[0])
+        except:
+            logger.error("aSyncDevice Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return device
+
+    def syncDevice(self, uuid):
+        retour=0
+        logger.debug("syncDevice called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSyncDevice(uuid))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("syncDevice Failed: " + str(sys.exc_info()[1]))
 
 # Les fonctions du daemon ------------------------------------------------------
 def convert_log_level(level='error'):
