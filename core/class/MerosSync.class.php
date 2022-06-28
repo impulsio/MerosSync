@@ -152,7 +152,8 @@ class MerosSync extends eqLogic {
         # Valeurs
         log::add('MerosSync', 'debug', 'updateEqLogicVals: Update eqLogic values');
         foreach ($values as $key => $value) {
-            if( $key == 'switch' ) {
+            if( $key == 'switch' )
+            {
                 foreach( $value as $id=>$state )
                 {
                   $_eqLogic->checkAndUpdateCmd('onoff_'.$id, $state);
@@ -192,8 +193,10 @@ class MerosSync extends eqLogic {
         $familly = $_device['famille'];
         # Switch
         $nb_switch = count($_device['onoff']);
-        foreach ($_device['onoff'] as $key=>$value) {
-            if(  $i==0 && $nb_switch>1 ) {
+        foreach ($_device['onoff'] as $key=>$value)
+        {
+            if(  $i==0 && $nb_switch>1 )
+            {
                 # All On
                 $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
                 if (!is_object($cmd)) {
