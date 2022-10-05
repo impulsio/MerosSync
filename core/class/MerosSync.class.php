@@ -790,7 +790,7 @@ class MerosSync extends eqLogic {
             $i++;
         }
         if ($i >= 10) {
-            log::add('MerosSync', 'error', __('Impossible de lancer le démon meross, vérifiez le log', __FILE__), 'unableStartDeamon');
+            log::add('MerosSync', 'error', __('Impossible de lancer le démon meross, vérifiez la log', __FILE__), 'unableStartDeamon');
             return false;
         }
         message::removeAll('MerosSync', 'unableStartDeamon');

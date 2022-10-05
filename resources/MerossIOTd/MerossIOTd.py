@@ -29,6 +29,7 @@ from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 http_api_client = 0
 manager = 0
 thread_run = True
+connected = False
 
 # Envoi vers Jeedom ------------------------------------------------------------
 class JeedomCallback:
@@ -588,14 +589,19 @@ def UpdateAllElectricity(interval):
 async def initConnection(args):
     global manager
     global http_api_client
+    global connected
     # Initiates the Meross Cloud Manager. This is in charge of handling the communication with the remote endpoint
     logger.debug("Connecting with user " + args.muser)
-    http_api_client = await MerossHttpClient.async_from_user_password(args.muser, args.mpswd)
-    logger.debug("Connected with user " + args.muser)
-    # Register event handlers for the manager...
-    manager = MerossManager(http_client=http_api_client)
-    await manager.async_init()
-    await manager.async_device_discovery()
+    try:
+        http_api_client = await MerossHttpClient.async_from_user_password(args.muser, args.mpswd)
+        logger.debug("Connected with user " + args.muser)
+        # Register event handlers for the manager...
+        manager = MerossManager(http_client=http_api_client)
+        await manager.async_init()
+        await manager.async_device_discovery()
+        connected=True
+    except:
+        logger.error("Issue while connecting with user "+ args.muser+" please verify login and password")
 
 async def closeConnection():
     global manager
@@ -604,8 +610,10 @@ async def closeConnection():
     await http_api_client.async_logout()
 
 async def testConnection(args):
+    global connected
     await initConnection(args)
-    await closeConnection()
+    if connected:
+        await closeConnection()
 
 # ----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
@@ -674,13 +682,15 @@ try:
     loop.run_until_complete(testConnection(args))
 finally:
     loop.close()
-logger.debug('Test connection Meross ok')
 
-pid = str(os.getpid())
-logger.debug("Ecriture du PID " + pid + " dans " + str(args.pidfile))
-with open(args.pidfile, 'w') as fp:
-    fp.write("%s\n" % pid)
+if connected:
+    logger.debug('Test connection Meross ok')
 
-logger.debug('Ouverture socket')
-t = threading.Thread(target=server.serve_forever())
-t.start()
+    pid = str(os.getpid())
+    logger.debug("Ecriture du PID " + pid + " dans " + str(args.pidfile))
+    with open(args.pidfile, 'w') as fp:
+        fp.write("%s\n" % pid)
+
+    logger.debug('Ouverture socket')
+    t = threading.Thread(target=server.serve_forever())
+    t.start()

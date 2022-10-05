@@ -1,7 +1,7 @@
 {
   "id" : "MerosSync",
   "name": "MerosSync",
-  "version": "0.1",
+  "version": "0.2",
   "description": "Plugin pour contrôler les appareils MEROSS",
   "licence": "GPL",
   "author": "jercle",

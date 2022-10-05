@@ -1,3 +1,6 @@
+# 0.2
+- Get errors when testing connection in order to simplify message display in the log
+
 # 0.1
 
 - First version

@@ -1,3 +1,6 @@
+# 0.2
+- Récupération des erreurs lors du test de connexion pour simplifier le message affiché dans la log
+
 # 0.1
 
 - Première version
