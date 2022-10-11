@@ -640,9 +640,9 @@ logger.propagate = False
 
 # create loggerMerossIOT
 meross_root_logger = logging.getLogger('meross_iot')
-meross_root_logger.setLevel(convert_log_level(args.loglevel))
+meross_root_logger.setLevel(logging.ERROR)
 chMeross = logging.StreamHandler()
-chMeross.setLevel(convert_log_level(args.loglevel))
+chMeross.setLevel(logging.ERROR)
 chMeross.setFormatter(formatter)
 meross_root_logger.addHandler(chMeross)
 meross_root_logger.propagate = False
