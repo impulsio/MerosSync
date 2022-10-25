@@ -44,14 +44,14 @@ Rendez vous dans le menu Plugins &gt; Protocole Domotique pour retrouver le plug
 
 Sur la partie haute de cette page, vous avez plusieurs boutons.
 
-- Bouton Synchroniser : Créer / Met à jour les équipements et leurs valeurs depuis le cloud Meross.
+- Bouton Synchroniser : Crée / Met à jour les équipements et leurs valeurs depuis le cloud Meross.
 - Bouton Configuration : Ouvre la fenêtre de configuration du plugin.
-- Bouton Santé : Aperçu de la santé de tous vos équipements.
-- Bouton Tout supprimer : Efface tout vos équipements afin de les recréer.
+- Bouton Santé : Affiche la santé de tous vos équipements.
+- Bouton Tout supprimer : Efface tous vos équipements afin de les recréer.
 
 > **Important**
 >
-> Si vous sélectionnez Tout supprimer, toutes les équipements et leurs commandes seront supprimer et leur ID seront modifiés.
+> Si vous sélectionnez Tout supprimer, tous les équipements et leurs commandes seront supprimés et leur ID seront modifiés.
 
 a. Equipements
 
