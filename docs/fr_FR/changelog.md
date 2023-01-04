@@ -1,3 +1,6 @@
+# 0.3
+- Correction d'erreur suite à évolution de l'API Meross
+
 # 0.2
 - Récupération des erreurs lors du test de connexion pour simplifier le message affiché dans la log
 

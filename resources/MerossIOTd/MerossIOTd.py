@@ -601,7 +601,7 @@ async def initConnection(args):
         await manager.async_device_discovery()
         connected=True
     except:
-        logger.error("Issue while connecting with user "+ args.muser+" please verify login and password")
+        logger.error("Issue while connecting with user "+ args.muser+" please verify login and password.")
 
 async def closeConnection():
     global manager
@@ -638,11 +638,15 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.propagate = False
 
+loggingLevel = logging.ERROR
+if (args.loglevel=='debug'):
+    loggingLevel = logging.DEBUG
+
 # create loggerMerossIOT
 meross_root_logger = logging.getLogger('meross_iot')
-meross_root_logger.setLevel(logging.ERROR)
+meross_root_logger.setLevel(loggingLevel)
 chMeross = logging.StreamHandler()
-chMeross.setLevel(logging.ERROR)
+chMeross.setLevel(loggingLevel)
 chMeross.setFormatter(formatter)
 meross_root_logger.addHandler(chMeross)
 meross_root_logger.propagate = False
