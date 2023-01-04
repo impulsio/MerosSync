@@ -20,11 +20,7 @@ Plugin jeedom permettant de contrôler les équipements Meross.
 - Lumières / volets / ... => non développé à ce jour
 
 # Changelog :
-0.1 :
-- Fork depuis le [plugin de Jeremie-C](https://github.com/Jeremie-C/plugin-MerossIOT)
-- Update version [merossIOT 0.4.4.7](https://github.com/albertogeniola/MerossIot)
-
-
+[Consultez le changelog](docs/fr_FR/changelog.md)
 
 
 N'hésitez pas à me contacter pour toutes questions
