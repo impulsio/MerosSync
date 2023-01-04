@@ -3,7 +3,7 @@ Plugin jeedom MerosSync
 <img src="docs/images/MerosSync_icon.png" width="150" />
 Plugin jeedom permettant de contrôler les équipements Meross.
 
-# Documentation complète:
+# Documentation complète :
 
 [Consultez la documentation](https://www.gowa.fr/plugin-jeedom)
 
