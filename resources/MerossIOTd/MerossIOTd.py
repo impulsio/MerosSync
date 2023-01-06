@@ -19,6 +19,7 @@ from meross_iot.model.enums import OnlineStatus #bulbs
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
+from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 
 #from meross_iot.cloud.devices.power_plugs import GenericPlug
 #from meross_iot.cloud.devices.humidifier import GenericHumidifier, SprayMode
@@ -336,93 +337,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
 
         return d
 
-    def oldSyncOneMeross(self, device):
-        # Hors ligne : fin
-        # if not device.online_status:
-        #    return d
-        # En Ligne Seulement
-        data = device.get_sys_data()
-        d['values'] = {}
-        # Nom Canaux
-        onoff = [device.name]
-        for x in device._channels:
-            try:
-                onoff.append(x['devName'])
-            except:
-                pass
-        d['onoff'] = onoff
-        # Valeur Canaux
-        switch = []
-        try:
-            switch = [data['all']['control']['toggle']['onoff']]
-        except:
-            try:
-                digest = data['all']['digest']['togglex']
-                switch = [x['onoff'] for x in digest]
-            except:
-                try:
-                    switch = [device.get_light_state()['onoff']]
-                except:
-                    pass
-        d['values']['switch'] = switch
-        # IP
-        try:
-            d['ip'] = data['all']['system']['firmware']['innerIp']
-        except:
-            pass
-        # MAC
-        try:
-            d['mac'] = data['all']['system']['hardware']['macAddress']
-        except:
-            pass
-
-        # Consommation
-        if device.supports_consumption_reading():
-            d['conso'] = True
-            try:
-                l_conso = device.get_power_consumption()
-            except:
-                l_conso = []
-            # Recup
-            if len(l_conso) > 0:
-                d['values']['conso_totale'] = 0
-                today = datetime.today().strftime("%Y-%m-%d")
-                for c in l_conso:
-                    if c['date'] == today:
-                        try:
-                            d['values']['conso_totale'] = float(c['value'] / 1000.)
-                        except:
-                            pass
-        else:
-            d['conso'] = False
-        # Lumiere
-        if device.supports_light_control():
-            d['light'] = True
-            digest = data['all']['digest']['light']
-            d['lumin'] = device.supports_mode(MODE_LUMINANCE)
-            d['tempe'] = device.supports_mode(MODE_TEMPERATURE)
-            d['isrgb'] = device.supports_mode(MODE_RGB)
-            if d['lumin']:
-                d['values']['lumival'] = digest['luminance']
-            if d['tempe']:
-                d['values']['tempval'] = digest['temperature']
-            if d['isrgb']:
-                d['values']['rgbval'] = digest['rgb']
-            d['values']['capacity'] = digest['capacity']
-        else:
-            d['light'] = False
-            d['lumin'] = False
-            d['tempe'] = False
-            d['isrgb'] = False
-        # HUMIDIFIER
-        if d['famille'] == "GenericHumidifier":
-            d['spray'] = True
-            d['values']['spray'] = device.get_spray_mode().value
-        else:
-            d['spray'] = False
-        # Fini
-        return d
-
     def getMerossConso(self, device):
         d = dict({
             'conso_totale': 0
@@ -591,17 +505,19 @@ async def initConnection(args):
     global http_api_client
     global connected
     # Initiates the Meross Cloud Manager. This is in charge of handling the communication with the remote endpoint
-    logger.debug("Connecting with user " + args.muser)
+    password = args.mpswd.encode().decode('unicode-escape')
+    logger.debug("Connecting with user " + args.muser +" & password "+password)
     try:
-        http_api_client = await MerossHttpClient.async_from_user_password(args.muser, args.mpswd)
+        http_api_client = await MerossHttpClient.async_from_user_password(args.muser, password)
         logger.debug("Connected with user " + args.muser)
         # Register event handlers for the manager...
         manager = MerossManager(http_client=http_api_client)
         await manager.async_init()
         await manager.async_device_discovery()
         connected=True
-    except:
-        logger.error("Issue while connecting with user "+ args.muser+" please verify login and password.")
+    except Exception as e:
+        print(e)
+        logger.error(e)
 
 async def closeConnection():
     global manager
@@ -623,6 +539,7 @@ parser.add_argument('--callback', help='Jeedom callback', default='http://localh
 parser.add_argument('--apikey', help='API Key', default='nokey')
 parser.add_argument('--loglevel', help='LOG Level', default='error')
 parser.add_argument('--pidfile', help='PID File', default='/tmp/MerossIOTd.pid')
+parser.add_argument('--errorfile', help='Error File', default='/tmp/MerossIOTderror.pid')
 parser.add_argument('--socket', help='Daemon socket', default='/tmp/MerossIOTd.sock')
 parser.add_argument('--logfile', help='Log file', default='/tmp/MerosSync.log')
 args = parser.parse_args()
@@ -656,6 +573,7 @@ logger.info('Start MerossIOTd')
 logger.info('Log level : {}'.format(args.loglevel))
 logger.info('Socket : {}'.format(args.socket))
 logger.info('PID file : {}'.format(args.pidfile))
+logger.info('Error file : {}'.format(args.errorfile))
 logger.info('Apikey : {}'.format(args.apikey))
 logger.info('Callback : {}'.format(args.callback))
 logger.info('Python version : {}'.format(sys.version))
@@ -698,3 +616,8 @@ if connected:
     logger.debug('Ouverture socket')
     t = threading.Thread(target=server.serve_forever())
     t.start()
+else:
+    pid = str(os.getpid())
+    logger.debug("Ecriture du PID " + pid + " dans " + str(args.errorfile))
+    with open(args.errorfile, 'w') as fp:
+        fp.write("%s\n" % pid)

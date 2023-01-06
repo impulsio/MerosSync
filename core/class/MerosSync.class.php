@@ -64,6 +64,10 @@ class MerosSync extends eqLogic {
     public static function syncMeross() {
         log::add('MerosSync', 'info', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
         $results = self::callMeross('syncMeross');
+        if (count($results)==0 || count($results['result'])==0)
+        {
+          log::add('MerosSync', 'error', 'Aucun équipement connecté ou problème de connexion. Merci de consulter la log.');
+        }
         foreach( $results['result'] as $key=>$device )
         {
             self::syncOneMeross($device);
@@ -756,13 +760,14 @@ class MerosSync extends eqLogic {
      * Start python daemon.
      * @return array Shell command return.
      */
-    public static function deamon_start() {
+    public static function deamon_start()
+    {
         $deamon_info = self::deamon_info();
         if ($deamon_info['launchable'] != 'ok') {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
         }
         $user = config::byKey('MerossUSR', 'MerosSync');
-        $pswd = quotemeta(config::byKey('MerossPWD', 'MerosSync'));
+        $pswd = addslashes(config::byKey('MerossPWD', 'MerosSync'));
 
         $MerosSync_path = realpath(dirname(__FILE__) . '/../../resources');
         $callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/MerosSync/core/php/jeeMerosSync.php';
@@ -774,6 +779,7 @@ class MerosSync extends eqLogic {
         $cmd.= ' --apikey '.jeedom::getApiKey('MerosSync');
         $cmd.= ' --loglevel '.log::convertLogLevel(log::getLogLevel('MerosSync'));
         $cmd.= ' --pid '.jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
+        $cmd.= ' --errorfile '.jeedom::getTmpFolder('MerosSync') . '/errordaemon.pid';
         $cmd.= ' --socket '.jeedom::getTmpFolder('MerosSync') . '/daemon.sock';
         $cmd.= ' --logfile '.log::getPathToLog('MerosSync');
 
@@ -781,15 +787,18 @@ class MerosSync extends eqLogic {
         log::add('MerosSync','info',__('Lancement démon meross :', __FILE__).' '.$log);
         $result = exec($cmd . ' >> ' . log::getPathToLog('MerosSync') . ' 2>&1 &');
         $i = 0;
-        while ($i < 30) {
+        while ($i < 30)
+        {
             $deamon_info = self::deamon_info();
-            if ($deamon_info['state'] == 'ok') {
+            if (($deamon_info['state'] == 'ok') || ($deamon_info['state'] == 'error'))
+            {
                 break;
             }
             sleep(1);
             $i++;
         }
-        if ($i >= 10) {
+        if (($i >= 10) || ($deamon_info['state'] == 'error'))
+        {
             log::add('MerosSync', 'error', __('Impossible de lancer le démon meross, vérifiez la log', __FILE__), 'unableStartDeamon');
             return false;
         }
@@ -825,26 +834,38 @@ class MerosSync extends eqLogic {
      * Return information (status) about daemon.
      * @return array Shell command return.
      */
-    public static function deamon_info() {
-        $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
-        $return = ['state' => 'nok'];
+    public static function deamon_info()
+    {
+      $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
+      $error_file = jeedom::getTmpFolder('MerosSync') . '/errordaemon.pid';
+      $return = ['state' => 'nok'];
 
-        if (file_exists($pid_file)) {
-            if (@posix_getsid(trim(file_get_contents($pid_file)))) {
-                $return['state'] = 'ok';
-            } else {
-                shell_exec(system::getCmdSudo() . 'rm -rf ' . $pid_file . ' 2>&1 > /dev/null');
-            }
+      if (file_exists($pid_file))
+      {
+        if (@posix_getsid(trim(file_get_contents($pid_file))))
+        {
+          $return['state'] = 'ok';
         }
-        $return['launchable'] = 'ok';
+        else
+        {
+          shell_exec(system::getCmdSudo() . 'rm -rf ' . $pid_file . ' 2>&1 > /dev/null');
+        }
+      }
+      elseif (file_exists($error_file))
+      {
+        $return['state'] = 'error';
+        shell_exec(system::getCmdSudo() . 'rm -rf ' . $error_file . ' 2>&1 > /dev/null');
+      }
+      $return['launchable'] = 'ok';
 
-        if (self::dependancy_info()['state'] == 'nok') {
-            $cache = cache::byKey('dependancy' . 'MerosSync');
-            $cache->remove();
-            $return['launchable'] = 'nok';
-            $return['launchable_message'] = __('Veuillez (ré-)installer les dépendances', __FILE__);
-        }
-        return $return;
+      if (self::dependancy_info()['state'] == 'nok')
+      {
+        $cache = cache::byKey('dependancy' . 'MerosSync');
+        $cache->remove();
+        $return['launchable'] = 'nok';
+        $return['launchable_message'] = __('Veuillez (ré-)installer les dépendances', __FILE__);
+      }
+      return $return;
     }
 }
 
