@@ -11,14 +11,16 @@ echo 10 > ${PROGRESS_FILE}
 sudo apt-get install -y libffi-dev
 echo 20 > ${PROGRESS_FILE}
 sudo apt-get install -y python3
-echo 35 > ${PROGRESS_FILE}
+echo 30 > ${PROGRESS_FILE}
 sudo apt-get install -y python3-pip
-echo 50 > ${PROGRESS_FILE}
+echo 40 > ${PROGRESS_FILE}
 sudo apt-get install -y python3-requests
-echo 65 > ${PROGRESS_FILE}
+echo 50 > ${PROGRESS_FILE}
 sudo apt-get install -y python3-setuptools
-echo 80 > ${PROGRESS_FILE}
+echo 60 > ${PROGRESS_FILE}
 sudo apt-get install -y python3-dev
+echo 70 > ${PROGRESS_FILE}
+sudo pip3 install --upgrade pip3
 echo 90 > ${PROGRESS_FILE}
 BASEDIR=$(dirname "$0")
 meross_version=$(head -1 $BASEDIR/meross-iot_version.txt)
