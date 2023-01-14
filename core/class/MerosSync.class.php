@@ -216,7 +216,7 @@ class MerosSync extends eqLogic {
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
                 }
-                $cmd->setName($value.' '.__('Marche', __FILE__));
+                $cmd->setName(__('Marche', __FILE__).' '.$value);
                 $cmd->setOrder($order);
                 $cmd->save();
                 $order++;
@@ -235,15 +235,17 @@ class MerosSync extends eqLogic {
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
                 }
-                $cmd->setName($value.' '.__('Arrêt', __FILE__));
+                $cmd->setName(__('Arrêt', __FILE__).' '.$value);
                 $cmd->setOrder($order);
                 $cmd->save();
                 $order++;
                 $i++;
-            } else {
+            } else
+            {
                 # status
                 $cmd = $_eqLogic->getCmd(null, 'onoff_'.$i);
-                if (!is_object($cmd)) {
+                if (!is_object($cmd))
+                {
                     log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=onoff_'.$i);
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('info');
@@ -269,7 +271,8 @@ class MerosSync extends eqLogic {
                 $order++;
                 # off
                 $cmd = $_eqLogic->getCmd(null, 'off_'.$i);
-                if (!is_object($cmd)) {
+                if (!is_object($cmd))
+                {
                     log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=off_'.$i);
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
@@ -288,11 +291,18 @@ class MerosSync extends eqLogic {
                         $cmd->setGeneric_type('ENERGY_OFF');
                     }
                     $cmd->setIsVisible(1);
-                    $cmd->setName(__('Arrêt', __FILE__).' '.$i);
                     $cmd->setLogicalId('off_'.$i);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
+                }
+                if ($nb_switch==1)
+                {
+                  $cmd->setName(__('Arrêt', __FILE__));
+                }
+                else
+                {
+                  $cmd->setName(__('Arrêt', __FILE__).' '.$value);
                 }
                 $cmd->setOrder($order);
                 $cmd->save();
@@ -320,11 +330,18 @@ class MerosSync extends eqLogic {
                         $cmd->setGeneric_type('ENERGY_ON');
                     }
                     $cmd->setIsVisible(1);
-                    $cmd->setName(__('Marche', __FILE__).' '.$i);
                     $cmd->setLogicalId('on_'.$i);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
+                }
+                if ($nb_switch==1)
+                {
+                  $cmd->setName(__('Marche', __FILE__));
+                }
+                else
+                {
+                  $cmd->setName(__('Marche', __FILE__).' '.$value);
                 }
                 $cmd->setOrder($order);
                 $cmd->save();
@@ -883,12 +900,36 @@ class MerosSyncCmd extends cmd {
             case "on":
                 $res = MerosSync::callMeross('setOn', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setOn: '.json_encode($res['result']));
-                $eqLogic->checkAndUpdateCmd('onoff_'.$channel, $res['result']);
+                $cmd = $eqLogic->getCmd(null, 'onoff_'.$channel);
+                if (!is_object($cmd))
+                {
+                  //Interrupteur global
+                  $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                  log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                  MerosSync::syncOneMeross($res['result']);
+                }
+                else
+                {
+                  log::add('MerosSync', 'debug', 'mise à jour état '.$res['result']);
+                  $eqLogic->checkAndUpdateCmd('onoff_'.$channel, $res['result']);
+                }
                 break;
             case "off":
                 $res = MerosSync::callMeross('setOff', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setOff: '.json_encode($res['result']));
-                $eqLogic->checkAndUpdateCmd('onoff_'.$channel, $res['result']);
+                $cmd = $eqLogic->getCmd(null, 'onoff_'.$channel);
+                if (!is_object($cmd))
+                {
+                  //Interrupteur global
+                  $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                  log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                  MerosSync::syncOneMeross($res['result']);
+                }
+                else
+                {
+                  log::add('MerosSync', 'debug', 'mise à jour état'.$res['result']);
+                  $eqLogic->checkAndUpdateCmd('onoff_'.$channel, $res['result']);
+                }
                 break;
             case "lumiset":
                 $res = MerosSync::callMeross('setLumi', [$eqLogic->getLogicalId(), $_options['slider']]);
@@ -913,8 +954,8 @@ class MerosSyncCmd extends cmd {
                 break;
             case "refresh":
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                MerosSync::syncOneMeross($res['result']);
                 log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             default:
                 log::add('MerosSync','debug','action: Action='.$action.' '.__('non implementée.', __FILE__));

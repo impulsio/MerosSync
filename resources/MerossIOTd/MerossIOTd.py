@@ -316,13 +316,13 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             onoff = []
             channel=0
             if len(device.channels) == 1:
-                onoff.append('Switch')
+                onoff.append('Etat')
             else:
-                onoff.append('All switches')
+                onoff.append('Tout')
             while channel<len(device.channels):
                 try:
                     if channel > 0:
-                        onoff.append('Switch '+str(channel))
+                        onoff.append(device.channels[channel].name)
                     isOn = 0
                     if device.is_on(channel):
                         isOn = 1
