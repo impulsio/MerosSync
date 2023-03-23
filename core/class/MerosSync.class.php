@@ -194,7 +194,8 @@ class MerosSync extends eqLogic {
         log::add('MerosSync', 'debug', 'updateEqLogicCmds: Update eqLogic commands');
         $i = 0;
         $order = 1;
-        $familly = $_device['famille'];
+        $family = $_device['famille'];
+        log::add('MerosSync', 'debug', 'syncMeross: - Famille '.$family);
         # Switch
         $nb_switch = count($_device['onoff']);
         foreach ($_device['onoff'] as $key=>$value)
@@ -250,9 +251,9 @@ class MerosSync extends eqLogic {
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('info');
                     $cmd->setSubType('binary');
-                    if( $familly == 'GenericGarageDoorOpener' ) {
+                    if( $family == 'GenericGarageDoorOpener' ) {
                         $cmd->setGeneric_type('GARAGE_STATE');
-                    } elseif( $familly == 'GenericBulb' ) {
+                    } elseif( $family == 'GenericBulb' ) {
                         $cmd->setGeneric_type('LIGHT_STATE');
                     } else {
                         $cmd->setGeneric_type('ENERGY_STATE');
@@ -277,11 +278,11 @@ class MerosSync extends eqLogic {
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
-                    if( $familly == 'GenericGarageDoorOpener' ) {
+                    if( $family == 'GenericGarageDoorOpener' ) {
                         $cmd->setTemplate('dashboard', 'garage');
                         $cmd->setTemplate('mobile', 'garage');
                         $cmd->setGeneric_type('GB_OPEN');
-                    } elseif( $familly == 'GenericBulb' ) {
+                    } elseif( $family == 'GenericBulb' ) {
                         $cmd->setTemplate('dashboard', 'light');
                         $cmd->setTemplate('mobile', 'light');
                         $cmd->setGeneric_type('LIGHT_OFF');
@@ -316,11 +317,11 @@ class MerosSync extends eqLogic {
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
-                    if( $familly == 'GenericGarageDoorOpener' ) {
+                    if( $family == 'GenericGarageDoorOpener' ) {
                         $cmd->setTemplate('dashboard', 'garage');
                         $cmd->setTemplate('mobile', 'garage');
                         $cmd->setGeneric_type('GB_CLOSE');
-                    } elseif( $familly == 'GenericBulb' ) {
+                    } elseif( $family == 'GenericBulb' ) {
                         $cmd->setTemplate('dashboard', 'light');
                         $cmd->setTemplate('mobile', 'light');
                         $cmd->setGeneric_type('LIGHT_ON');
@@ -370,8 +371,10 @@ class MerosSync extends eqLogic {
         $cmd->setOrder($order);
         $cmd->save();
         $order++;
+
         # Electicité
-        if( $_device['elec'] ) {
+        if( $_device['elec'] )
+        {
             # Puissance
             $cmd = $_eqLogic->getCmd(null, 'power');
             if (!is_object($cmd)) {
@@ -449,8 +452,10 @@ class MerosSync extends eqLogic {
             $cmd->save();
             $order++;
         }
+
         # Consommation
-        if( $_device['conso'] ) {
+        if( $_device['conso'] )
+        {
             # Ce Jour
             $cmd = $_eqLogic->getCmd(null, 'conso_totale');
             if (!is_object($cmd)) {
@@ -458,8 +463,8 @@ class MerosSync extends eqLogic {
                 $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Consommation', __FILE__));
                 $cmd->setType('info');
-                $cmd->setSubType('numeric');
-                $cmd->setGeneric_type('CONSUMPTION');
+                $cmd->setSubType('binary');
+                $cmd->setGeneric_type('GARAGE_STATE');
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(1);
                 $cmd->setTemplate('dashboard', 'default');
@@ -476,8 +481,12 @@ class MerosSync extends eqLogic {
             $cmd->save();
             $order++;
         }
+
+        //NON IMPLEMENTE
+
         # Lampe - Luminosité
-        if( $_device['lumin'] ) {
+        if( $_device['lumin'] )
+        {
             # Luminance information
             $cmd = $_eqLogic->getCmd(null, 'lumival');
             if (!is_object($cmd)) {
@@ -527,6 +536,7 @@ class MerosSync extends eqLogic {
             $cmd->save();
             $order++;
         }
+
         if( $_device['tempe'] ) {
             # Temperature information
             $cmd = $_eqLogic->getCmd(null, 'tempval');

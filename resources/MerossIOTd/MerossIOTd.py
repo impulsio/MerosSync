@@ -20,12 +20,7 @@ from meross_iot.controller.mixins.electricity import ElectricityMixin #electrici
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
-
-#from meross_iot.cloud.devices.power_plugs import GenericPlug
-#from meross_iot.cloud.devices.humidifier import GenericHumidifier, SprayMode
-#from meross_iot.cloud.devices.hubs import GenericHub
-#from meross_iot.cloud.devices.subdevices.thermostats import ValveSubDevice, ThermostatV3Mode
-#from meross_iot.cloud.devices.light_bulbs import MODE_RGB, MODE_LUMINANCE, MODE_TEMPERATURE, to_rgb
+from meross_iot.controller.mixins.garage import GarageOpenerMixin
 
 http_api_client = 0
 manager = 0
@@ -267,7 +262,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         device_online = '0'
         if device.online_status == OnlineStatus.ONLINE:
             device_online = '1'
-        logger.debug("Is online? " + device_online)
         d = dict({
             'name': device.name,
             'uuid': device.uuid,
@@ -332,6 +326,23 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 channel = channel + 1
             d['onoff'] = onoff
             d['values']['switch'] = switch
+        else:
+            pass
+
+        #Récupérations des portes de garage
+        openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
+        if len(openers) > 0:
+            logger.debug("GarageOpenerMixin")
+            dev = openers[0]
+            onoff = []
+            onoff.append('Etat')
+            isOn = 0
+            if dev.get_is_open():
+                isOn = 1
+            switch.append(isOn)
+            d['onoff'] = onoff
+            d['values']['switch'] = switch
+            d['famille'] = 'GenericGarageDoorOpener'
         else:
             pass
 

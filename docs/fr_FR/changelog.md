@@ -1,3 +1,6 @@
+# 0.6
+- Ajout de la gestion des portes de garage
+
 # 0.5
 - Récupération des noms des prises pour les multiprises
 - Correction mise à jour état lors de l'utilisation de la prise "Master"

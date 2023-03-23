@@ -1,3 +1,6 @@
+# 0.6
+- Add garage opener manager
+
 # 0.5
 - Gather swith names for power strip
 - Fix issue to update all switches when using master switch
