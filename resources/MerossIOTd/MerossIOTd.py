@@ -14,7 +14,6 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.controller.mixins.garage import GarageOpenerMixin #garage opener
 from meross_iot.model.enums import OnlineStatus #bulbs
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
@@ -145,18 +144,28 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetOn connected")
         try:
             logger.debug("aSetOn " + uuid)
-            plugs = manager.find_devices(device_uuids="["+uuid+"]")
-            if len(plugs) < 1:
-                logger.error("aSetOn - Device not found " + uuid)
-            else:
-                logger.debug("aSetOn - Device found")
-                dev = plugs[0]
-                logger.debug("aSetOn - Device update")
+            openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
+            if len(openers)>0:
+                logger.debug("aSetOn - Garage door found")
+                dev = openers[0]
                 await dev.async_update()
-                logger.debug("aSetOn - Device turn on")
-                await dev.async_turn_on(channel)
+                logger.debug("aSetOn - We open the door")
+                await dev.open(channel=0)
                 await closeConnection()
-                return 1
+                return 0
+            else:
+                plugs = manager.find_devices(device_uuids="["+uuid+"]")
+                if len(plugs) < 1:
+                    logger.error("aSetOn - Device not found " + uuid)
+                else:
+                    logger.debug("aSetOn - Device found")
+                    dev = plugs[0]
+                    logger.debug("aSetOn - Device update")
+                    await dev.async_update()
+                    logger.debug("aSetOn - Device turn on")
+                    await dev.async_turn_on(channel)
+                    await closeConnection()
+                    return 1
         except:
             logger.error("aSetOn - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
@@ -184,18 +193,28 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetOff connected")
         try:
             logger.debug("aSetOff " + uuid)
-            plugs = manager.find_devices(device_uuids="["+uuid+"]")
-            if len(plugs) < 1:
-                logger.error("aSetOff - Device not found " + uuid)
-            else:
-                logger.debug("aSetOff - Device found")
-                dev = plugs[0]
-                logger.debug("aSetOff - Device update")
+            openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
+            if len(openers)>0:
+                logger.debug("aSetOff - Garage door found")
+                dev = openers[0]
                 await dev.async_update()
-                logger.debug("aSetOff - Device turn on")
-                await dev.async_turn_off(channel)
+                logger.debug("aSetOff - We close the door")
+                await dev.close()
                 await closeConnection()
                 return 0
+            else:
+                plugs = manager.find_devices(device_uuids="["+uuid+"]")
+                if len(plugs) < 1:
+                    logger.error("aSetOff - Device not found " + uuid)
+                else:
+                    logger.debug("aSetOff - Device found")
+                    dev = plugs[0]
+                    logger.debug("aSetOff - Device update")
+                    await dev.async_update()
+                    logger.debug("aSetOff - Device turn on")
+                    await dev.async_turn_off(channel)
+                    await closeConnection()
+                    return 0
         except:
             logger.error("aSetOff - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
