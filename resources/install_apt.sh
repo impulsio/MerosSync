@@ -20,7 +20,7 @@ sudo apt-get install -y python3-setuptools
 echo 60 > ${PROGRESS_FILE}
 sudo apt-get install -y python3-dev
 echo 70 > ${PROGRESS_FILE}
-sudo pip3 install --upgrade pip3
+sudo pip3 install --upgrade pip
 echo 90 > ${PROGRESS_FILE}
 BASEDIR=$(dirname "$0")
 meross_version=$(head -1 $BASEDIR/meross-iot_version.txt)
