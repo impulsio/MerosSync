@@ -148,7 +148,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             if len(openers)>0:
                 logger.debug("aSetOn - Garage door found")
                 dev = openers[0]
-                await dev.async_update()
                 logger.debug("aSetOn - We open the door")
                 await dev.open(channel=0)
                 await closeConnection()
@@ -197,7 +196,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             if len(openers)>0:
                 logger.debug("aSetOff - Garage door found")
                 dev = openers[0]
-                await dev.async_update()
                 logger.debug("aSetOff - We close the door")
                 await dev.close()
                 await closeConnection()
