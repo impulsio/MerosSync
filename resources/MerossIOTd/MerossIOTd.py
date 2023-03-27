@@ -152,7 +152,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetOn - We open the door")
                 await dev.async_open()
                 await closeConnection()
-                return 0
+                return 1
             else:
                 plugs = manager.find_devices(device_uuids="["+uuid+"]")
                 if len(plugs) < 1:
