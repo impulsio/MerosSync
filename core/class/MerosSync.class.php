@@ -158,10 +158,12 @@ class MerosSync extends eqLogic {
         foreach ($values as $key => $value) {
             if( $key == 'switch' )
             {
-                foreach( $value as $id=>$state )
-                {
-                  $_eqLogic->checkAndUpdateCmd('onoff_'.$id, $state);
-                }
+              log::add('MerosSync', 'debug', 'updateEqLogicVals:');
+              foreach( $value as $id=>$state )
+              {
+                $_eqLogic->checkAndUpdateCmd('onoff_'.$id, $state);
+                log::add('MerosSync', 'debug', 'syncMeross: - Mise à jour onoff_'.$id.' : '.$state);
+              }
             } else {
                 if( $key == "capacity" ) {
                     if( $value == 1 || $value == 5 ) {

@@ -360,6 +360,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.debug("Is open? "+ str(dev.get_is_open()))
             if dev.get_is_open():
                 isOn = 1
+                logger.debug("C'est ouvert !")
             switch.append(isOn)
             d['onoff'] = onoff
             d['values']['switch'] = switch
