@@ -278,6 +278,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             return 'Unknow device'
 
     async def aSyncOneMeross(self, device):
+        await device.async_update()
         device_online = '0'
         if device.online_status == OnlineStatus.ONLINE:
             device_online = '1'
@@ -287,12 +288,10 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             'famille': str(device.__class__.__name__),
             'online': device_online,
             'type': device.type,
-            'ip': '',
-            'mac': ''
+            'ip': device.lan_ip
         })
         d['values'] = {}
         switch = []
-        await device.async_update()
 
         #Récupération des consommations instantannées
         plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ElectricityMixin)
@@ -322,31 +321,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         else:
             d['conso'] = False
 
-        #Récupérations des switch
-        plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ToggleXMixin)
-        if len(plugs) > 0:
-            logger.debug("ToggleXMixin")
-            onoff = []
-            channel=0
-            if len(device.channels) == 1:
-                onoff.append('Etat')
-            else:
-                onoff.append('Tout')
-            while channel<len(device.channels):
-                try:
-                    if channel > 0:
-                        onoff.append(device.channels[channel].name)
-                    isOn = 0
-                    if device.is_on(channel):
-                        isOn = 1
-                    switch.append(isOn)
-                except:
-                    logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
-                channel = channel + 1
-            d['onoff'] = onoff
-            d['values']['switch'] = switch
-        else:
-            pass
 
         #Récupérations des portes de garage
         openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
@@ -355,18 +329,44 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             dev = openers[0]
             onoff = []
             onoff.append('Etat')
-            isOn = 0
+            isOn = 1
             await dev.async_update()
             logger.debug("Is open? "+ str(dev.get_is_open()))
             if dev.get_is_open():
-                isOn = 1
+                isOn = 0
                 logger.debug("C'est ouvert !")
             switch.append(isOn)
             d['onoff'] = onoff
             d['values']['switch'] = switch
             d['famille'] = 'GenericGarageDoorOpener'
         else:
-            pass
+            #Récupérations des switch si ce n'est pas des portes de garage
+            plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ToggleXMixin)
+            if len(plugs) > 0:
+                logger.debug("ToggleXMixin")
+                onoff = []
+                channel=0
+                if len(device.channels) == 1:
+                    onoff.append('Etat')
+                else:
+                    onoff.append('Tout')
+                while channel<len(device.channels):
+                    try:
+                        if channel > 0:
+                            onoff.append(device.channels[channel].name)
+                        isOn = 0
+                        if device.is_on(channel):
+                            isOn = 1
+                        switch.append(isOn)
+                    except:
+                        logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
+                    channel = channel + 1
+                d['onoff'] = onoff
+                d['values']['switch'] = switch
+            else:
+                pass
+
+
 
         return d
 

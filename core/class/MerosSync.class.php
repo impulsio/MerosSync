@@ -133,9 +133,6 @@ class MerosSync extends eqLogic {
             if ($device['ip'] != '') {
                 $eqLogic->setConfiguration('ip', $device['ip']);
             }
-            if ($device['mac'] != '') {
-                $eqLogic->setConfiguration('mac', $device['mac']);
-            }
             $eqLogic->setIsEnable(1);
             $eqLogic->save();
             # Les Commandes
@@ -161,7 +158,7 @@ class MerosSync extends eqLogic {
               log::add('MerosSync', 'debug', 'updateEqLogicVals:');
               foreach( $value as $id=>$state )
               {
-                $_eqLogic->checkAndUpdateCmd('onoff_'.$id, $state);
+                $_eqLogic->checkAndUpdateCmd('onoff_'.$id, intval($state));
                 log::add('MerosSync', 'debug', 'syncMeross: - Mise à jour onoff_'.$id.' : '.$state);
               }
             } else {
@@ -253,11 +250,14 @@ class MerosSync extends eqLogic {
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('info');
                     $cmd->setSubType('binary');
-                    if( $family == 'GenericGarageDoorOpener' ) {
+                    if( $family == 'GenericGarageDoorOpener' )
+                    {
                         $cmd->setGeneric_type('GARAGE_STATE');
-                    } elseif( $family == 'GenericBulb' ) {
+                    } elseif( $family == 'GenericBulb' )
+                    {
                         $cmd->setGeneric_type('LIGHT_STATE');
-                    } else {
+                    } else
+                    {
                         $cmd->setGeneric_type('ENERGY_STATE');
                     }
                     $cmd->setIsVisible(0);
@@ -267,6 +267,7 @@ class MerosSync extends eqLogic {
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=onoff_'.$i);
                 }
+                $cmd->setConfiguration('repeatEventManagement','always');
                 $cmd->setName($value);
                 $cmd->setOrder($order);
                 $cmd->save();
