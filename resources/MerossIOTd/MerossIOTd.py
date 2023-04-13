@@ -20,6 +20,7 @@ from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
+from meross_iot.controller.mixins.light import LightMixin
 
 http_api_client = 0
 manager = 0
@@ -292,6 +293,38 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         })
         d['values'] = {}
         switch = []
+
+        #Récupération des lumières
+        lights = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=LightMixin)
+        if len(lights) > 0:
+            logger.debug("LightMixin")
+            light=lights[0]
+
+            d['famille'] = 'GenericBulb'
+            onoff = []
+            isOn=0
+            if light.get_light_is_on():
+                isOn=1
+            switch.append(isOn)
+            d['onoff'] = onoff
+            d['values']['switch'] = switch
+
+            if light.get_supports_luminance():
+                logger.debug("Support luminance")
+                d['lumin']=True
+                d['value']['lumival']=light.get_luminance()
+            if light.get_supports_rgb():
+                logger.debug("Support RGB")
+                d['isrgb']=True
+                d['value']['rgbval']=light.get_rgb_color()
+            if light.get_supports_temperature():
+                logger.debug("Support Temperature")
+                d['tempe']=True
+                d['value']['tempval']=light.get_color_temperature()
+        else:
+            d['lumin']=False
+            d['isrgb']=False
+            d['tempe']=False
 
         #Récupération des consommations instantannées
         plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ElectricityMixin)
