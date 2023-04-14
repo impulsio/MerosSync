@@ -312,15 +312,15 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             if light.get_supports_luminance():
                 logger.debug("Support luminance")
                 d['lumin']=True
-                d['value']['lumival']=light.get_luminance()
+                d['values']['lumival']=light.get_luminance()
             if light.get_supports_rgb():
                 logger.debug("Support RGB")
                 d['isrgb']=True
-                d['value']['rgbval']=light.get_rgb_color()
+                d['values']['rgbval']=light.get_rgb_color()
             if light.get_supports_temperature():
                 logger.debug("Support Temperature")
                 d['tempe']=True
-                d['value']['tempval']=light.get_color_temperature()
+                d['values']['tempval']=light.get_color_temperature()
         else:
             d['lumin']=False
             d['isrgb']=False
@@ -372,8 +372,8 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['onoff'] = onoff
             d['values']['switch'] = switch
             d['famille'] = 'GenericGarageDoorOpener'
-        else:
-            #Récupérations des switch si ce n'est pas des portes de garage
+        elif len(lights) < 1:
+            #Récupérations des switch si ce n'est pas des portes de garage ni des lumières
             plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ToggleXMixin)
             if len(plugs) > 0:
                 logger.debug("ToggleXMixin")
