@@ -644,6 +644,31 @@ class MerosSync extends eqLogic {
             $cmd->save();
             $order++;
         }
+        # Light Mode
+        if( $_device['tempe'] && $_device['isrgb'] ) {
+            # information
+            $cmd = $_eqLogic->getCmd(null, 'capacity');
+            if (!is_object($cmd)) {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=capacity');
+                $cmd = new MerosSyncCmd();
+                $cmd->setName(__('Mode', __FILE__));
+                $cmd->setType('info');
+                $cmd->setSubType('string');
+                $cmd->setGeneric_type('GENERIC_INFO');
+                $cmd->setIsVisible(1);
+                $cmd->setIsHistorized(0);
+                $cmd->setEventOnly(1);
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setLogicalId('capacity');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=capacity');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
+        }
         # Spray Mode
         if( $_device['spray'] ) {
             # Spray OFF
