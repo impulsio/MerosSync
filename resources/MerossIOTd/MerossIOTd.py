@@ -302,6 +302,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
 
             d['famille'] = 'GenericBulb'
             onoff = []
+            onoff.append('Etat')
             isOn=0
             if light.get_light_is_on():
                 isOn=1
