@@ -1,3 +1,6 @@
+# 0.7
+- Add light manager
+
 # 0.6
 - Add garage opener manager
 
