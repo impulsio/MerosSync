@@ -20,6 +20,7 @@ from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
+from meross_iot.controller.mixins.light import LightMixin
 
 http_api_client = 0
 manager = 0
@@ -136,6 +137,20 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         except:
             logger.error("handle Failed: " + str(sys.exc_info()[1]))
 
+    def setOn(self, uuid, channel=0):
+        retour=0
+        logger.debug("setOn called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetOn(uuid, channel))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setOn Failed: " + str(sys.exc_info()[1]))
+
     async def aSetOn(self, uuid, channel):
         logger.debug("aSetOn called")
         global manager
@@ -171,19 +186,19 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return 0
 
-    def setOn(self, uuid, channel=0):
+    def setOff(self, uuid, channel=0):
         retour=0
-        logger.debug("setOn called")
+        logger.debug("setOff called")
         try:
             asyncio.set_event_loop(asyncio.new_event_loop())
             self.loop = asyncio.get_event_loop()
             try:
-                retour=self.loop.run_until_complete(self.aSetOn(uuid, channel))
+                retour=self.loop.run_until_complete(self.aSetOff(uuid, channel))
             finally:
                 self.loop.close()
             return retour
         except:
-            logger.error("setOn Failed: " + str(sys.exc_info()[1]))
+            logger.error("setOff Failed: " + str(sys.exc_info()[1]))
 
     async def aSetOff(self, uuid, channel):
         logger.debug("aSetOff called")
@@ -220,62 +235,119 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return 1
 
-    def setOff(self, uuid, channel=0):
-        retour=0
-        logger.debug("setOff called")
+    def setLumi(self, uuid, lumi_int):
+        logger.debug("setLumi called")
         try:
             asyncio.set_event_loop(asyncio.new_event_loop())
             self.loop = asyncio.get_event_loop()
             try:
-                retour=self.loop.run_until_complete(self.aSetOff(uuid, channel))
+                retour=self.loop.run_until_complete(self.aSetLumi(uuid, lumi_int))
             finally:
                 self.loop.close()
             return retour
         except:
-            logger.error("setOff Failed: " + str(sys.exc_info()[1]))
+            logger.error("setLumi Failed: " + str(sys.exc_info()[1]))
 
-    def setLumi(self, uuid, lumi_int):
-        device = manager.get_device_by_uuid(uuid)
-        if device is not None:
-            if str(device.__class__.__name__) == 'GenericHumidifier':
-                res = device.configure_light(onoff=1, luminance=lumi_int)
+    async def aSetLumi(self, uuid, lumi_int):
+        logger.debug("aSetLumi called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetLumi connected")
+        try:
+            logger.debug("aSetLumi " + uuid)
+            lights = manager.find_devices(device_uuids="["+uuid+"]", device_class=LightMixin)
+            if len(lights)>0:
+                logger.debug("aSetLumi - This is a light")
+                dev = lights[0]
+                await dev.async_update()
+                logger.debug("aSetLumi - We set the luminance")
+                await dev.async_set_light_color(0,None,None,lumi_int,None)
+                await closeConnection()
+                return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
             else:
-                res = device.set_light_color(luminance=lumi_int)
-            return res
-        else:
-            return 'Unknow device'
+                return "Ce n'est pas une lampe"
+        except:
+            logger.error("aSetLumi - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return "Une erreur est survenue"
 
-    def setTemp(self, uuid, temp_int, lumi=-1):
-        device = manager.get_device_by_uuid(uuid)
-        if device is not None:
-            res = device.set_light_color(temperature=temp_int, luminance=lumi)
-            return res
-        else:
-            return 'Unknow device'
+    def setTemp(self, uuid, temp_int):
+        logger.debug("setTemp called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetTemp(uuid, temp_int))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setTemp Failed: " + str(sys.exc_info()[1]))
 
-    def setRGB(self, uuid, rgb_int, lumi=-1):
-        device = manager.get_device_by_uuid(uuid)
-        if device is not None:
-            if str(device.__class__.__name__) == 'GenericHumidifier':
-                res = device.configure_light(onoff=1, rgb=int(rgb_int), luminance=lumi)
+    async def aSetTemp(self, uuid, temp_int):
+        logger.debug("aSetTemp called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetTemp connected")
+        try:
+            logger.debug("aSetTemp " + uuid)
+            lights = manager.find_devices(device_uuids="["+uuid+"]", device_class=LightMixin)
+            if len(lights)>0:
+                logger.debug("aSetTemp - This is a light")
+                dev = lights[0]
+                await dev.async_update()
+                logger.debug("aSetTemp - We set the temperature")
+                await dev.async_set_light_color(0,None,None,None,temp_int)
+                await closeConnection()
+                return "C'est fait - nouvelle température : "+ str(temp_int)
             else:
-                res = device.set_light_color(rgb=int(rgb_int), luminance=lumi)
-            return res
-        else:
-            return 'Unknow device'
+                return "Ce n'est pas une lampe"
+        except:
+            logger.error("aSetTemp - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return "Une erreur est survenue"
+
+    def setRGB(self, uuid, rgb):
+        logger.debug("setRGB called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetRGB(uuid, rgb))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setRGB Failed: " + str(sys.exc_info()[1]))
+
+    async def aSetRGB(self, uuid, rgb):
+        logger.debug("aSetRGB called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetRGB connected")
+        try:
+            logger.debug("aSetRGB " + uuid)
+            lights = manager.find_devices(device_uuids="["+uuid+"]", device_class=LightMixin)
+            if len(lights)>0:
+                logger.debug("aSetRGB - This is a light")
+                dev = lights[0]
+                await dev.async_update()
+                logger.debug("aSetRGB - We set the color")
+                await dev.async_set_light_color(0,None,hex_to_rgb(rgb),None,None)
+                await closeConnection()
+                return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
+            else:
+                return "Ce n'est pas une lampe"
+        except:
+            logger.error("aSetRGB - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return "Une erreur est survenue"
 
     def setSpray(self, uuid, smode=0):
-        device = manager.get_device_by_uuid(uuid)
-        if device is not None:
-            if smode == '1':
-                res = device.set_spray_mode(spray_mode=SprayMode.CONTINUOUS)
-            elif smode == '2':
-                res = device.set_spray_mode(spray_mode=SprayMode.INTERMITTENT)
-            else:
-                res = device.set_spray_mode(spray_mode=SprayMode.OFF)
-            return res
-        else:
-            return 'Unknow device'
+        logger.debug("setSpray called")
 
     async def aSyncOneMeross(self, device):
         await device.async_update()
@@ -292,6 +364,39 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         })
         d['values'] = {}
         switch = []
+
+        #Récupération des lumières
+        lights = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=LightMixin)
+        if len(lights) > 0:
+            logger.debug("LightMixin")
+            light=lights[0]
+
+            d['famille'] = 'GenericBulb'
+            onoff = []
+            onoff.append('Etat')
+            isOn=0
+            if light.get_light_is_on():
+                isOn=1
+            switch.append(isOn)
+            d['onoff'] = onoff
+            d['values']['switch'] = switch
+
+            if light.get_supports_luminance():
+                logger.debug("Support luminance")
+                d['lumin']=True
+                d['values']['lumival']=light.get_luminance()
+            if light.get_supports_rgb():
+                logger.debug("Support RGB")
+                d['isrgb']=True
+                d['values']['rgbval']=rgb_to_hex(light.get_rgb_color())
+            if light.get_supports_temperature():
+                logger.debug("Support Temperature")
+                d['tempe']=True
+                d['values']['tempval']=light.get_color_temperature()
+        else:
+            d['lumin']=False
+            d['isrgb']=False
+            d['tempe']=False
 
         #Récupération des consommations instantannées
         plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ElectricityMixin)
@@ -339,8 +444,8 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['onoff'] = onoff
             d['values']['switch'] = switch
             d['famille'] = 'GenericGarageDoorOpener'
-        else:
-            #Récupérations des switch si ce n'est pas des portes de garage
+        elif len(lights) < 1:
+            #Récupérations des switch si ce n'est pas des portes de garage ni des lumières
             plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ToggleXMixin)
             if len(plugs) > 0:
                 logger.debug("ToggleXMixin")
@@ -365,29 +470,21 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['switch'] = switch
             else:
                 pass
-
-
-
         return d
 
-    def getMerossConso(self, device):
-        d = dict({
-            'conso_totale': 0
-        })
+    def syncMeross(self):
+        retour=0
+        logger.debug("syncMeross called")
         try:
-            l_conso = device.get_power_consumption()
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSyncMeross())
+            finally:
+                self.loop.close()
+            return retour
         except:
-            l_conso = []
-        # Recup
-        if len(l_conso) > 0:
-            today = datetime.today().strftime("%Y-%m-%d")
-            for c in l_conso:
-                if c['date'] == today:
-                    try:
-                        d['conso_totale'] = float(c['value'] / 1000.)
-                    except:
-                        pass
-        return d
+            logger.error("syncMeross Failed: " + str(sys.exc_info()[1]))
 
     async def aSyncMeross(self):
         logger.debug("aSyncMeross called")
@@ -409,20 +506,19 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return d_devices
 
-    def syncMeross(self):
+    def syncDevice(self, uuid):
         retour=0
-        logger.debug("syncMeross called")
+        logger.debug("syncDevice called")
         try:
             asyncio.set_event_loop(asyncio.new_event_loop())
             self.loop = asyncio.get_event_loop()
             try:
-                retour=self.loop.run_until_complete(self.aSyncMeross())
+                retour=self.loop.run_until_complete(self.aSyncDevice(uuid))
             finally:
                 self.loop.close()
             return retour
         except:
-            logger.error("syncMeross Failed: " + str(sys.exc_info()[1]))
-
+            logger.error("syncDevice Failed: " + str(sys.exc_info()[1]))
 
     async def aSyncDevice(self, uuid):
         logger.debug("aSyncDevice called")
@@ -441,20 +537,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.error("aSyncDevice Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return device
-
-    def syncDevice(self, uuid):
-        retour=0
-        logger.debug("syncDevice called")
-        try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSyncDevice(uuid))
-            finally:
-                self.loop.close()
-            return retour
-        except:
-            logger.error("syncDevice Failed: " + str(sys.exc_info()[1]))
 
 # Les fonctions du daemon ------------------------------------------------------
 def convert_log_level(level='error'):
@@ -492,6 +574,16 @@ def shutdown():
     asyncio.set_event_loop(loop)
     loop.run_until_complete(ashutdown())
     loop.close()
+
+def rgb_to_hex(rgb):
+    return '#{:02x}{:02x}{:02x}'.format(rgb[0],rgb[1],rgb[2])
+
+def hex_to_rgb(hex):
+    rgb = []
+    for i in (0, 2, 4):
+        decimal = int(hex[i:i+2], 16)
+        rgb.append(decimal)
+    return tuple(rgb)
 
 # ----------------------------------------------------------------------------
 def syncOneElectricity(device):

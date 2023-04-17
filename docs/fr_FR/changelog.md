@@ -1,3 +1,6 @@
+# 0.7
+- Ajout de la gestion des lumières
+
 # 0.6
 - Ajout de la gestion des portes de garage
 

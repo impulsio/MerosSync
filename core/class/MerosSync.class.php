@@ -162,14 +162,18 @@ class MerosSync extends eqLogic {
                 log::add('MerosSync', 'debug', 'syncMeross: - Mise à jour onoff_'.$id.' : '.$state);
               }
             } else {
-                if( $key == "capacity" ) {
-                    if( $value == 1 || $value == 5 ) {
+                if( $key == "capacity" )
+                {
+                    if( $value == 1 || $value == 5 )
+                    {
                         $value = __('Couleur', __FILE__);
-                    } else {
+                    } else
+                    {
                         $value = __('Blanc', __FILE__);
                     }
                 }
-                if( $key == "spray" ) {
+                if( $key == "spray" )
+                {
                     if( $value == 1 ) {
                         $value = __('Continu', __FILE__);
                     } elseif( $value == 2 ) {
@@ -178,8 +182,9 @@ class MerosSync extends eqLogic {
                         $value = __('Arrêt', __FILE__);
                     }
                 }
-                if( $key == "rgbval" ) {
-                    $value = '#'.substr('000000'.dechex($value),-6);
+                if( $key == "rgbval" )
+                {
+                    $value = '#'.$value;
                 }
                 $_eqLogic->checkAndUpdateCmd($key, $value);
             }
@@ -495,8 +500,6 @@ class MerosSync extends eqLogic {
             $order++;
         }
 
-        //NON IMPLEMENTE
-
         # Lampe - Luminosité
         if( $_device['lumin'] )
         {
@@ -550,7 +553,8 @@ class MerosSync extends eqLogic {
             $order++;
         }
 
-        if( $_device['tempe'] ) {
+        if( $_device['tempe'] )
+        {
             # Temperature information
             $cmd = $_eqLogic->getCmd(null, 'tempval');
             if (!is_object($cmd)) {
@@ -645,7 +649,7 @@ class MerosSync extends eqLogic {
             $order++;
         }
         # Light Mode
-        if( $_device['tempe'] && $_device['isrgb'] ) {
+        if( $_device['capacity'] ) {
             # information
             $cmd = $_eqLogic->getCmd(null, 'capacity');
             if (!is_object($cmd)) {
@@ -657,7 +661,6 @@ class MerosSync extends eqLogic {
                 $cmd->setGeneric_type('GENERIC_INFO');
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(0);
-                $cmd->setEventOnly(1);
                 $cmd->setTemplate('dashboard', 'default');
                 $cmd->setTemplate('mobile', 'default');
                 $cmd->setLogicalId('capacity');
@@ -669,7 +672,8 @@ class MerosSync extends eqLogic {
             $cmd->save();
             $order++;
         }
-        # Spray Mode
+
+        # Spray Mode NOT HANDLE
         if( $_device['spray'] ) {
             # Spray OFF
             $cmd = $_eqLogic->getCmd(null, 'spray_0');
@@ -919,7 +923,8 @@ class MerosSyncCmd extends cmd {
         $splitAction = explode("_", $action);
         $action = $splitAction[0];
         $channel = $splitAction[1];
-        switch ($action) {
+        switch ($action)
+        {
             case "on":
                 $res = MerosSync::callMeross('setOn', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setOn: '.json_encode($res['result']));
@@ -959,16 +964,16 @@ class MerosSyncCmd extends cmd {
                 log::add('MerosSync', 'debug', 'setLumi '.$_options['slider'].': '.$res['result']);
                 break;
             case "tempset":
-                $cmd = $eqLogic->getCmd(null, 'lumival');
-                $lumi = $cmd->execCmd();
-                $res = MerosSync::callMeross('setTemp', [$eqLogic->getLogicalId(), $_options['slider'], $lumi]);
+                //$cmd = $eqLogic->getCmd(null, 'lumival');
+                //$lumi = $cmd->execCmd();
+                $res = MerosSync::callMeross('setTemp', [$eqLogic->getLogicalId(), $_options['slider']]);
                 log::add('MerosSync', 'debug', 'setTemp '.$_options['slider'].': '.$res['result']);
                 break;
             case "rgbset":
-                $cmd = $eqLogic->getCmd(null, 'lumival');
-                $lumi = $cmd->execCmd();
-                $rgb = hexdec($_options['color']);
-                $res = MerosSync::callMeross('setRGB', [$eqLogic->getLogicalId(), $rgb, $lumi]);
+                //$cmd = $eqLogic->getCmd(null, 'lumival');
+                //$lumi = $cmd->execCmd();
+                //$rgb = hexdec($_options['color']);
+                $res = MerosSync::callMeross('setRGB', [$eqLogic->getLogicalId(), substr($_options['color'],-6)]);
                 log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' ('.$rgb.'): '.$res['result']);
                 break;
             case "spray":
