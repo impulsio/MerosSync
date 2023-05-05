@@ -14,13 +14,15 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.model.enums import OnlineStatus #bulbs
+from meross_iot.model.enums import OnlineStatus, ThermostatMode
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
 from meross_iot.controller.mixins.light import LightMixin
+from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatState
+from meross_iot.utilities.misc import current_version
 
 http_api_client = 0
 manager = 0
@@ -426,6 +428,45 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         else:
             d['conso'] = False
 
+        #Récupération des thermostats
+        therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)
+        if len(therms) > 0:
+            logger.debug("ThermostatModeMixin")
+            dev = therms[0]
+            therm=dev.get_thermostat_state()
+            d['tempe']=True
+            d['tempval']=therm.target_temperature_celsius
+            d['on']=therm.is_on
+
+            if therm.mode == ThermostatMode.HEAT:
+                d['mode'] = 'Mode chauffage'
+                d['tempval']=therm.heat_temperature_celsius
+            elif therm.mode == ThermostatMode.COOL:
+                d['mode'] = 'Mode clim'
+                d['tempval']=therm.cool_temperature_celsius
+            elif therm.mode == ThermostatMode.ECONOMY:
+                d['mode'] = 'Mode eco'
+                d['tempval']=therm.eco_temperature_celsius
+            elif therm.mode == ThermostatMode.AUTO:
+                d['mode'] = 'Mode auto'
+                d['tempval']=therm.target_temperature_celsius
+            elif therm.mode == ThermostatMode.MANUAL:
+                d['mode'] = 'Mode manuel'
+                d['tempval']=therm.manual_temperature_celsius
+            else:
+                d['tempval']=therm.target_temperature_celsius
+                d['mode']='Aucun mode'
+
+            if therm.warning:
+                d['warning']='Alerte'
+            else:
+                d['warning']='OK'
+
+            d['minval']=therm.min_temperature_celsius
+            d['maxval']=therm.max_temperature_celsius
+            d['tempcur']=therm.current_temperature_celsius
+        else:
+            d['tempe']=False
 
         #Récupérations des portes de garage
         openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
@@ -637,7 +678,6 @@ async def initConnection(args):
         logger.debug("Connected with user " + args.muser)
         # Register event handlers for the manager...
         manager = MerossManager(http_client=http_api_client)
-        await manager.async_init()
         await manager.async_device_discovery()
         connected=True
     except Exception as e:
@@ -693,6 +733,8 @@ chMeross.setFormatter(formatter)
 meross_root_logger.addHandler(chMeross)
 meross_root_logger.propagate = False
 meross_root_logger.debug('Test logger merossIOT')
+
+logger.info('Current version is : ' + current_version())
 
 logger.info('Start MerossIOTd')
 logger.info('Log level : {}'.format(args.loglevel))

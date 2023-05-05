@@ -56,7 +56,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                     echo '<img src="' . $plugin->getPathImgIcon() . '" height="105" width="95" />';
                 }
 				echo '<br>';
-				echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
+				echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '('.$eqLogic->getConfiguration('type').')</span>';
 				echo '</div>';
 			}
 			?>

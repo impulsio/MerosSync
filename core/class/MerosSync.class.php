@@ -107,23 +107,29 @@ class MerosSync extends eqLogic {
             $eqLogic->setName($device['name']);
             $eqLogic->setEqType_name('MerosSync');
             $eqLogic->setLogicalId($key);
-            if ($device['type'] != '') {
+            if ($device['type'] != '')
+            {
                 $eqLogic->setConfiguration('type', $device['type']);
             }
-            if ($device['famille'] != '') {
+            if ($device['famille'] != '')
+            {
                 $eqLogic->setConfiguration('famille', $device['famille']);
             }
-            if ($device['online'] != '') {
+            if ($device['online'] != '')
+            {
                 $eqLogic->setConfiguration('online', $device['online']);
-            } else {
+            } else
+            {
                 $eqLogic->setConfiguration('online', '0');
             }
         } else {
             log::add('MerosSync', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic->setName($device['name']);
-            if ($device['online'] != '') {
+            if ($device['online'] != '')
+            {
                 $eqLogic->setConfiguration('online', $device['online']);
-            } else {
+            } else
+            {
                 $eqLogic->setConfiguration('online', '0');
             }
         }
@@ -774,7 +780,8 @@ class MerosSync extends eqLogic {
      * Get dependancy information
      * @return array Python3 command return.
      */
-    public static function dependancy_info() {
+    public static function dependancy_info()
+    {
         $return = [
             'state' => 'nok',
             'log' => 'MerosSync_update',
@@ -793,7 +800,8 @@ class MerosSync extends eqLogic {
      * Install dependancies.
      * @return array Shell script command return.
      */
-    public static function dependancy_install() {
+    public static function dependancy_install()
+    {
         log::remove(__CLASS__ . '_update');
         return [
             'script' => dirname(__FILE__) . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder('MerosSync') . '/dependance',
