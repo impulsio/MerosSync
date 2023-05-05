@@ -227,7 +227,14 @@ class MerosSync extends eqLogic {
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
                 }
-                $cmd->setName('Marche '.$value);
+                if( $family == 'GenericGarageDoorOpener' )
+                {
+                  $cmd->setName('Monter '.$value);
+                }
+                else
+                {
+                  $cmd->setName('Marche '.$value);
+                }
                 $cmd->setOrder($order);
                 $cmd->save();
                 $order++;
@@ -246,12 +253,20 @@ class MerosSync extends eqLogic {
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
                 }
-                $cmd->setName('Arrêt '.$value);
+                if( $family == 'GenericGarageDoorOpener' )
+                {
+                  $cmd->setName('Fermer '.$value);
+                }
+                else
+                {
+                  $cmd->setName('Arrêt '.$value);
+                }
                 $cmd->setOrder($order);
                 $cmd->save();
                 $order++;
                 $i++;
-            } else
+            }
+            else
             {
                 # status
                 $cmd = $_eqLogic->getCmd(null, 'onoff_'.$i);
@@ -292,15 +307,20 @@ class MerosSync extends eqLogic {
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
-                    if( $family == 'GenericGarageDoorOpener' ) {
+                    if( $family == 'GenericGarageDoorOpener' )
+                    {
                         $cmd->setTemplate('dashboard', 'garage');
                         $cmd->setTemplate('mobile', 'garage');
                         $cmd->setGeneric_type('GB_CLOSE');
-                    } elseif( $family == 'GenericBulb' ) {
+                    }
+                    elseif( $family == 'GenericBulb' )
+                    {
                         $cmd->setTemplate('dashboard', 'light');
                         $cmd->setTemplate('mobile', 'light');
                         $cmd->setGeneric_type('LIGHT_OFF');
-                    } else {
+                    }
+                    else
+                    {
                         $cmd->setTemplate('dashboard', 'prise');
                         $cmd->setTemplate('mobile', 'prise');
                         $cmd->setGeneric_type('ENERGY_OFF');
@@ -313,7 +333,8 @@ class MerosSync extends eqLogic {
                 }
                 if ($nb_switch==1)
                 {
-                  if( $family == 'GenericGarageDoorOpener' ) {
+                  if( $family == 'GenericGarageDoorOpener' )
+                  {
                     $cmd->setName('Fermer');
                   }
                   else {
@@ -922,7 +943,8 @@ class MerosSync extends eqLogic {
 }
 
 class MerosSyncCmd extends cmd {
-    public function execute($_options = array()) {
+    public function execute($_options = array())
+    {
         $eqLogic = $this->getEqLogic();
         $action = $this->getLogicalId();
         log::add('MerosSync', 'debug', $eqLogic->getLogicalId().' = action: '. $action.' - params '.json_encode($_options) );

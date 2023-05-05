@@ -167,7 +167,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 dev = openers[0]
                 await dev.async_update()
                 logger.debug("aSetOn - We open the door")
-                await dev.async_open()
+                await dev.async_open(channel)
                 await closeConnection()
                 return 1
             else:
@@ -216,7 +216,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 dev = openers[0]
                 await dev.async_update()
                 logger.debug("aSetOff - We close the door")
-                await dev.async_close()
+                await dev.async_close(channel)
                 await closeConnection()
                 return 0
             else:
@@ -472,16 +472,27 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
         if len(openers) > 0:
             logger.debug("GarageOpenerMixin")
-            dev = openers[0]
+            device = openers[0]
             onoff = []
-            onoff.append('Etat')
-            isOn = 1
-            await dev.async_update()
-            logger.debug("Is open? "+ str(dev.get_is_open()))
-            if dev.get_is_open():
-                isOn = 0
-                logger.debug("C'est ouvert !")
-            switch.append(isOn)
+            await device.async_update()
+            #Gestion multi porte pour un seul device
+            if len(device.channels) == 1:
+                onoff.append('Etat')
+            else:
+                onoff.append('Tout')
+            channel=0
+            while channel<len(device.channels):
+                try:
+                    if channel > 0:
+                        onoff.append(device.channels[channel].name)
+                    isOn = 1
+                    if device.get_is_open(channel):
+                        isOn = 0
+                    switch.append(isOn)
+                except:
+                    logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
+                channel = channel + 1
+
             d['onoff'] = onoff
             d['values']['switch'] = switch
             d['famille'] = 'GenericGarageDoorOpener'
