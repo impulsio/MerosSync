@@ -653,30 +653,6 @@ def syncOneElectricity(device):
     # Fini
     return False
 
-def UpdateAllElectricity(interval):
-    stopped = threading.Event()
-    def loop():
-        while not stopped.wait(interval):
-            e_devices = {}
-            try:
-                devices = manager.get_supported_devices()
-                for num in range(len(devices)):
-                    device = devices[num]
-                    if device.online:
-                        d = syncOneElectricity(device)
-                        if isinstance(d, dict):
-                            uuid = device.uuid
-                            e_devices[uuid] = d
-                # Fin du for
-                logging.info('Send Electricity')
-                #jc.sendElectricity(e_devices)
-                jc.send({'action': 'electricity', 'values':e_devices})
-            except:
-                pass
-    # fin de loop
-    threading.Thread(target=loop).start()
-    return stopped.set
-
 async def initConnection(args):
     global manager
     global http_api_client

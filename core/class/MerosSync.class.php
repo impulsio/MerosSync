@@ -210,7 +210,8 @@ class MerosSync extends eqLogic {
         $nb_switch = count($_device['onoff']);
         foreach ($_device['onoff'] as $key=>$value)
         {
-            if(  $i==0 && $nb_switch>1 )
+          #l'interrupteur global ne fonctionne pas avec les portes de garage
+            if(  $i==0 && $nb_switch>1 && $family != 'GenericGarageDoorOpener')
             {
                 # All On
                 $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
@@ -227,14 +228,7 @@ class MerosSync extends eqLogic {
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
                 }
-                if( $family == 'GenericGarageDoorOpener' )
-                {
-                  $cmd->setName('Monter '.$value);
-                }
-                else
-                {
-                  $cmd->setName('Marche '.$value);
-                }
+                $cmd->setName('Marche '.$value);
                 $cmd->setOrder($order);
                 $cmd->save();
                 $order++;
@@ -253,14 +247,7 @@ class MerosSync extends eqLogic {
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
                 }
-                if( $family == 'GenericGarageDoorOpener' )
-                {
-                  $cmd->setName('Fermer '.$value);
-                }
-                else
-                {
-                  $cmd->setName('Arrêt '.$value);
-                }
+                $cmd->setName('Arrêt '.$value);
                 $cmd->setOrder($order);
                 $cmd->save();
                 $order++;
