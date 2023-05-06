@@ -14,13 +14,15 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.model.enums import OnlineStatus #bulbs
+from meross_iot.model.enums import OnlineStatus, ThermostatMode
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
 from meross_iot.controller.mixins.light import LightMixin
+from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatState
+from meross_iot.utilities.misc import current_version
 
 http_api_client = 0
 manager = 0
@@ -165,7 +167,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 dev = openers[0]
                 await dev.async_update()
                 logger.debug("aSetOn - We open the door")
-                await dev.async_open()
+                await dev.async_open(channel)
                 await closeConnection()
                 return 1
             else:
@@ -214,7 +216,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 dev = openers[0]
                 await dev.async_update()
                 logger.debug("aSetOff - We close the door")
-                await dev.async_close()
+                await dev.async_close(channel)
                 await closeConnection()
                 return 0
             else:
@@ -426,21 +428,71 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         else:
             d['conso'] = False
 
+        #Récupération des thermostats
+        therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)
+        if len(therms) > 0:
+            logger.debug("ThermostatModeMixin")
+            dev = therms[0]
+            therm=dev.get_thermostat_state()
+            d['tempe']=True
+            d['tempval']=therm.target_temperature_celsius
+            d['on']=therm.is_on
+
+            if therm.mode == ThermostatMode.HEAT:
+                d['mode'] = 'Mode chauffage'
+                d['tempval']=therm.heat_temperature_celsius
+            elif therm.mode == ThermostatMode.COOL:
+                d['mode'] = 'Mode clim'
+                d['tempval']=therm.cool_temperature_celsius
+            elif therm.mode == ThermostatMode.ECONOMY:
+                d['mode'] = 'Mode eco'
+                d['tempval']=therm.eco_temperature_celsius
+            elif therm.mode == ThermostatMode.AUTO:
+                d['mode'] = 'Mode auto'
+                d['tempval']=therm.target_temperature_celsius
+            elif therm.mode == ThermostatMode.MANUAL:
+                d['mode'] = 'Mode manuel'
+                d['tempval']=therm.manual_temperature_celsius
+            else:
+                d['tempval']=therm.target_temperature_celsius
+                d['mode']='Aucun mode'
+
+            if therm.warning:
+                d['warning']='Alerte'
+            else:
+                d['warning']='OK'
+
+            d['minval']=therm.min_temperature_celsius
+            d['maxval']=therm.max_temperature_celsius
+            d['tempcur']=therm.current_temperature_celsius
+        else:
+            d['tempe']=False
 
         #Récupérations des portes de garage
         openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
         if len(openers) > 0:
             logger.debug("GarageOpenerMixin")
-            dev = openers[0]
+            device = openers[0]
             onoff = []
-            onoff.append('Etat')
-            isOn = 1
-            await dev.async_update()
-            logger.debug("Is open? "+ str(dev.get_is_open()))
-            if dev.get_is_open():
-                isOn = 0
-                logger.debug("C'est ouvert !")
-            switch.append(isOn)
+            await device.async_update()
+            #Gestion multi porte pour un seul device
+            if len(device.channels) == 1:
+                onoff.append('Etat')
+            else:
+                onoff.append('Tout')
+            channel=0
+            while channel<len(device.channels):
+                try:
+                    if channel > 0:
+                        onoff.append(device.channels[channel].name)
+                    isOn = 1
+                    if device.get_is_open(channel):
+                        isOn = 0
+                    switch.append(isOn)
+                except:
+                    logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
+                channel = channel + 1
+
             d['onoff'] = onoff
             d['values']['switch'] = switch
             d['famille'] = 'GenericGarageDoorOpener'
@@ -601,30 +653,6 @@ def syncOneElectricity(device):
     # Fini
     return False
 
-def UpdateAllElectricity(interval):
-    stopped = threading.Event()
-    def loop():
-        while not stopped.wait(interval):
-            e_devices = {}
-            try:
-                devices = manager.get_supported_devices()
-                for num in range(len(devices)):
-                    device = devices[num]
-                    if device.online:
-                        d = syncOneElectricity(device)
-                        if isinstance(d, dict):
-                            uuid = device.uuid
-                            e_devices[uuid] = d
-                # Fin du for
-                logging.info('Send Electricity')
-                #jc.sendElectricity(e_devices)
-                jc.send({'action': 'electricity', 'values':e_devices})
-            except:
-                pass
-    # fin de loop
-    threading.Thread(target=loop).start()
-    return stopped.set
-
 async def initConnection(args):
     global manager
     global http_api_client
@@ -637,7 +665,6 @@ async def initConnection(args):
         logger.debug("Connected with user " + args.muser)
         # Register event handlers for the manager...
         manager = MerossManager(http_client=http_api_client)
-        await manager.async_init()
         await manager.async_device_discovery()
         connected=True
     except Exception as e:
@@ -693,6 +720,8 @@ chMeross.setFormatter(formatter)
 meross_root_logger.addHandler(chMeross)
 meross_root_logger.propagate = False
 meross_root_logger.debug('Test logger merossIOT')
+
+logger.info('Current version is : ' + current_version())
 
 logger.info('Start MerossIOTd')
 logger.info('Log level : {}'.format(args.loglevel))

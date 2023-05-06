@@ -107,23 +107,29 @@ class MerosSync extends eqLogic {
             $eqLogic->setName($device['name']);
             $eqLogic->setEqType_name('MerosSync');
             $eqLogic->setLogicalId($key);
-            if ($device['type'] != '') {
+            if ($device['type'] != '')
+            {
                 $eqLogic->setConfiguration('type', $device['type']);
             }
-            if ($device['famille'] != '') {
+            if ($device['famille'] != '')
+            {
                 $eqLogic->setConfiguration('famille', $device['famille']);
             }
-            if ($device['online'] != '') {
+            if ($device['online'] != '')
+            {
                 $eqLogic->setConfiguration('online', $device['online']);
-            } else {
+            } else
+            {
                 $eqLogic->setConfiguration('online', '0');
             }
         } else {
             log::add('MerosSync', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic->setName($device['name']);
-            if ($device['online'] != '') {
+            if ($device['online'] != '')
+            {
                 $eqLogic->setConfiguration('online', $device['online']);
-            } else {
+            } else
+            {
                 $eqLogic->setConfiguration('online', '0');
             }
         }
@@ -204,7 +210,8 @@ class MerosSync extends eqLogic {
         $nb_switch = count($_device['onoff']);
         foreach ($_device['onoff'] as $key=>$value)
         {
-            if(  $i==0 && $nb_switch>1 )
+          #l'interrupteur global ne fonctionne pas avec les portes de garage
+            if(  $i==0 && $nb_switch>1 && $family != 'GenericGarageDoorOpener')
             {
                 # All On
                 $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
@@ -245,7 +252,8 @@ class MerosSync extends eqLogic {
                 $cmd->save();
                 $order++;
                 $i++;
-            } else
+            }
+            else
             {
                 # status
                 $cmd = $_eqLogic->getCmd(null, 'onoff_'.$i);
@@ -286,15 +294,20 @@ class MerosSync extends eqLogic {
                     $cmd = new MerosSyncCmd();
                     $cmd->setType('action');
                     $cmd->setSubType('other');
-                    if( $family == 'GenericGarageDoorOpener' ) {
+                    if( $family == 'GenericGarageDoorOpener' )
+                    {
                         $cmd->setTemplate('dashboard', 'garage');
                         $cmd->setTemplate('mobile', 'garage');
                         $cmd->setGeneric_type('GB_CLOSE');
-                    } elseif( $family == 'GenericBulb' ) {
+                    }
+                    elseif( $family == 'GenericBulb' )
+                    {
                         $cmd->setTemplate('dashboard', 'light');
                         $cmd->setTemplate('mobile', 'light');
                         $cmd->setGeneric_type('LIGHT_OFF');
-                    } else {
+                    }
+                    else
+                    {
                         $cmd->setTemplate('dashboard', 'prise');
                         $cmd->setTemplate('mobile', 'prise');
                         $cmd->setGeneric_type('ENERGY_OFF');
@@ -307,7 +320,8 @@ class MerosSync extends eqLogic {
                 }
                 if ($nb_switch==1)
                 {
-                  if( $family == 'GenericGarageDoorOpener' ) {
+                  if( $family == 'GenericGarageDoorOpener' )
+                  {
                     $cmd->setName('Fermer');
                   }
                   else {
@@ -774,7 +788,8 @@ class MerosSync extends eqLogic {
      * Get dependancy information
      * @return array Python3 command return.
      */
-    public static function dependancy_info() {
+    public static function dependancy_info()
+    {
         $return = [
             'state' => 'nok',
             'log' => 'MerosSync_update',
@@ -793,7 +808,8 @@ class MerosSync extends eqLogic {
      * Install dependancies.
      * @return array Shell script command return.
      */
-    public static function dependancy_install() {
+    public static function dependancy_install()
+    {
         log::remove(__CLASS__ . '_update');
         return [
             'script' => dirname(__FILE__) . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder('MerosSync') . '/dependance',
@@ -914,7 +930,8 @@ class MerosSync extends eqLogic {
 }
 
 class MerosSyncCmd extends cmd {
-    public function execute($_options = array()) {
+    public function execute($_options = array())
+    {
         $eqLogic = $this->getEqLogic();
         $action = $this->getLogicalId();
         log::add('MerosSync', 'debug', $eqLogic->getLogicalId().' = action: '. $action.' - params '.json_encode($_options) );
