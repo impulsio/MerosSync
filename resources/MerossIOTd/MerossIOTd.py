@@ -215,7 +215,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetOff - Garage door found")
                 dev = openers[0]
                 await dev.async_update()
-                logger.debug("aSetOff - We close the door")
+                logger.debug("aSetOff - We close the door "+str(channel))
                 await dev.async_close(channel)
                 await closeConnection()
                 return 0
@@ -488,6 +488,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     isOn = 1
                     if device.get_is_open(channel):
                         isOn = 0
+                    logger.debug("Channel "+str(channel)+"Is open = "+str(device.get_is_open(channel)))
                     switch.append(isOn)
                 except:
                     logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
@@ -580,7 +581,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         device=0
         logger.debug("aSyncDevice connected")
         try:
-            await manager.async_device_discovery()
             meross_device = manager.find_devices(device_uuids="["+uuid+"]")
             logger.debug("aSyncDevice - " + str(len(meross_device)) + " devices found")
             if (len(meross_device) == 1):
