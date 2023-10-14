@@ -158,7 +158,8 @@ class MerosSync extends eqLogic {
     public static function updateEqLogicVals($_eqLogic, $values) {
         # Valeurs
         log::add('MerosSync', 'debug', 'updateEqLogicVals: Update eqLogic values');
-        foreach ($values as $key => $value) {
+        foreach ($values as $key => $value)
+        {
             if( $key == 'switch' )
             {
               log::add('MerosSync', 'debug', 'updateEqLogicVals:');
@@ -167,7 +168,9 @@ class MerosSync extends eqLogic {
                 $_eqLogic->checkAndUpdateCmd('onoff_'.$id, intval($state));
                 log::add('MerosSync', 'debug', 'syncMeross: - Mise à jour onoff_'.$id.' : '.$state);
               }
-            } else {
+            }
+            else
+            {
                 if( $key == "capacity" )
                 {
                     if( $value == 1 || $value == 5 )
@@ -617,7 +620,9 @@ class MerosSync extends eqLogic {
             $cmd->save();
             $order++;
         }
-        if( $_device['isrgb'] ) {
+
+        if( $_device['isrgb'] )
+        {
             # Color information
             $cmd = $_eqLogic->getCmd(null, 'rgbval');
             if (!is_object($cmd)) {
@@ -687,8 +692,97 @@ class MerosSync extends eqLogic {
             $order++;
         }
 
+        #Roller
+        if( $_device['roller'] )
+        {
+            # Roller UP
+            $cmd = $_eqLogic->getCmd(null, 'up_0');
+            if (!is_object($cmd))
+            {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=up_0');
+                $cmd = new MerosSyncCmd();
+                $cmd->setType('action');
+                $cmd->setSubType('other');
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setGeneric_type('FLAP_UP');
+                $cmd->setIsVisible(1);
+                $cmd->setLogicalId('up_0');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setName('Monter');
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=up_0');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
+            # Roller down
+            $cmd = $_eqLogic->getCmd(null, 'down_0');
+            if (!is_object($cmd)) {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=down_0');
+                $cmd = new MerosSyncCmd();
+                $cmd->setType('action');
+                $cmd->setSubType('other');
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setGeneric_type('FLAP_DOWN');
+                $cmd->setIsVisible(1);
+                $cmd->setLogicalId('down_0');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setName('Descendre');
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=down_0');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
+            # Roller stop
+            $cmd = $_eqLogic->getCmd(null, 'stop_0');
+            if (!is_object($cmd)) {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=stop_0');
+                $cmd = new MerosSyncCmd();
+                $cmd->setType('action');
+                $cmd->setSubType('other');
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setGeneric_type('FLAP_STOP');
+                $cmd->setIsVisible(1);
+                $cmd->setLogicalId('stop_0');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setName('STOP');
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=stop_0');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
+            # Roller information
+            $cmd = $_eqLogic->getCmd(null, 'position');
+            if (!is_object($cmd)) {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=position');
+                $cmd = new MerosSyncCmd();
+                $cmd->setName('Etat');
+                $cmd->setType('info');
+                $cmd->setSubType('numeric');
+                $cmd->setGeneric_type('FLAP_STATE');
+                $cmd->setIsVisible(1);
+                $cmd->setIsHistorized(0);
+                $cmd->setEventOnly(1);
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setLogicalId('position');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=position');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
+        }
+
         # Spray Mode NOT HANDLE
-        if( $_device['spray'] ) {
+        if( $_device['spray'] )
+        {
             # Spray OFF
             $cmd = $_eqLogic->getCmd(null, 'spray_0');
             if (!is_object($cmd)) {
@@ -1001,6 +1095,30 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
+                break;
+              case "up":
+                $res = MerosSync::callMeross('goUp');
+                log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
+                if ($res['result'] != -1)
+                {
+                  $eqLogic->checkAndUpdateCmd('position', $res['result']);
+                }
+                break;
+              case "down":
+                $res = MerosSync::callMeross('goDown');
+                log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
+                if ($res['result'] != -1)
+                {
+                  $eqLogic->checkAndUpdateCmd('position', $res['result']);
+                }
+                break;
+              case "stop":
+                $res = MerosSync::callMeross('stop');
+                log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
+                if ($res['result'] != -1)
+                {
+                  $eqLogic->checkAndUpdateCmd('position', $res['result']);
+                }
                 break;
             default:
                 log::add('MerosSync','debug','action: Action='.$action.' '.__('non implementée.', __FILE__));

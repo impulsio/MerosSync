@@ -1,3 +1,6 @@
+# 0.8
+- Add roller manager
+
 # 0.7
 - Add light manager
 

@@ -22,6 +22,7 @@ from meross_iot.model.http.exception import TooManyTokensException, TokenExpired
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
 from meross_iot.controller.mixins.light import LightMixin
 from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatState
+from meross_iot.controller.mixins.roller_shutter import RollerShutterTimerMixin
 from meross_iot.utilities.misc import current_version
 
 http_api_client = 0
@@ -237,6 +238,75 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return 1
 
+    def goUp(self, uuid):
+        logger.debug("goUp called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aMove(uuid,1))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("goUp Failed: " + str(sys.exc_info()[1]))
+
+    def goDown(self, uuid):
+        logger.debug("goDown called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aMove(uuid,-1))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("goDown Failed: " + str(sys.exc_info()[1]))
+
+    def stop(self, uuid):
+        logger.debug("stop called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aMove(uuid,0))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("stop Failed: " + str(sys.exc_info()[1]))
+
+    async def aMove(uuid, sens):
+        logger.debug("aMove called "+sens)
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aMove connected")
+        try:
+            logger.debug("aMove " + uuid)
+            rollers = manager.find_devices(device_uuids="["+uuid+"]", device_class=RollerShutterTimerMixin)
+            if len(rollers)>0:
+                logger.debug("aMove - This is a roller")
+                dev = rollers[0]
+                await dev.async_update()
+                if sens==0:
+                    logger.debug("aMove - stop")
+                    await dev.async_stop(0)
+                elif sens==-1:
+                    logger.debug("aMove - goDown")
+                    await dev.async_close(0)
+                elif sens==1:
+                    logger.debug("aMove - goUp")
+                    await dev.async_open(0)
+                await closeConnection()
+            else:
+                return -1
+        except:
+            logger.error("aSetLumi - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return -1
+
     def setLumi(self, uuid, lumi_int):
         logger.debug("setLumi called")
         try:
@@ -427,6 +497,18 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                         d['values']['conso_totale'] = float(c['total_consumption_kwh'])
         else:
             d['conso'] = False
+
+
+        #Récupération des commande volets roulants
+        rollers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=RollerShutterTimerMixin)
+        if len(rollers) > 0:
+            logger.debug("RollerShutterTimerMixin")
+            roller = roller[0]
+            position = await roller.get_position(0)
+            d['roller'] = True
+            d['values']['position'] = position
+        else:
+            d['roller'] = False
 
         #Récupération des thermostats
         therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)
@@ -661,7 +743,9 @@ async def initConnection(args):
     password = args.mpswd.encode().decode('unicode-escape')
     logger.debug("Connecting with user " + args.muser +" & password "+password)
     try:
-        http_api_client = await MerossHttpClient.async_from_user_password(args.muser, password)
+        http_api_client = await MerossHttpClient.async_from_user_password(api_base_url='https://iotx-eu.meross.com',
+                                                                        email=args.muser,
+                                                                        password=password)
         logger.debug("Connected with user " + args.muser)
         # Register event handlers for the manager...
         manager = MerossManager(http_client=http_api_client)
@@ -722,6 +806,17 @@ meross_root_logger.propagate = False
 meross_root_logger.debug('Test logger merossIOT')
 
 logger.info('Current version is : ' + current_version())
+f = open('/var/www/html/plugins/MerosSync/resources/meross-iot_version.txt', 'r')
+target_version=f.readline().strip('\n')
+f.close()
+
+if (target_version != current_version()):
+    logger.error("La version isntallée "+current_version()+" ne correspond pas à la version attendue : "+target_version+". Merci d'installer les dépendances.")
+    pid = str(os.getpid())
+    logger.debug("Ecriture du PID " + pid + " dans " + str(args.errorfile))
+    with open(args.errorfile, 'w') as fp:
+        fp.write("%s\n" % pid)
+    sys.exit()
 
 logger.info('Start MerossIOTd')
 logger.info('Log level : {}'.format(args.loglevel))

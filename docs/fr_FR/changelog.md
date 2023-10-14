@@ -1,3 +1,6 @@
+# 0.8
+- Ajout de la gestion des volets roulants
+
 # 0.7
 - Ajout de la gestion des lumières
 
