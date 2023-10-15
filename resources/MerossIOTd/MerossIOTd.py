@@ -553,6 +553,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         if len(diffs) > 0:
             logger.debug("RollerShutterTimerMixin")
             diff = diffs[0]
+            await diff.async_update()
             spray = await diff.get_current_spray_mode(0)
             d['spray'] = True
             d['values']['spray'] = spray
