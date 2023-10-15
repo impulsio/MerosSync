@@ -542,7 +542,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.debug("RollerShutterTimerMixin")
             roller = rollers[0]
             await roller.async_update()
-            position = await roller.get_position(0)
+            position = roller.get_position(0)
             d['roller'] = True
             d['values']['position'] = position
         else:
@@ -565,6 +565,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         if len(therms) > 0:
             logger.debug("ThermostatModeMixin")
             dev = therms[0]
+            await dev.async_update()
             therm=dev.get_thermostat_state()
             d['tempe']=True
             d['tempval']=therm.target_temperature_celsius
