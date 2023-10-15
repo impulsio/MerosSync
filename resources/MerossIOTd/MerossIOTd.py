@@ -541,6 +541,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         if len(rollers) > 0:
             logger.debug("RollerShutterTimerMixin")
             roller = rollers[0]
+            await roller.async_update()
             position = await roller.get_position(0)
             d['roller'] = True
             d['values']['position'] = position
