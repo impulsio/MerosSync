@@ -780,7 +780,7 @@ class MerosSync extends eqLogic {
             $order++;
         }
 
-        # Spray Mode NOT HANDLE
+        # Spray Mode
         if( $_device['spray'] )
         {
             # Spray OFF
@@ -795,7 +795,7 @@ class MerosSync extends eqLogic {
                 $cmd->setIsVisible(1);
                 $cmd->setLogicalId('spray_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setName(__('Arrêt', __FILE__));
+                $cmd->setName('Mode Léger');
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_0');
             }
@@ -814,7 +814,7 @@ class MerosSync extends eqLogic {
                 $cmd->setIsVisible(1);
                 $cmd->setLogicalId('spray_1');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setName(__('Continu', __FILE__));
+                $cmd->setName('Mode Fort');
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_1');
             }
@@ -833,7 +833,7 @@ class MerosSync extends eqLogic {
                 $cmd->setIsVisible(1);
                 $cmd->setLogicalId('spray_2');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setName(__('Intermittent', __FILE__));
+                $cmd->setName('Arrêt');
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_2');
             }
@@ -1088,7 +1088,7 @@ class MerosSyncCmd extends cmd {
                 log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' ('.$rgb.'): '.$res['result']);
                 break;
             case "spray":
-                $res = MerosSync::callMeross('setSpray', [$eqLogic->getLogicalId(), $channel]);
+                $res = MerosSync::callMeross('setSpray', $channel);
                 log::add('MerosSync', 'debug', 'setSpray: '.json_encode($res['result']));
                 break;
             case "refresh":

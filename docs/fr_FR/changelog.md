@@ -1,5 +1,6 @@
 # 0.8
 - Ajout de la gestion des volets roulants
+- Ajout de la gestion du diffuseur d'huiles essentielles
 
 # 0.7
 - Ajout de la gestion des lumières

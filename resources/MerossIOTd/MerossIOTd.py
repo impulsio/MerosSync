@@ -15,14 +15,15 @@ from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
 from meross_iot.model.enums import OnlineStatus, ThermostatMode
+from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
-from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
 from meross_iot.controller.mixins.light import LightMixin
 from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatState
 from meross_iot.controller.mixins.roller_shutter import RollerShutterTimerMixin
+from meross_iot.controller.mixins.diffuser_spray import DiffuserSprayMixin
 from meross_iot.utilities.misc import current_version
 
 http_api_client = 0
@@ -307,6 +308,43 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return -1
 
+    def setSpray(self, uuid, mode):
+        logger.debug("setSpray called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetSpray(uuid, mode))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setSpray Failed: " + str(sys.exc_info()[1]))
+
+    async def aSetSpray(self, uuid, mode):
+        logger.debug("aSetSpray called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetSpray connected")
+        try:
+            logger.debug("aSetSpray " + uuid)
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserSprayMixin)
+            if len(diffs)>0:
+                logger.debug("aSetSpray - This is a diffuser spray")
+                dev = diffs[0]
+                await dev.async_update()
+                logger.debug("aSetSpray - We set the mode")
+                await dev.async_set_spray_mode(mode,0)
+                await closeConnection()
+                return "C'est fait - nouveau mode : "+ str(mode)
+            else:
+                return "Ce n'est pas un diffuseur"
+        except:
+            logger.error("aSetSpray - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return "Une erreur est survenue"
+
     def setLumi(self, uuid, lumi_int):
         logger.debug("setLumi called")
         try:
@@ -498,17 +536,27 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         else:
             d['conso'] = False
 
-
         #Récupération des commande volets roulants
         rollers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=RollerShutterTimerMixin)
         if len(rollers) > 0:
             logger.debug("RollerShutterTimerMixin")
-            roller = roller[0]
+            roller = rollers[0]
             position = await roller.get_position(0)
             d['roller'] = True
             d['values']['position'] = position
         else:
             d['roller'] = False
+
+        #Récupération des diffuseurs huiles essentielles
+        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserSprayMixin)
+        if len(diffs) > 0:
+            logger.debug("RollerShutterTimerMixin")
+            diff = diffs[0]
+            spray = await diff.get_current_spray_mode(0)
+            d['spray'] = True
+            d['values']['spray'] = spray
+        else:
+            d['spray'] = False
 
         #Récupération des thermostats
         therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)

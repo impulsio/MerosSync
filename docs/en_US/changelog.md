@@ -1,5 +1,6 @@
 # 0.8
 - Add roller manager
+- Add oil diffuser
 
 # 0.7
 - Add light manager
