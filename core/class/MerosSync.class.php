@@ -1097,7 +1097,7 @@ class MerosSyncCmd extends cmd {
                 MerosSync::syncOneMeross($res['result']);
                 break;
               case "up":
-                $res = MerosSync::callMeross('goUp');
+                $res = MerosSync::callMeross('goUp', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
                 if ($res['result'] != -1)
                 {
@@ -1105,7 +1105,7 @@ class MerosSyncCmd extends cmd {
                 }
                 break;
               case "down":
-                $res = MerosSync::callMeross('goDown');
+                $res = MerosSync::callMeross('goDown', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
                 if ($res['result'] != -1)
                 {
@@ -1113,7 +1113,7 @@ class MerosSyncCmd extends cmd {
                 }
                 break;
               case "stop":
-                $res = MerosSync::callMeross('stop');
+                $res = MerosSync::callMeross('stop', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
                 if ($res['result'] != -1)
                 {
