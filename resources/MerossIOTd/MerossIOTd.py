@@ -278,7 +278,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         except:
             logger.error("stop Failed: " + str(sys.exc_info()[1]))
 
-    async def aMove(uuid, sens):
+    async def aMove(self, uuid, sens):
         logger.debug("aMove called "+sens)
         global manager
         global args
