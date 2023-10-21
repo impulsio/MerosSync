@@ -279,13 +279,13 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.error("stop Failed: " + str(sys.exc_info()[1]))
 
     async def aMove(self, uuid, sens):
-        logger.debug("aMove called "+sens)
+        logger.debug("aMove called "+str(sens))
         global manager
         global args
         await initConnection(args)
         logger.debug("aMove connected")
         try:
-            logger.debug("aMove " + uuid)
+            logger.debug("aMove " + str(uuid))
             rollers = manager.find_devices(device_uuids="["+uuid+"]", device_class=RollerShutterTimerMixin)
             if len(rollers)>0:
                 logger.debug("aMove - This is a roller")
