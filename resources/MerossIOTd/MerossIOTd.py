@@ -328,7 +328,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await initConnection(args)
         logger.debug("aSetSpray connected")
         try:
-            logger.debug("aSetSpray " + uuid)
+            logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(mode))
             diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserSprayMixin)
             if len(diffs)>0:
                 logger.debug("aSetSpray - This is a diffuser spray")
@@ -551,12 +551,18 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         #Récupération des diffuseurs huiles essentielles
         diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserSprayMixin)
         if len(diffs) > 0:
-            logger.debug("RollerShutterTimerMixin")
+            logger.debug("DiffuserSprayMixin")
             diff = diffs[0]
             await diff.async_update()
-            spray = await diff.get_current_spray_mode(0)
+            spray = diff.get_current_spray_mode(0)
             d['spray'] = True
-            d['values']['spray'] = spray
+            d['values']['spray'] = "Mode "+str(spray)
+            if spray == 0:
+                d['values']['spray'] = "Mode léger"
+            elif spray == 1:
+                d['values']['spray'] = "Mode fort"
+            elif spray == 2:
+                d['values']['spray'] = "Arrêt"
         else:
             d['spray'] = False
 

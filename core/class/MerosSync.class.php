@@ -1088,7 +1088,7 @@ class MerosSyncCmd extends cmd {
                 log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' ('.$rgb.'): '.$res['result']);
                 break;
             case "spray":
-                $res = MerosSync::callMeross('setSpray', $channel);
+                $res = MerosSync::callMeross('setSpray', [$eqLogic->getLogicalId()], $action);
                 log::add('MerosSync', 'debug', 'setSpray: '.json_encode($res['result']));
                 break;
             case "refresh":
