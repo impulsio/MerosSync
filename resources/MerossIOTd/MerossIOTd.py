@@ -24,6 +24,7 @@ from meross_iot.controller.mixins.light import LightMixin
 from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatState
 from meross_iot.controller.mixins.roller_shutter import RollerShutterTimerMixin
 from meross_iot.controller.mixins.diffuser_spray import DiffuserSprayMixin
+from meross_iot.controller.mixins.diffuser_light import DiffuserLightMixin
 from meross_iot.utilities.misc import current_version
 
 http_api_client = 0
@@ -304,7 +305,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             else:
                 return -1
         except:
-            logger.error("aSetLumi - Failed: " + str(sys.exc_info()[1]))
+            logger.error("aMove - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return -1
 
@@ -376,7 +377,17 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
             else:
-                return "Ce n'est pas une lampe"
+                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+                if len(diffs)>0:
+                    logger.debug("aSetLumi - This is a diffuser light")
+                    dev = diffs[0]
+                    await dev.async_update()
+                    logger.debug("aSetLumi - We set the luminance")
+                    await dev.async_set_light_mode(channel=0,brightness=lumi_int)
+                    await closeConnection()
+                    return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
+                else:
+                    return "Nous ne savons pas gérer cette action"
         except:
             logger.error("aSetLumi - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
@@ -450,7 +461,17 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
             else:
-                return "Ce n'est pas une lampe"
+                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+                if len(diffs)>0:
+                    logger.debug("aSetRGB - This is a diffuser light")
+                    dev = diffs[0]
+                    await dev.async_update()
+                    logger.debug("aSetRGB - We set the color")
+                    await dev.async_set_light_mode(channel=0,rgb=hex_to_rgb(rgb))
+                    await closeConnection()
+                    return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
+                else:
+                    return "Nous ne savons pas gérer cette action"
         except:
             logger.error("aSetRGB - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
@@ -565,6 +586,36 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['spray'] = "Arrêt"
         else:
             d['spray'] = False
+
+        #Récupération des diffuseurs huiles essentielles - partie lumière
+        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserLightMixin)
+        if len(diffs) > 0:
+            logger.debug("DiffuserLightMixin")
+            diff = diffs[0]
+            await diff.async_update()
+            isOn = diff.get_light_is_on(0)
+
+            d['lumin'] = True
+            d['values']['lumival'] = diff.get_light_brightness(0)
+
+            d['isrgb'] = True
+            d['values']['rgbval'] = rgb_to_hex(diff.get_light_rgb_color(0))
+
+            lightmode = diff.get_light_mode(0)
+            d['lightmode'] = True
+            d['values']['lightmode']="Mode "+str(lightmode)
+            if lightMode == 0:
+                d['values']['lightmode']="Mode multicolor"
+            elif lightMode == 1:
+                d['values']['lightmode']="Mode fixe"
+            elif lightMode == 2:
+                d['values']['lightmode']="Mode intensité"
+            d['modes'][0]='Mode multicolor'
+            d['modes'][1]='Mode fixe'
+            d['modes'][2]='Mode intensité'
+
+        else:
+            d['lumin'] = False
 
         #Récupération des thermostats
         therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)
