@@ -494,6 +494,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             'ip': device.lan_ip
         })
         d['values'] = {}
+        d['modes'] = {}
         switch = []
 
         #Récupération des lumières
