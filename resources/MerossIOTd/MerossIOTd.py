@@ -604,11 +604,11 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             lightmode = diff.get_light_mode(0)
             d['lightmode'] = True
             d['values']['lightmode']="Mode "+str(lightmode)
-            if lightMode == 0:
+            if lightmode == 0:
                 d['values']['lightmode']="Mode multicolor"
-            elif lightMode == 1:
+            elif lightmode == 1:
                 d['values']['lightmode']="Mode fixe"
-            elif lightMode == 2:
+            elif lightmode == 2:
                 d['values']['lightmode']="Mode intensité"
             d['modes'][0]='Mode multicolor'
             d['modes'][1]='Mode fixe'
