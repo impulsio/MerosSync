@@ -872,7 +872,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName(__('Mode', __FILE__));
+                $cmd->setName('Mode');
                 $cmd->setType('info');
                 $cmd->setSubType('string');
                 $cmd->setGeneric_type('GENERIC_INFO');
