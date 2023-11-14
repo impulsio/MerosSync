@@ -675,7 +675,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lightmode');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Mode');
+                $cmd->setName('Mode lumière');
                 $cmd->setType('info');
                 $cmd->setSubType('string');
                 $cmd->setGeneric_type('GENERIC_INFO');
@@ -700,7 +700,7 @@ class MerosSync extends eqLogic {
                 if (!is_object($cmd)) {
                     log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=setLightmode_'.$key);
                     $cmd = new MerosSyncCmd();
-                    $cmd->setName('Mode');
+                    $cmd->setName('Mode '.$value);
                     $cmd->setType('action');
                     $cmd->setSubType('other');
                     $cmd->setIsVisible(1);
@@ -709,7 +709,6 @@ class MerosSync extends eqLogic {
                     $cmd->setTemplate('mobile', 'default');
                     $cmd->setLogicalId('setLightmode_'.$key);
                     $cmd->setEqLogic_id($_eqLogic->getId());
-                    $cmd->setName($value);
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=setLightmode_'.$key);
                 }
@@ -872,7 +871,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Mode');
+                $cmd->setName('Mode diffusion');
                 $cmd->setType('info');
                 $cmd->setSubType('string');
                 $cmd->setGeneric_type('GENERIC_INFO');
@@ -1110,8 +1109,9 @@ class MerosSyncCmd extends cmd {
                 //$cmd = $eqLogic->getCmd(null, 'lumival');
                 //$lumi = $cmd->execCmd();
                 //$rgb = hexdec($_options['color']);
+                log::add('MerosSync', 'debug', 'callSetRGB '.$_options['color'].' => '.substr($_options['color'],-6));
                 $res = MerosSync::callMeross('setRGB', [$eqLogic->getLogicalId(), substr($_options['color'],-6)]);
-                log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' ('.$rgb.'): '.$res['result']);
+                log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' : '.$res['result']);
                 break;
             case "spray":
               log::add('MerosSync', 'debug', 'call setSpray with mode '.$channel);

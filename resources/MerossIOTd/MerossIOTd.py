@@ -456,7 +456,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetRGB - This is a light")
                 dev = lights[0]
                 await dev.async_update()
-                logger.debug("aSetRGB - We set the color")
+                logger.debug("aSetRGB - We set the color "+str(rgb))
                 await dev.async_set_light_color(0,None,hex_to_rgb(rgb),None,None)
                 await closeConnection()
                 return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
@@ -466,7 +466,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     logger.debug("aSetRGB - This is a diffuser light")
                     dev = diffs[0]
                     await dev.async_update()
-                    logger.debug("aSetRGB - We set the color")
+                    logger.debug("aSetRGB - We set the color "+str(rgb))
                     await dev.async_set_light_mode(channel=0,rgb=hex_to_rgb(rgb))
                     await closeConnection()
                     return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
