@@ -346,6 +346,43 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return "Une erreur est survenue"
 
+    def setLightmode(self, uuid, mode):
+        logger.debug("setLightmode called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetLightmode(uuid, mode))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setLightmode Failed: " + str(sys.exc_info()[1]))
+
+    async def aSetLightmode(self, uuid, mode):
+        logger.debug("aSetLightmode called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetLightmode connected")
+        try:
+            logger.debug("aSetLightmode " + str(uuid) + "-  mode " + str(mode))
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+            if len(diffs)>0:
+                logger.debug("aSetLightmode - This is a diffuser light")
+                dev = diffs[0]
+                await dev.async_update()
+                logger.debug("aSetLightmode - We set the mode")
+                await dev.async_set_light_mode(channel=0,mode=mode)
+                await closeConnection()
+                return "C'est fait - nouveau mode : "+ str(mode)
+            else:
+                return "Ce n'est pas un diffuseur"
+        except:
+            logger.error("aSetLightmode - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return "Une erreur est survenue"
+
     def setLumi(self, uuid, lumi_int):
         logger.debug("setLumi called")
         try:
@@ -476,9 +513,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.error("aSetRGB - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return "Une erreur est survenue"
-
-    def setSpray(self, uuid, smode=0):
-        logger.debug("setSpray called")
 
     async def aSyncOneMeross(self, device):
         await device.async_update()

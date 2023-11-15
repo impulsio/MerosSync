@@ -696,9 +696,9 @@ class MerosSync extends eqLogic {
             {
               foreach ($_device['modes'] as $key => $value)
               {
-                $cmd = $_eqLogic->getCmd(null, 'setLightmode_'.$key);
+                $cmd = $_eqLogic->getCmd(null, 'lightmode_'.$key);
                 if (!is_object($cmd)) {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=setLightmode_'.$key);
+                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lightmode_'.$key);
                     $cmd = new MerosSyncCmd();
                     $cmd->setName('Mode '.$value);
                     $cmd->setType('action');
@@ -707,7 +707,7 @@ class MerosSync extends eqLogic {
                     $cmd->setIsHistorized(0);
                     $cmd->setTemplate('dashboard', 'default');
                     $cmd->setTemplate('mobile', 'default');
-                    $cmd->setLogicalId('setLightmode_'.$key);
+                    $cmd->setLogicalId('lightmode_'.$key);
                     $cmd->setEqLogic_id($_eqLogic->getId());
                 } else {
                     log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=setLightmode_'.$key);
@@ -1114,9 +1114,14 @@ class MerosSyncCmd extends cmd {
                 log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' : '.$res['result']);
                 break;
             case "spray":
-              log::add('MerosSync', 'debug', 'call setSpray with mode '.$channel);
+                log::add('MerosSync', 'debug', 'call setSpray with mode '.$channel);
                 $res = MerosSync::callMeross('setSpray', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setSpray: '.json_encode($res['result']));
+                break;
+            case "lightmode":
+                log::add('MerosSync', 'debug', 'call setLightMode with mode '.$channel);
+                $res = MerosSync::callMeross('setLightmode', [$eqLogic->getLogicalId(), $channel]);
+                log::add('MerosSync', 'debug', 'setLightmode: '.json_encode($res['result']));
                 break;
             case "refresh":
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
