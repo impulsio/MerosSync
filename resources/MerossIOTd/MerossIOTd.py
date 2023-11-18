@@ -14,7 +14,7 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.model.enums import OnlineStatus, ThermostatMode
+from meross_iot.model.enums import OnlineStatus, ThermostatMode, DiffuserSprayMode, DiffuserLightMode
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
