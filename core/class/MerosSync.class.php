@@ -193,6 +193,7 @@ class MerosSync extends eqLogic {
                 }
                 if( $key == "rgbval" )
                 {
+                    log::add('MerosSync', 'debug', 'syncMeross: - la couleur est '.$value);
                     $value = '#'.$value;
                 }
                 $_eqLogic->checkAndUpdateCmd($key, $value);
@@ -697,10 +698,11 @@ class MerosSync extends eqLogic {
               foreach ($_device['modes'] as $key => $value)
               {
                 $cmd = $_eqLogic->getCmd(null, 'lightmode_'.$key);
-                if (!is_object($cmd)) {
+                if (!is_object($cmd))
+                {
                     log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lightmode_'.$key);
                     $cmd = new MerosSyncCmd();
-                    $cmd->setName('Mode '.$value);
+                    $cmd->setName($value);
                     $cmd->setType('action');
                     $cmd->setSubType('other');
                     $cmd->setIsVisible(1);
@@ -709,8 +711,10 @@ class MerosSync extends eqLogic {
                     $cmd->setTemplate('mobile', 'default');
                     $cmd->setLogicalId('lightmode_'.$key);
                     $cmd->setEqLogic_id($_eqLogic->getId());
-                } else {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=setLightmode_'.$key);
+                } else
+                {
+                  $cmd->setName($value);
+                  log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=setLightmode_'.$key);
                 }
                 $cmd->setOrder($order);
                 $cmd->save();
@@ -814,6 +818,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_0');
                 $cmd = new MerosSyncCmd();
+                $cmd->setName('Mode Léger');
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -821,7 +826,6 @@ class MerosSync extends eqLogic {
                 $cmd->setIsVisible(1);
                 $cmd->setLogicalId('spray_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setName('Mode Léger');
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_0');
             }
@@ -833,6 +837,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_1');
                 $cmd = new MerosSyncCmd();
+                $cmd->setName('Mode Fort');
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -840,7 +845,6 @@ class MerosSync extends eqLogic {
                 $cmd->setIsVisible(1);
                 $cmd->setLogicalId('spray_1');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setName('Mode Fort');
             } else
             {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_1');
@@ -853,6 +857,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_2');
                 $cmd = new MerosSyncCmd();
+                $cmd->setName('Arrêt');
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -860,7 +865,6 @@ class MerosSync extends eqLogic {
                 $cmd->setIsVisible(1);
                 $cmd->setLogicalId('spray_2');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setName('Arrêt');
             } else
             {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_2');

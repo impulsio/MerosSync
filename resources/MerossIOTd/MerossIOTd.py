@@ -310,34 +310,39 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return -1
 
-    def setSpray(self, uuid, mode):
+    def setSpray(self, uuid, lemode):
         logger.debug("setSpray called")
         try:
             asyncio.set_event_loop(asyncio.new_event_loop())
             self.loop = asyncio.get_event_loop()
             try:
-                retour=self.loop.run_until_complete(self.aSetSpray(uuid, mode))
+                retour=self.loop.run_until_complete(self.aSetSpray(uuid, lemode))
             finally:
                 self.loop.close()
             return retour
         except:
             logger.error("setSpray Failed: " + str(sys.exc_info()[1]))
 
-    async def aSetSpray(self, uuid, mode):
+    async def aSetSpray(self, uuid, lemode):
         logger.debug("aSetSpray called")
         global manager
         global args
         await initConnection(args)
         logger.debug("aSetSpray connected")
         try:
-            logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(mode))
+            logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(lemode))
             diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserSprayMixin)
             if len(diffs)>0:
                 logger.debug("aSetSpray - This is a diffuser spray")
                 dev = diffs[0]
                 await dev.async_update()
                 logger.debug("aSetSpray - We set the mode")
-                await dev.async_set_spray_mode(mode,0)
+                if lemode==0:
+                    await dev.async_set_spray_mode(mode=DiffuserSprayMode.LIGHT,channel=0)
+                elif lemode==1:
+                    await dev.async_set_spray_mode(mode=DiffuserSprayMode.STRONG,channel=0)
+                elif lemode==2:
+                    await dev.async_set_spray_mode(mode=DiffuserSprayMode.OFF,channel=0)
                 await closeConnection()
                 return 1
             else:
@@ -348,34 +353,39 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return -1
 
-    def setLightmode(self, uuid, mode):
+    def setLightmode(self, uuid, lemode):
         logger.debug("setLightmode called")
         try:
             asyncio.set_event_loop(asyncio.new_event_loop())
             self.loop = asyncio.get_event_loop()
             try:
-                retour=self.loop.run_until_complete(self.aSetLightmode(uuid, mode))
+                retour=self.loop.run_until_complete(self.aSetLightmode(uuid, lemode))
             finally:
                 self.loop.close()
             return retour
         except:
             logger.error("setLightmode Failed: " + str(sys.exc_info()[1]))
 
-    async def aSetLightmode(self, uuid, mode):
+    async def aSetLightmode(self, uuid, lemode):
         logger.debug("aSetLightmode called")
         global manager
         global args
         await initConnection(args)
         logger.debug("aSetLightmode connected")
         try:
-            logger.debug("aSetLightmode " + str(uuid) + "-  mode " + str(mode))
+            logger.debug("aSetLightmode " + str(uuid) + "-  mode " + str(lemode))
             diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(diffs)>0:
                 logger.debug("aSetLightmode - This is a diffuser light")
                 dev = diffs[0]
                 await dev.async_update()
                 logger.debug("aSetLightmode - We set the mode")
-                await dev.async_set_light_mode(channel=0,mode=mode)
+                if lemode==0:
+                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.ROTATING_COLORS, onoff=True)
+                elif lemode==1:
+                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_RGB, onoff=True)
+                elif lemode==2:
+                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_LUMINANCE, onoff=True)
                 await closeConnection()
                 return 1
             else:
@@ -413,7 +423,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 dev = lights[0]
                 await dev.async_update()
                 logger.debug("aSetLumi - We set the luminance")
-                await dev.async_set_light_color(0,None,None,lumi_int,None)
+                await dev.async_set_light_color(channel=0,onoff=True,brightness=lumi_int)
                 await closeConnection()
                 return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
             else:
@@ -423,7 +433,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     dev = diffs[0]
                     await dev.async_update()
                     logger.debug("aSetLumi - We set the luminance")
-                    await dev.async_set_light_mode(channel=0,brightness=lumi_int)
+                    await dev.async_set_light_mode(channel=0,onoff=True,brightness=lumi_int, mode=DiffuserLightMode.FIXED_LUMINANCE)
                     await closeConnection()
                     return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
                 else:
@@ -507,7 +517,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     dev = diffs[0]
                     await dev.async_update()
                     logger.debug("aSetRGB - We set the color "+str(rgb))
-                    await dev.async_set_light_mode(channel=0,rgb=hex_to_rgb(rgb))
+                    await dev.async_set_light_mode(channel=0, rgb=hex_to_rgb(rgb), onoff=True, mode=DiffuserLightMode.FIXED_RGB)
                     await closeConnection()
                     return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
                 else:
@@ -644,11 +654,11 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             lightmode = diff.get_light_mode(0)
             d['lightmode'] = True
             d['values']['lightmode']="Mode "+str(lightmode)
-            if lightmode == 0:
+            if lightmode == DiffuserLightMode.ROTATING_COLORS:
                 d['values']['lightmode']="Mode multicolor"
-            elif lightmode == 1:
+            elif lightmode == DiffuserLightMode.FIXED_RGB:
                 d['values']['lightmode']="Mode fixe"
-            elif lightmode == 2:
+            elif lightmode == DiffuserLightMode.FIXED_LUMINANCE:
                 d['values']['lightmode']="Mode intensité"
             d['modes'][0]='Mode multicolor'
             d['modes'][1]='Mode fixe'
