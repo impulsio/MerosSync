@@ -302,6 +302,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     logger.debug("aMove - goUp")
                     await dev.async_open(0)
                 await closeConnection()
+                return 1
             else:
                 return -1
         except:
@@ -338,13 +339,14 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetSpray - We set the mode")
                 await dev.async_set_spray_mode(mode,0)
                 await closeConnection()
-                return "C'est fait - nouveau mode : "+ str(mode)
+                return 1
             else:
-                return "Ce n'est pas un diffuseur"
+                logger.debug("aSetSpray - Not a diffuser spray")
+                return -1
         except:
             logger.error("aSetSpray - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
-        return "Une erreur est survenue"
+        return -1
 
     def setLightmode(self, uuid, mode):
         logger.debug("setLightmode called")
@@ -375,13 +377,14 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetLightmode - We set the mode")
                 await dev.async_set_light_mode(channel=0,mode=mode)
                 await closeConnection()
-                return "C'est fait - nouveau mode : "+ str(mode)
+                return 1
             else:
-                return "Ce n'est pas un diffuseur"
+                logger.debug("aSetLightmode - Not a diffuser light")
+                return -1
         except:
             logger.error("aSetLightmode - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
-        return "Une erreur est survenue"
+        return -1
 
     def setLumi(self, uuid, lumi_int):
         logger.debug("setLumi called")
@@ -636,6 +639,8 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['isrgb'] = True
             d['values']['rgbval'] = rgb_to_hex(diff.get_light_rgb_color(0))
 
+            logger.debug("DiffuserLightMixin - " + str(d['values']['rgbval']) + " - " + str(d['values']['lumival']))
+
             lightmode = diff.get_light_mode(0)
             d['lightmode'] = True
             d['values']['lightmode']="Mode "+str(lightmode)
@@ -884,7 +889,7 @@ async def initConnection(args):
     global connected
     # Initiates the Meross Cloud Manager. This is in charge of handling the communication with the remote endpoint
     password = args.mpswd.encode().decode('unicode-escape')
-    logger.debug("Connecting with user " + args.muser +" & password "+password)
+    logger.debug("Connecting with user " + args.muser)
     try:
         http_api_client = await MerossHttpClient.async_from_user_password(api_base_url='https://iotx-eu.meross.com',
                                                                         email=args.muser,

@@ -841,7 +841,8 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('spray_1');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('Mode Fort');
-            } else {
+            } else
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_1');
             }
             $cmd->setOrder($order);
@@ -860,7 +861,8 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('spray_2');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('Arrêt');
-            } else {
+            } else
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_2');
             }
             $cmd->setOrder($order);
@@ -868,7 +870,8 @@ class MerosSync extends eqLogic {
             $order++;
             # Spray information
             $cmd = $_eqLogic->getCmd(null, 'spray');
-            if (!is_object($cmd)) {
+            if (!is_object($cmd))
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray');
                 $cmd = new MerosSyncCmd();
                 $cmd->setName('Mode diffusion');
@@ -881,7 +884,8 @@ class MerosSync extends eqLogic {
                 $cmd->setTemplate('mobile', 'default');
                 $cmd->setLogicalId('spray');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-            } else {
+            } else
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray');
             }
             $cmd->setOrder($order);
