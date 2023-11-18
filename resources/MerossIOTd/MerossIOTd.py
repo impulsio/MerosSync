@@ -642,11 +642,11 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             spray = diff.get_current_spray_mode(0)
             d['spray'] = True
             d['values']['spray'] = "Mode "+str(spray)
-            if spray == 0:
+            if spray == DiffuserSprayMode.LIGHT:
                 d['values']['spray'] = "Mode léger"
-            elif spray == 1:
+            elif spray == DiffuserSprayMode.STRONG:
                 d['values']['spray'] = "Mode fort"
-            elif spray == 2:
+            elif spray == DiffuserSprayMode.OFF:
                 d['values']['spray'] = "Arrêt"
         else:
             d['spray'] = False
