@@ -818,7 +818,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_0');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Mode Léger');
+                $cmd->setName('Diffusion légère');
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -837,7 +837,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_1');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Mode Fort');
+                $cmd->setName('Diffusion forte');
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');
@@ -857,7 +857,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_2');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Arrêt');
+                $cmd->setName('Arrêt diffuseur');
                 $cmd->setType('action');
                 $cmd->setSubType('other');
                 $cmd->setTemplate('dashboard', 'default');

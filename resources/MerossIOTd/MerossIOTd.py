@@ -165,12 +165,20 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         try:
             logger.debug("aSetOn " + uuid)
             openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(openers)>0:
                 logger.debug("aSetOn - Garage door found")
                 dev = openers[0]
                 await dev.async_update()
                 logger.debug("aSetOn - We open the door")
                 await dev.async_open(channel)
+                await closeConnection()
+                return 1
+            elif len(diffs)>0:
+                logger.debug("aSetOn - Diffuser Light")
+                dev = diffs[0]
+                await dev.async_update()
+                await dev.async_set_light_mode(channel=0,onoff=True)
                 await closeConnection()
                 return 1
             else:
@@ -214,6 +222,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         try:
             logger.debug("aSetOff " + uuid)
             openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(openers)>0:
                 logger.debug("aSetOff - Garage door found")
                 dev = openers[0]
@@ -222,6 +231,13 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await dev.async_close(channel)
                 await closeConnection()
                 return 0
+            elif len(diffs)>0:
+                logger.debug("aSetOn - Diffuser Light")
+                dev = diffs[0]
+                await dev.async_update()
+                await dev.async_set_light_mode(channel=0,onoff=False)
+                await closeConnection()
+                return 1
             else:
                 plugs = manager.find_devices(device_uuids="["+uuid+"]")
                 if len(plugs) < 1:
@@ -641,7 +657,16 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.debug("DiffuserLightMixin")
             diff = diffs[0]
             await diff.async_update()
-            isOn = diff.get_light_is_on(0)
+
+            d['famille'] = 'GenericBulb'
+            onoff = []
+            onoff.append('Etat')
+            isOn=0
+            if diff.get_light_is_on(0):
+                isOn=1
+            switch.append(isOn)
+            d['onoff'] = onoff
+            d['values']['switch'] = switch
 
             d['lumin'] = True
             d['values']['lumival'] = diff.get_light_brightness(0)
