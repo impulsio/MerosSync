@@ -237,7 +237,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await dev.async_update()
                 await dev.async_set_light_mode(channel=0,onoff=False)
                 await closeConnection()
-                return 1
+                return 0
             else:
                 plugs = manager.find_devices(device_uuids="["+uuid+"]")
                 if len(plugs) < 1:
@@ -401,7 +401,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 elif lemode==1:
                     await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_RGB, onoff=True)
                 elif lemode==2:
-                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_LUMINANCE, onoff=True)
+                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_LUMINANCE, brightness=100, onoff=True)
                 await closeConnection()
                 return 1
             else:

@@ -194,7 +194,6 @@ class MerosSync extends eqLogic {
                 if( $key == "rgbval" )
                 {
                     log::add('MerosSync', 'debug', 'syncMeross: - la couleur est '.$value);
-                    $value = '#'.$value;
                 }
                 $_eqLogic->checkAndUpdateCmd($key, $value);
             }
@@ -549,7 +548,7 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lumiset');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName(__('Luminosité', __FILE__));
+                $cmd->setName('Luminosité');
                 $cmd->setType('action');
                 $cmd->setSubType('slider');
                 $cmd->setGeneric_type('LIGHT_SLIDER');
@@ -1106,6 +1105,9 @@ class MerosSyncCmd extends cmd {
             case "lumiset":
                 $res = MerosSync::callMeross('setLumi', [$eqLogic->getLogicalId(), $_options['slider']]);
                 log::add('MerosSync', 'debug', 'setLumi '.$_options['slider'].': '.$res['result']);
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             case "tempset":
                 //$cmd = $eqLogic->getCmd(null, 'lumival');
@@ -1114,22 +1116,28 @@ class MerosSyncCmd extends cmd {
                 log::add('MerosSync', 'debug', 'setTemp '.$_options['slider'].': '.$res['result']);
                 break;
             case "rgbset":
-                //$cmd = $eqLogic->getCmd(null, 'lumival');
-                //$lumi = $cmd->execCmd();
-                //$rgb = hexdec($_options['color']);
                 log::add('MerosSync', 'debug', 'callSetRGB '.$_options['color'].' => '.substr($_options['color'],-6));
                 $res = MerosSync::callMeross('setRGB', [$eqLogic->getLogicalId(), substr($_options['color'],-6)]);
                 log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' : '.$res['result']);
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             case "spray":
                 log::add('MerosSync', 'debug', 'call setSpray with mode '.$channel);
                 $res = MerosSync::callMeross('setSpray', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setSpray: '.json_encode($res['result']));
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             case "lightmode":
                 log::add('MerosSync', 'debug', 'call setLightMode with mode '.$channel);
                 $res = MerosSync::callMeross('setLightmode', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setLightmode: '.json_encode($res['result']));
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             case "refresh":
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
