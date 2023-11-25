@@ -352,13 +352,17 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetSpray - This is a diffuser spray")
                 dev = diffs[0]
                 await dev.async_update()
-                logger.debug("aSetSpray - We set the mode")
-                if lemode==0:
+                if str(lemode)=="0":
+                    logger.debug("aSetSpray - We set the mode light")
                     await dev.async_set_spray_mode(mode=DiffuserSprayMode.LIGHT,channel=0)
-                elif lemode==1:
+                elif str(lemode)=="1":
+                    logger.debug("aSetSpray - We set the mode strong")
                     await dev.async_set_spray_mode(mode=DiffuserSprayMode.STRONG,channel=0)
-                elif lemode==2:
+                elif str(lemode)=="2":
+                    logger.debug("aSetSpray - We set the mode off")
                     await dev.async_set_spray_mode(mode=DiffuserSprayMode.OFF,channel=0)
+                else:
+                    logger.debug("aSetSpray - We set the no mode")
                 await closeConnection()
                 return 1
             else:
@@ -395,13 +399,17 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetLightmode - This is a diffuser light")
                 dev = diffs[0]
                 await dev.async_update()
-                logger.debug("aSetLightmode - We set the mode")
-                if lemode==0:
+                if str(lemode)=="0":
+                    logger.debug("aSetLightmode - We set the mode rotating colors")
                     await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.ROTATING_COLORS, onoff=True)
-                elif lemode==1:
+                elif str(lemode)=="1":
+                    logger.debug("aSetLightmode - We set the mode fixed rgb")
                     await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_RGB, onoff=True)
-                elif lemode==2:
+                elif str(lemode)=="2":
+                    logger.debug("aSetLightmode - We set the mode fixed luminance")
                     await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_LUMINANCE, brightness=100, onoff=True)
+                else:
+                    logger.debug("aSetLightmode - We set the no mode")
                 await closeConnection()
                 return 1
             else:
