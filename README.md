@@ -12,10 +12,11 @@ Plugin jeedom permettant de contrôler les équipements Meross.
 - Synchronisation toutes les 10 minutes (pour éviter)
 
 # Equipements compatbiles :
-![MOD150](desktop/images/mod150.png)
-![MSS310](desktop/images/mss310.png)
-![MSS620](desktop/images/mss620.png)
-![MSG100](desktop/images/msg100.png)
+|MOD150|![MOD150](desktop/images/mod150.png | width=150)|
+|MSS310|![MSS310](desktop/images/mss310.png | width=150)|
+|MSS620|![MSS620](desktop/images/mss620.png | width=150)|
+|MSG100|![MSG100](desktop/images/msg100.png | width=150)|
+
 Pour ajouter des compatibilités : me contacter !
 
 # Documentation complète :
