@@ -16,7 +16,7 @@ Plugin jeedom permettant de contrôler les équipements Meross.
 <table>
   <tr>
     <td>MOD150</td>
-    <td>Diffuseurs huiles essentielles</td>
+    <td>Diffuseur huiles essentielles</td>
     <td><img src="desktop/images/mod150.png" width=150 /></td>
   </tr>
   <tr>
