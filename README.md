@@ -13,12 +13,24 @@ Plugin jeedom permettant de contrôler les équipements Meross.
 
 # Equipements compatbiles :
 
-| Equipement | Image |
-| ---------- | ----- |
-| MOD150 | ![MOD150](desktop/images/mod150.png | width=150) |
-| MSS310 | ![MSS310](desktop/images/mss310.png | width=150) |
-| MSS620 | ![MSS620](desktop/images/mss620.png | width=150) |
-| MSG100 | ![MSG100](desktop/images/msg100.png | width=150) |
+<table>
+  <tr>
+    <td>MOD150</td>
+    <td><img src="desktop/images/mod150.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MSS310</td>
+    <td><img src="desktop/images/mss310.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MSS620</td>
+    <td><img src="desktop/images/mss620.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MSG100</td>
+    <td><img src="desktop/images/msg100.png" width=150 /></td>
+  </tr>
+</table>
 
 Pour ajouter des compatibilités : me contacter !
 
