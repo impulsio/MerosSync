@@ -14,14 +14,17 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.model.enums import OnlineStatus, ThermostatMode
+from meross_iot.model.enums import OnlineStatus, ThermostatMode, DiffuserSprayMode, DiffuserLightMode
+from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
-from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
 from meross_iot.controller.mixins.light import LightMixin
 from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatState
+from meross_iot.controller.mixins.roller_shutter import RollerShutterTimerMixin
+from meross_iot.controller.mixins.diffuser_spray import DiffuserSprayMixin
+from meross_iot.controller.mixins.diffuser_light import DiffuserLightMixin
 from meross_iot.utilities.misc import current_version
 
 http_api_client = 0
@@ -162,12 +165,20 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         try:
             logger.debug("aSetOn " + uuid)
             openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(openers)>0:
                 logger.debug("aSetOn - Garage door found")
                 dev = openers[0]
                 await dev.async_update()
                 logger.debug("aSetOn - We open the door")
                 await dev.async_open(channel)
+                await closeConnection()
+                return 1
+            elif len(diffs)>0:
+                logger.debug("aSetOn - Diffuser Light")
+                dev = diffs[0]
+                await dev.async_update()
+                await dev.async_set_light_mode(channel=0,onoff=True)
                 await closeConnection()
                 return 1
             else:
@@ -211,12 +222,20 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         try:
             logger.debug("aSetOff " + uuid)
             openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(openers)>0:
                 logger.debug("aSetOff - Garage door found")
                 dev = openers[0]
                 await dev.async_update()
-                logger.debug("aSetOff - We close the door")
+                logger.debug("aSetOff - We close the door "+str(channel))
                 await dev.async_close(channel)
+                await closeConnection()
+                return 0
+            elif len(diffs)>0:
+                logger.debug("aSetOn - Diffuser Light")
+                dev = diffs[0]
+                await dev.async_update()
+                await dev.async_set_light_mode(channel=0,onoff=False)
                 await closeConnection()
                 return 0
             else:
@@ -236,6 +255,170 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.error("aSetOff - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return 1
+
+    def goUp(self, uuid):
+        logger.debug("goUp called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aMove(uuid,1))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("goUp Failed: " + str(sys.exc_info()[1]))
+
+    def goDown(self, uuid):
+        logger.debug("goDown called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aMove(uuid,-1))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("goDown Failed: " + str(sys.exc_info()[1]))
+
+    def stop(self, uuid):
+        logger.debug("stop called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aMove(uuid,0))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("stop Failed: " + str(sys.exc_info()[1]))
+
+    async def aMove(self, uuid, sens):
+        logger.debug("aMove called "+str(sens))
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aMove connected")
+        try:
+            logger.debug("aMove " + str(uuid))
+            rollers = manager.find_devices(device_uuids="["+uuid+"]", device_class=RollerShutterTimerMixin)
+            if len(rollers)>0:
+                logger.debug("aMove - This is a roller")
+                dev = rollers[0]
+                await dev.async_update()
+                if sens==0:
+                    logger.debug("aMove - stop")
+                    await dev.async_stop(0)
+                elif sens==-1:
+                    logger.debug("aMove - goDown")
+                    await dev.async_close(0)
+                elif sens==1:
+                    logger.debug("aMove - goUp")
+                    await dev.async_open(0)
+                await closeConnection()
+                return 1
+            else:
+                return -1
+        except:
+            logger.error("aMove - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return -1
+
+    def setSpray(self, uuid, lemode):
+        logger.debug("setSpray called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetSpray(uuid, lemode))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setSpray Failed: " + str(sys.exc_info()[1]))
+
+    async def aSetSpray(self, uuid, lemode):
+        logger.debug("aSetSpray called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetSpray connected")
+        try:
+            logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(lemode))
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserSprayMixin)
+            if len(diffs)>0:
+                logger.debug("aSetSpray - This is a diffuser spray")
+                dev = diffs[0]
+                await dev.async_update()
+                if str(lemode)=="0":
+                    logger.debug("aSetSpray - We set the mode light")
+                    await dev.async_set_spray_mode(mode=DiffuserSprayMode.LIGHT,channel=0)
+                elif str(lemode)=="1":
+                    logger.debug("aSetSpray - We set the mode strong")
+                    await dev.async_set_spray_mode(mode=DiffuserSprayMode.STRONG,channel=0)
+                elif str(lemode)=="2":
+                    logger.debug("aSetSpray - We set the mode off")
+                    await dev.async_set_spray_mode(mode=DiffuserSprayMode.OFF,channel=0)
+                else:
+                    logger.debug("aSetSpray - We set the no mode")
+                await closeConnection()
+                return 1
+            else:
+                logger.debug("aSetSpray - Not a diffuser spray")
+                return -1
+        except:
+            logger.error("aSetSpray - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return -1
+
+    def setLightmode(self, uuid, lemode):
+        logger.debug("setLightmode called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetLightmode(uuid, lemode))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setLightmode Failed: " + str(sys.exc_info()[1]))
+
+    async def aSetLightmode(self, uuid, lemode):
+        logger.debug("aSetLightmode called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetLightmode connected")
+        try:
+            logger.debug("aSetLightmode " + str(uuid) + "-  mode " + str(lemode))
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+            if len(diffs)>0:
+                logger.debug("aSetLightmode - This is a diffuser light")
+                dev = diffs[0]
+                await dev.async_update()
+                if str(lemode)=="0":
+                    logger.debug("aSetLightmode - We set the mode rotating colors")
+                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.ROTATING_COLORS, onoff=True)
+                elif str(lemode)=="1":
+                    logger.debug("aSetLightmode - We set the mode fixed rgb")
+                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_RGB, onoff=True)
+                elif str(lemode)=="2":
+                    logger.debug("aSetLightmode - We set the mode fixed luminance")
+                    await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_LUMINANCE, brightness=100, onoff=True)
+                else:
+                    logger.debug("aSetLightmode - We set the no mode")
+                await closeConnection()
+                return 1
+            else:
+                logger.debug("aSetLightmode - Not a diffuser light")
+                return -1
+        except:
+            logger.error("aSetLightmode - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return -1
 
     def setLumi(self, uuid, lumi_int):
         logger.debug("setLumi called")
@@ -264,11 +447,21 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 dev = lights[0]
                 await dev.async_update()
                 logger.debug("aSetLumi - We set the luminance")
-                await dev.async_set_light_color(0,None,None,lumi_int,None)
+                await dev.async_set_light_color(channel=0,onoff=True,brightness=lumi_int)
                 await closeConnection()
                 return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
             else:
-                return "Ce n'est pas une lampe"
+                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+                if len(diffs)>0:
+                    logger.debug("aSetLumi - This is a diffuser light")
+                    dev = diffs[0]
+                    await dev.async_update()
+                    logger.debug("aSetLumi - We set the luminance")
+                    await dev.async_set_light_mode(channel=0,onoff=True,brightness=lumi_int, mode=DiffuserLightMode.FIXED_LUMINANCE)
+                    await closeConnection()
+                    return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
+                else:
+                    return "Nous ne savons pas gérer cette action"
         except:
             logger.error("aSetLumi - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
@@ -337,19 +530,26 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("aSetRGB - This is a light")
                 dev = lights[0]
                 await dev.async_update()
-                logger.debug("aSetRGB - We set the color")
+                logger.debug("aSetRGB - We set the color "+str(rgb))
                 await dev.async_set_light_color(0,None,hex_to_rgb(rgb),None,None)
                 await closeConnection()
                 return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
             else:
-                return "Ce n'est pas une lampe"
+                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+                if len(diffs)>0:
+                    logger.debug("aSetRGB - This is a diffuser light")
+                    dev = diffs[0]
+                    await dev.async_update()
+                    logger.debug("aSetRGB - We set the color "+str(rgb))
+                    await dev.async_set_light_mode(channel=0, rgb=hex_to_rgb(rgb), onoff=True, mode=DiffuserLightMode.FIXED_RGB)
+                    await closeConnection()
+                    return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
+                else:
+                    return "Nous ne savons pas gérer cette action"
         except:
             logger.error("aSetRGB - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return "Une erreur est survenue"
-
-    def setSpray(self, uuid, smode=0):
-        logger.debug("setSpray called")
 
     async def aSyncOneMeross(self, device):
         await device.async_update()
@@ -365,6 +565,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             'ip': device.lan_ip
         })
         d['values'] = {}
+        d['modes'] = {}
         switch = []
 
         #Récupération des lumières
@@ -428,11 +629,83 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         else:
             d['conso'] = False
 
+        #Récupération des commande volets roulants
+        rollers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=RollerShutterTimerMixin)
+        if len(rollers) > 0:
+            logger.debug("RollerShutterTimerMixin")
+            roller = rollers[0]
+            await roller.async_update()
+            position = roller.get_position(0)
+            d['roller'] = True
+            d['values']['position'] = position
+        else:
+            d['roller'] = False
+
+        #Récupération des diffuseurs huiles essentielles
+        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserSprayMixin)
+        if len(diffs) > 0:
+            logger.debug("DiffuserSprayMixin")
+            diff = diffs[0]
+            await diff.async_update()
+            spray = diff.get_current_spray_mode(0)
+            d['spray'] = True
+            d['values']['spray'] = "Mode "+str(spray)
+            if spray == DiffuserSprayMode.LIGHT:
+                d['values']['spray'] = "Mode léger"
+            elif spray == DiffuserSprayMode.STRONG:
+                d['values']['spray'] = "Mode fort"
+            elif spray == DiffuserSprayMode.OFF:
+                d['values']['spray'] = "Arrêt"
+        else:
+            d['spray'] = False
+
+        #Récupération des diffuseurs huiles essentielles - partie lumière
+        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserLightMixin)
+        if len(diffs) > 0:
+            logger.debug("DiffuserLightMixin")
+            diff = diffs[0]
+            await diff.async_update()
+
+            d['famille'] = 'GenericBulb'
+            onoff = []
+            onoff.append('Etat')
+            isOn=0
+            if diff.get_light_is_on(0):
+                isOn=1
+            switch.append(isOn)
+            d['onoff'] = onoff
+            d['values']['switch'] = switch
+
+            d['lumin'] = True
+            d['values']['lumival'] = diff.get_light_brightness(0)
+
+            d['isrgb'] = True
+            d['values']['rgbval'] = rgb_to_hex(diff.get_light_rgb_color(0))
+
+            logger.debug("DiffuserLightMixin - " + str(d['values']['rgbval']) + " - " + str(d['values']['lumival']))
+
+            lightmode = diff.get_light_mode(0)
+            d['lightmode'] = True
+            d['values']['lightmode']="Mode "+str(lightmode)
+            if lightmode == DiffuserLightMode.ROTATING_COLORS:
+                d['values']['lightmode']="Mode multicolor"
+            elif lightmode == DiffuserLightMode.FIXED_RGB:
+                d['values']['lightmode']="Mode fixe"
+            elif lightmode == DiffuserLightMode.FIXED_LUMINANCE:
+                d['values']['lightmode']="Mode intensité"
+            d['modes'][0]='Mode multicolor'
+            d['modes'][1]='Mode fixe'
+            d['modes'][2]='Mode intensité'
+
+        else:
+            d['lumin'] = False
+
         #Récupération des thermostats
         therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)
         if len(therms) > 0:
             logger.debug("ThermostatModeMixin")
             dev = therms[0]
+            await dev.async_update()
             therm=dev.get_thermostat_state()
             d['tempe']=True
             d['tempval']=therm.target_temperature_celsius
@@ -488,6 +761,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     isOn = 1
                     if device.get_is_open(channel):
                         isOn = 0
+                    logger.debug("Channel "+str(channel)+"Is open = "+str(device.get_is_open(channel)))
                     switch.append(isOn)
                 except:
                     logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
@@ -580,7 +854,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         device=0
         logger.debug("aSyncDevice connected")
         try:
-            await manager.async_device_discovery()
             meross_device = manager.find_devices(device_uuids="["+uuid+"]")
             logger.debug("aSyncDevice - " + str(len(meross_device)) + " devices found")
             if (len(meross_device) == 1):
@@ -659,9 +932,11 @@ async def initConnection(args):
     global connected
     # Initiates the Meross Cloud Manager. This is in charge of handling the communication with the remote endpoint
     password = args.mpswd.encode().decode('unicode-escape')
-    logger.debug("Connecting with user " + args.muser +" & password "+password)
+    logger.debug("Connecting with user " + args.muser)
     try:
-        http_api_client = await MerossHttpClient.async_from_user_password(args.muser, password)
+        http_api_client = await MerossHttpClient.async_from_user_password(api_base_url='https://iotx-eu.meross.com',
+                                                                        email=args.muser,
+                                                                        password=password)
         logger.debug("Connected with user " + args.muser)
         # Register event handlers for the manager...
         manager = MerossManager(http_client=http_api_client)
@@ -722,6 +997,17 @@ meross_root_logger.propagate = False
 meross_root_logger.debug('Test logger merossIOT')
 
 logger.info('Current version is : ' + current_version())
+f = open('/var/www/html/plugins/MerosSync/resources/meross-iot_version.txt', 'r')
+target_version=f.readline().strip('\n')
+f.close()
+
+if (target_version != current_version()):
+    logger.error("La version isntallée "+current_version()+" ne correspond pas à la version attendue : "+target_version+". Merci d'installer les dépendances.")
+    pid = str(os.getpid())
+    logger.debug("Ecriture du PID " + pid + " dans " + str(args.errorfile))
+    with open(args.errorfile, 'w') as fp:
+        fp.write("%s\n" % pid)
+    sys.exit()
 
 logger.info('Start MerossIOTd')
 logger.info('Log level : {}'.format(args.loglevel))
