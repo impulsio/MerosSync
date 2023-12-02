@@ -43,7 +43,7 @@ Le plugin
 
 Rendez vous dans le menu Plugins &gt; Protocole Domotique pour retrouver le plugin.
 
-![Plugin](../images/MerosSync_screenshot1.png)
+![Plugin](../images/MerosSync_screenshot2.png)
 
 Sur la partie haute de cette page, vous avez plusieurs boutons.
 
@@ -80,4 +80,4 @@ Utilisation
 
 Il vous suffit de cliquer sur les fonctions des widgets
 
-![Utilisation](../images/MerosSync_screenshot2.png)
+![Utilisation](../images/MerosSync_screenshot3.png)

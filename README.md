@@ -21,7 +21,7 @@ Plugin jeedom permettant de contrôler les équipements Meross.
   </tr>
   <tr>
     <td>MSS310</td>
-    <td>Prise connectée avec mesure consommation</td>
+    <td>Prise connectée avec mesure de consommation</td>
     <td><img src="desktop/images/mss310.png" width=150 /></td>
   </tr>
   <tr>
@@ -30,7 +30,7 @@ Plugin jeedom permettant de contrôler les équipements Meross.
     <td><img src="desktop/images/mss620.png" width=150 /></td>
   </tr>
   <tr>
-    <td>MSG100</td>
+    <td>MSG100 & MSG200</td>
     <td>Porte de garage</td>
     <td><img src="desktop/images/msg100.png" width=150 /></td>
   </tr>
