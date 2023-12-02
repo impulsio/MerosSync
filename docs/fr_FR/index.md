@@ -8,6 +8,9 @@ Plugin permettant de contrôler les équipements Meross.
 
 ![MerosSync icon](../images/MerosSync_icon.png)
 
+# Compatibilités :
+[Equipements compatibles](../../README.md)
+
 Installation
 ============
 
@@ -40,7 +43,7 @@ Le plugin
 
 Rendez vous dans le menu Plugins &gt; Protocole Domotique pour retrouver le plugin.
 
-![Plugin](../images/4_Plugin.png)
+![Plugin](../images/MerosSync_screenshot1.png)
 
 Sur la partie haute de cette page, vous avez plusieurs boutons.
 
@@ -77,4 +80,4 @@ Utilisation
 
 Il vous suffit de cliquer sur les fonctions des widgets
 
-![Utilisation](../images/6_Dashboard.png)
+![Utilisation](../images/MerosSync_screenshot2.png)
