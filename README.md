@@ -16,19 +16,28 @@ Plugin jeedom permettant de contrôler les équipements Meross.
 <table>
   <tr>
     <td>MOD150</td>
+    <td>Diffuseurs huiles essentielles</td>
     <td><img src="desktop/images/mod150.png" width=150 /></td>
   </tr>
   <tr>
     <td>MSS310</td>
+    <td>Prise connectée avec mesure consommation</td>
     <td><img src="desktop/images/mss310.png" width=150 /></td>
   </tr>
   <tr>
     <td>MSS620</td>
+    <td>Multiprise extérieure</td>
     <td><img src="desktop/images/mss620.png" width=150 /></td>
   </tr>
   <tr>
     <td>MSG100</td>
+    <td>Porte de garage</td>
     <td><img src="desktop/images/msg100.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MRS100</td>
+    <td>Interrupteur volet roulant</td>
+    <td><img src="desktop/images/mrs100.png" width=150 /></td>
   </tr>
 </table>
 
