@@ -39,6 +39,11 @@ Plugin jeedom permettant de contrôler les équipements Meross.
     <td>Interrupteur volet roulant</td>
     <td><img src="desktop/images/mrs100.png" width=150 /></td>
   </tr>
+  <tr>
+    <td>MTS960</td>
+    <td>Thermostat chauffage</td>
+    <td><img src="desktop/images/mts960.png" width=150 /></td>
+  </tr>
 </table>
 
 Pour ajouter des compatibilités : me contacter !

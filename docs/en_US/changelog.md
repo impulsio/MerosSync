@@ -1,3 +1,6 @@
+# 0.9
+- Add thermostat
+
 # 0.8
 - Add roller manager
 - Add oil diffuser

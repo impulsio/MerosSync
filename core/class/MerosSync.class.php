@@ -572,6 +572,27 @@ class MerosSync extends eqLogic {
 
         if( $_device['tempe'] )
         {
+            # Temperature actuelle
+            $cmd = $_eqLogic->getCmd(null, 'tempcur');
+            if (!is_object($cmd)) {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempcur');
+                $cmd = new MerosSyncCmd();
+                $cmd->setName('Température actuelle');
+                $cmd->setType('info');
+                $cmd->setSubType('numeric');
+                $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
+                $cmd->setIsVisible(0);
+                $cmd->setIsHistorized(0);
+                $cmd->setLogicalId('tempcur');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempcur');
+            }
+            $cmd->setConfiguration('minValue', 1);
+            $cmd->setConfiguration('maxValue', 100);
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
             # Temperature information
             $cmd = $_eqLogic->getCmd(null, 'tempval');
             if (!is_object($cmd)) {
@@ -588,18 +609,17 @@ class MerosSync extends eqLogic {
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempval');
             }
-            $cmd->setConfiguration('minValue', 1);
-            $cmd->setConfiguration('maxValue', 100);
+            $cmd->setConfiguration('minValue', $_device['minval']);
+            $cmd->setConfiguration('maxValue', $_device['maxval']);
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
-            $status_id =  $cmd->getId();
             # Temperature setter
             $cmd = $_eqLogic->getCmd(null, 'tempset');
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempset');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName(__('Température', __FILE__));
+                $cmd->setName('Température cible');
                 $cmd->setType('action');
                 $cmd->setSubType('slider');
                 $cmd->setGeneric_type('LIGHT_SET_COLOR_TEMP');
@@ -612,13 +632,42 @@ class MerosSync extends eqLogic {
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempset');
             }
-            $cmd->setConfiguration('minValue', 1);
-            $cmd->setConfiguration('maxValue', 100);
+            $cmd->setConfiguration('minValue', $_device['minval']);
+            $cmd->setConfiguration('maxValue', $_device['maxval']);
             $cmd->setOrder($order);
             $cmd->save();
-            $cmd->setValue($status_id);
+            $cmd->setValue($_device['tempval']);
             $cmd->save();
             $order++;
+
+            if (is_array($_device['modes']))
+            {
+              foreach ($_device['modes'] as $key => $value)
+              {
+                $cmd = $_eqLogic->getCmd(null, 'tempmode_'.$key);
+                if (!is_object($cmd))
+                {
+                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempmode_'.$key);
+                    $cmd = new MerosSyncCmd();
+                    $cmd->setName($value);
+                    $cmd->setType('action');
+                    $cmd->setSubType('other');
+                    $cmd->setIsVisible(1);
+                    $cmd->setIsHistorized(0);
+                    $cmd->setTemplate('dashboard', 'default');
+                    $cmd->setTemplate('mobile', 'default');
+                    $cmd->setLogicalId('tempmode_'.$key);
+                    $cmd->setEqLogic_id($_eqLogic->getId());
+                } else
+                {
+                  $cmd->setName($value);
+                  log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=setTempMode_'.$key);
+                }
+                $cmd->setOrder($order);
+                $cmd->save();
+                $order++;
+              }
+            }
         }
 
         if( $_device['isrgb'] )
@@ -1114,6 +1163,17 @@ class MerosSyncCmd extends cmd {
                 //$lumi = $cmd->execCmd();
                 $res = MerosSync::callMeross('setTemp', [$eqLogic->getLogicalId(), $_options['slider']]);
                 log::add('MerosSync', 'debug', 'setTemp '.$_options['slider'].': '.$res['result']);
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
+                break;
+            case "tempmode":
+                log::add('MerosSync', 'debug', 'call setTempMode with mode '.$channel);
+                $res = MerosSync::callMeross('setTempMode', [$eqLogic->getLogicalId(), $channel]);
+                log::add('MerosSync', 'debug', 'setTempMode: '.json_encode($res['result']));
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             case "rgbset":
                 log::add('MerosSync', 'debug', 'callSetRGB '.$_options['color'].' => '.substr($_options['color'],-6));
