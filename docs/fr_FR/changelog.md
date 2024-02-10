@@ -1,3 +1,6 @@
+# 0.9
+- Ajout de la gestion des thermostats
+
 # 0.8
 - Ajout de la gestion des volets roulants
 - Ajout de la gestion du diffuseur d'huiles essentielles

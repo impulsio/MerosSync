@@ -488,21 +488,88 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetTemp connected")
         try:
             logger.debug("aSetTemp " + uuid)
-            lights = manager.find_devices(device_uuids="["+uuid+"]", device_class=LightMixin)
-            if len(lights)>0:
-                logger.debug("aSetTemp - This is a light")
-                dev = lights[0]
+            therms = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeMixin)
+            if len(therms)>0:
+                logger.debug("aSetTemp - This is a thermostat")
+                dev = therms[0]
                 await dev.async_update()
-                logger.debug("aSetTemp - We set the temperature")
-                await dev.async_set_light_color(0,None,None,None,temp_int)
+                therm=dev.get_thermostat_state()
+                logger.debug("aSetTemp - We set the temperature : "+str(temp_int))
+                if therm.mode == ThermostatMode.HEAT:
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.HEAT,heat_temperature_celsius=temp_int, on_not_off=True)
+                elif therm.mode == ThermostatMode.COOL:
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.COOL,cool_temperature_celsius=temp_int, on_not_off=True)
+                elif therm.mode == ThermostatMode.ECONOMY:
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.ECONOMY,eco_temperature_celsius=temp_int, on_not_off=True)
+                elif therm.mode == ThermostatMode.AUTO:
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.AUTO,heat_temperature_celsius=temp_int, cool_temperature_celsius=temp_int, on_not_off=True)
+                elif therm.mode == ThermostatMode.MANUAL:
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.MANUAL,manual_temperature_celsius=temp_int, on_not_off=True)
+                else:
+                    logger.debug("aSetTemp - no mode, going to auto")
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.AUTO,heat_temperature_celsius=temp_int, cool_temperature_celsius=temp_int, on_not_off=True)
+
                 await closeConnection()
-                return "C'est fait - nouvelle température : "+ str(temp_int)
+                return "aSetTemp - Done - new temeperature : "+ str(temp_int)
             else:
-                return "Ce n'est pas une lampe"
+                return "aSetTemp - Not a thermostat"
         except:
             logger.error("aSetTemp - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return "Une erreur est survenue"
+
+    def setTempMode(self, uuid, lemode):
+        logger.debug("setTempMode called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetTempMode(uuid, lemode))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setTempMode Failed: " + str(sys.exc_info()[1]))
+
+    async def aSetTempMode(self, uuid, lemode):
+        logger.debug("aSetTempMode called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetTempMode connected")
+        try:
+            logger.debug("aSetTempMode " + str(uuid) + "-  mode " + str(lemode))
+            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeMixin)
+            if len(diffs)>0:
+                logger.debug("aSetTemp - This is a thermostat")
+                dev = diffs[0]
+                await dev.async_update()
+                if str(lemode)=="0":
+                    logger.debug("aSetTemp - We set the mode HEAT")
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.HEAT, on_not_off=True)
+                elif str(lemode)=="1":
+                    logger.debug("aSetTemp - We set the mode COOL")
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.COOL, on_not_off=True)
+                elif str(lemode)=="2":
+                    logger.debug("aSetTemp - We set the mode ECONOMY")
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.ECONOMY, on_not_off=True)
+                elif str(lemode)=="3":
+                    logger.debug("aSetTemp - We set the mode AUTO")
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.AUTO, on_not_off=True)
+                elif str(lemode)=="4":
+                    logger.debug("aSetTemp - We set the mode MANUAL")
+                    await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.MANUAL, on_not_off=True)
+                else:
+                    logger.debug("aSetTemp - We set no mode")
+                await closeConnection()
+                return 1
+            else:
+                return "aSetTemp - Not a thermostat"
+                return -1
+        except:
+            logger.error("aSetTemp - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return -1
 
     def setRGB(self, uuid, rgb):
         logger.debug("setRGB called")
@@ -715,7 +782,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['mode'] = 'Mode chauffage'
                 d['tempval']=therm.heat_temperature_celsius
             elif therm.mode == ThermostatMode.COOL:
-                d['mode'] = 'Mode clim'
+                d['mode'] = 'Mode climatisation'
                 d['tempval']=therm.cool_temperature_celsius
             elif therm.mode == ThermostatMode.ECONOMY:
                 d['mode'] = 'Mode eco'
@@ -734,6 +801,12 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['warning']='Alerte'
             else:
                 d['warning']='OK'
+
+            d['modes'][0]='Mode chauffage'
+            d['modes'][1]='Mode climatisation'
+            d['modes'][2]='Mode eco'
+            d['modes'][3]='Mode auto'
+            d['modes'][4]='Mode manuel'
 
             d['minval']=therm.min_temperature_celsius
             d['maxval']=therm.max_temperature_celsius
@@ -932,7 +1005,7 @@ async def initConnection(args):
     global connected
     # Initiates the Meross Cloud Manager. This is in charge of handling the communication with the remote endpoint
     password = args.mpswd.encode().decode('unicode-escape')
-    logger.debug("Connecting with user " + args.muser)
+    logger.debug("Connecting with user " + args.muser + " - " + args.mpswd + " => " + password)
     try:
         http_api_client = await MerossHttpClient.async_from_user_password(api_base_url='https://iotx-eu.meross.com',
                                                                         email=args.muser,
