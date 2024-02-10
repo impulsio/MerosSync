@@ -1005,7 +1005,7 @@ async def initConnection(args):
     global connected
     # Initiates the Meross Cloud Manager. This is in charge of handling the communication with the remote endpoint
     password = args.mpswd.encode().decode('unicode-escape')
-    logger.debug("Connecting with user " + args.muser)
+    logger.debug("Connecting with user " + args.muser + " - " + args.mpswd + " => " + password)
     try:
         http_api_client = await MerossHttpClient.async_from_user_password(api_base_url='https://iotx-eu.meross.com',
                                                                         email=args.muser,
