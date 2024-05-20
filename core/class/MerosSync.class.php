@@ -1017,6 +1017,7 @@ class MerosSync extends eqLogic {
         $cmd.= ' --errorfile '.jeedom::getTmpFolder('MerosSync') . '/errordaemon.pid';
         $cmd.= ' --socket '.jeedom::getTmpFolder('MerosSync') . '/daemon.sock';
         $cmd.= ' --logfile '.log::getPathToLog('MerosSync');
+        $cmd.= ' --versionFile '.$MerosSync_path.'/meross-iot_version.txt';
 
         $log = str_replace($pswd, 'xxx', str_replace($user, 'xxx', $cmd));
         log::add('MerosSync','info',__('Lancement démon meross :', __FILE__).' '.$log);
