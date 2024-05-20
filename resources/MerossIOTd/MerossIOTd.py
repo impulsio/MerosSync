@@ -635,6 +635,12 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         d['modes'] = {}
         switch = []
 
+
+        #Récupération des sensors
+        ms100 = manager.find_devices(device_uuids="["+device.uuid+"]", device_type="ms100")
+        if len(ms100) > 0:
+            logger.debug("MS100")
+
         #Récupération des lumières
         lights = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=LightMixin)
         if len(lights) > 0:
