@@ -1042,6 +1042,7 @@ parser.add_argument('--pidfile', help='PID File', default='/tmp/MerossIOTd.pid')
 parser.add_argument('--errorfile', help='Error File', default='/tmp/MerossIOTderror.pid')
 parser.add_argument('--socket', help='Daemon socket', default='/tmp/MerossIOTd.sock')
 parser.add_argument('--logfile', help='Log file', default='/tmp/MerosSync.log')
+parser.add_argument('--versionFile', help='Version file', default='')
 args = parser.parse_args()
 
 # create logger
@@ -1070,7 +1071,7 @@ meross_root_logger.propagate = False
 meross_root_logger.debug('Test logger merossIOT')
 
 logger.info('Current version is : ' + current_version())
-f = open('/var/www/html/plugins/MerosSync/resources/meross-iot_version.txt', 'r')
+f = open(args.versionFile, 'r')
 target_version=f.readline().strip('\n')
 f.close()
 
