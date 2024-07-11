@@ -1,3 +1,6 @@
+# 11 juillet 2024
+- Update compatibility with Meross API. Including updgrade to avoid "mfaLockExpire" error
+
 # 0.9
 - Add thermostat
 
