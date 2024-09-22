@@ -972,10 +972,10 @@ class MerosSync extends eqLogic {
             'progress_file' => jeedom::getTmpFolder('MerosSync') . '/dependance'
         ];
         $meross_version = trim(file_get_contents(dirname(__FILE__) . '/../../resources/meross-iot_version.txt'));
-        $cmd = "/usr/bin/python3 -c 'from distutils.version import LooseVersion;import pkg_resources,meross_iot,sys;" .
-            "sys.exit(LooseVersion(pkg_resources.get_distribution(\"meross_iot\").version)<LooseVersion(\"".$meross_version."\"))' 2>&1";
+        $cmd = "pipx list | grep meross-iot | wc -l";
         exec($cmd, $output, $return_var);
-        if ($return_var == 0) {
+        log::add('MerosSync','info','Statut installation : |'.$output.'&'.$return_var.'|');
+        if ($output == "1") {
             $return['state'] = 'ok';
         }
         return $return;
