@@ -34,7 +34,7 @@ echo 90 > ${PROGRESS_FILE}
 echo "Installation upgrade merossiot"
 BASEDIR=$(dirname "$0")
 meross_version=$(head -1 $BASEDIR/meross-iot_version.txt)
-pipx install meross_iot==$meross_version
+sudo pipx install meross_iot==$meross_version
 echo 100 > ${PROGRESS_FILE}
 echo "Installation des dépendances terminée !"
 rm ${PROGRESS_FILE}
