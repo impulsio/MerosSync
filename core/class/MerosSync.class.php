@@ -52,6 +52,7 @@ class MerosSync extends eqLogic {
         else {
           log::add('MerosSync', 'info', 'noStreamSocket ' . $errno . ' - ' . $errstr);
           log::add('MerosSync', 'error', 'Merci de démarrer le démon !');
+          return array();
         }
         $result = (is_json($result)) ? json_decode($result, true) : $result;
         log::add('MerosSync', 'debug', 'result callMeross '.print_r($result, true));
