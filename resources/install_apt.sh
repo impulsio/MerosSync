@@ -29,10 +29,10 @@ echo 70 > ${PROGRESS_FILE}
 echo "Empty cache"
 sudo pip3 cache purge
 echo "Installation upgrade pip"
-sudo pip3 install --upgrade pip
+sudo apt install -y python3-pip
 echo 80 > ${PROGRESS_FILE}
 echo "Installation upgrade requests"
-sudo pip3 install --upgrade requests
+sudo apt install -y python3-requests
 echo 90 > ${PROGRESS_FILE}
 echo "Installation upgrade merossiot"
 BASEDIR=$(dirname "$0")
