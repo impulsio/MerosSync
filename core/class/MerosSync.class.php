@@ -974,7 +974,7 @@ class MerosSync extends eqLogic {
         $meross_version = trim(file_get_contents(dirname(__FILE__) . '/../../resources/meross-iot_version.txt'));
         $cmd = "pipx list | grep meross-iot | wc -l";
         exec($cmd, $output, $return_var);
-        log::add('MerosSync','info','Statut installation : |'.$output[0].'&'.$return_var.'|');
+        log::add('MerosSync','debug','Statut installation : |'.$output[0].'&'.$return_var.'|');
         if ($output[0] == "1") {
             $return['state'] = 'ok';
         }
