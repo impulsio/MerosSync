@@ -29,13 +29,13 @@ echo 70 > ${PROGRESS_FILE}
 echo "Empty cache"
 sudo pip3 cache purge
 echo "Définition environnement virtuel python"
-mkdir -p ~/.venvs
-python3 -m venv ~/.venvs
+mkdir -p /tmp/jeedom/.venvs
+python3 -m venv /tmp/jeedom/.venvs/merosssync
 echo 80 > ${PROGRESS_FILE}
 echo "Installation upgrade merossiot"
 BASEDIR=$(dirname "$0")
 meross_version=$(head -1 $BASEDIR/meross-iot_version.txt)
-~/.venvs/merosssync/bin/pip install meross_iot==0.4.7.3
+/tmp/jeedom/.venvs/merosssync/bin/pip install meross_iot==0.4.7.3
 echo 100 > ${PROGRESS_FILE}
 echo "Installation des dépendances terminée !"
 rm ${PROGRESS_FILE}
