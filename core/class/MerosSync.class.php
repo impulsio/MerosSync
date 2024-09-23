@@ -1012,7 +1012,7 @@ class MerosSync extends eqLogic {
         $MerosSync_path = realpath(dirname(__FILE__) . '/../../resources');
         $callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/MerosSync/core/php/jeeMerosSync.php';
 
-        $cmd = 'sudo /tmp/jeedom/.venvs/merosssync/bin/python3 ' . $MerosSync_path . '/MerossIOTd/MerossIOTd.py';
+        $cmd = '/tmp/jeedom/.venvs/merosssync/bin/python3 ' . $MerosSync_path . '/MerossIOTd/MerossIOTd.py';
         $cmd.= ' --muser "'.$user.'"';
         $cmd.= ' --mpswd "'.$pswd.'"';
         $cmd.= ' --callback '.$callback;
