@@ -1028,7 +1028,7 @@ class MerosSync extends eqLogic {
         log::add('MerosSync','info',__('Lancement démon meross :', __FILE__).' '.$log);
         $result = exec($cmd . ' >> ' . log::getPathToLog('MerosSync') . ' 2>&1 &');
         $i = 0;
-        while ($i < 30)
+        while ($i < 60)
         {
             $deamon_info = self::deamon_info();
             if (($deamon_info['state'] == 'ok') || ($deamon_info['state'] == 'error'))
@@ -1038,9 +1038,14 @@ class MerosSync extends eqLogic {
             sleep(1);
             $i++;
         }
-        if (($i >= 10) || ($deamon_info['state'] == 'error'))
+        if ($deamon_info['state'] == 'error')
         {
-            log::add('MerosSync', 'error', __('Impossible de lancer le démon meross, vérifiez la log', __FILE__), 'unableStartDeamon');
+            log::add('MerosSync', 'error', 'Le démon meross est en erreur, vérifiez la log', 'unableStartDeamon');
+            return false;
+        }
+        else if ($i >= 60)
+        {
+            log::add('MerosSync', 'error', 'Le démon meross a mis trop de temps à démarrer, vérifiez la log', 'unableStartDeamon');
             return false;
         }
         message::removeAll('MerosSync', 'unableStartDeamon');
