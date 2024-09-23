@@ -1088,6 +1088,7 @@ class MerosSync extends eqLogic {
 
       if (file_exists($pid_file))
       {
+        log::add('MerosSync', 'debug', 'File daemon contains '.file_get_contents($pid_file));
         if (@posix_getsid(trim(file_get_contents($pid_file))))
         {
           $return['state'] = 'ok';
@@ -1099,6 +1100,7 @@ class MerosSync extends eqLogic {
       }
       elseif (file_exists($error_file))
       {
+        log::add('MerosSync', 'debug', 'File error contains '.file_get_contents($error_file));
         $return['state'] = 'error';
         shell_exec(system::getCmdSudo() . 'rm -rf ' . $error_file . ' 2>&1 > /dev/null');
       }
