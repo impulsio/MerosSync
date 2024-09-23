@@ -635,6 +635,14 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         d['modes'] = {}
         switch = []
 
+        # valeurs par défaut
+        d['lumin'] = False
+        d['isrgb'] = False
+        d['tempe'] = False
+        d['elec'] = False
+        d['roller'] = False
+        d['conso'] = False
+        d['spray'] = False
 
         #Récupération des sensors
         ms100 = manager.find_devices(device_uuids="["+device.uuid+"]", device_type="ms100")
@@ -669,10 +677,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 logger.debug("Support Temperature")
                 d['tempe']=True
                 d['values']['tempval']=light.get_color_temperature()
-        else:
-            d['lumin']=False
-            d['isrgb']=False
-            d['tempe']=False
 
         #Récupération des consommations instantannées
         plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ElectricityMixin)
@@ -683,8 +687,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['values']['power'] = instant_consumption.power
             d['values']['current'] = instant_consumption.current
             d['values']['tension'] = instant_consumption.voltage
-        else:
-            d['elec'] = False
 
         #Récupérations des consommations
         plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ConsumptionXMixin)
@@ -699,8 +701,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 for c in conso:
                     if str(c['date']) == str(today):
                         d['values']['conso_totale'] = float(c['total_consumption_kwh'])
-        else:
-            d['conso'] = False
 
         #Récupération des commande volets roulants
         rollers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=RollerShutterTimerMixin)
@@ -711,8 +711,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             position = roller.get_position(0)
             d['roller'] = True
             d['values']['position'] = position
-        else:
-            d['roller'] = False
 
         #Récupération des diffuseurs huiles essentielles
         diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserSprayMixin)
@@ -729,8 +727,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['spray'] = "Mode fort"
             elif spray == DiffuserSprayMode.OFF:
                 d['values']['spray'] = "Arrêt"
-        else:
-            d['spray'] = False
 
         #Récupération des diffuseurs huiles essentielles - partie lumière
         diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserLightMixin)
@@ -769,9 +765,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['modes'][0]='Mode multicolor'
             d['modes'][1]='Mode fixe'
             d['modes'][2]='Mode intensité'
-
-        else:
-            d['lumin'] = False
 
         #Récupération des thermostats
         therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)
@@ -817,8 +810,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['minval']=therm.min_temperature_celsius
             d['maxval']=therm.max_temperature_celsius
             d['tempcur']=therm.current_temperature_celsius
-        else:
-            d['tempe']=False
 
         #Récupérations des portes de garage
         openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
