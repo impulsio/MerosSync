@@ -975,7 +975,7 @@ class MerosSync extends eqLogic {
             'progress_file' => jeedom::getTmpFolder('MerosSync') . '/dependance'
         ];
         $meross_version = trim(file_get_contents(dirname(__FILE__) . '/../../resources/meross-iot_version.txt'));
-        $cmd = "sudo pipx list | grep meross-iot | wc -l";
+        $cmd = "~/.venvs/merosssync/bin/pip list | grep meross_iot | wc -l";
         exec($cmd, $output, $return_var);
         log::add('MerosSync','debug','Statut installation : |'.$output[0].'&'.$return_var.'|');
         if ($output[0] == "1")
@@ -1012,7 +1012,7 @@ class MerosSync extends eqLogic {
         $MerosSync_path = realpath(dirname(__FILE__) . '/../../resources');
         $callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/MerosSync/core/php/jeeMerosSync.php';
 
-        $cmd = 'pipx run ' . $MerosSync_path . '/MerossIOTd/MerossIOTd.py';
+        $cmd = '~/.venvs/merosssync/bin/python3 ' . $MerosSync_path . '/MerossIOTd/MerossIOTd.py';
         $cmd.= ' --muser "'.$user.'"';
         $cmd.= ' --mpswd "'.$pswd.'"';
         $cmd.= ' --callback '.$callback;
