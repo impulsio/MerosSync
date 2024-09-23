@@ -69,27 +69,30 @@ class MerosSync extends eqLogic {
         {
           log::add('MerosSync', 'error', 'Aucun équipement connecté ou problème de connexion. Merci de consulter la log.');
         }
-        foreach( $results['result'] as $key=>$device )
+        else
         {
-            self::syncOneMeross($device);
-        }
-        log::add('MerosSync', 'debug', 'Check offline components');
-        foreach (self::byType('MerosSync') as $eqLogic)
-        {
-          log::add('MerosSync', 'debug', 'ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
-          $inArray = false;
           foreach( $results['result'] as $key=>$device )
           {
-              if ($device['uuid'] == $eqLogic->getLogicalId())
-              {
-                $inArray = true;
-              }
+              self::syncOneMeross($device);
           }
-          if (!$inArray)
+          log::add('MerosSync', 'debug', 'Check offline components');
+          foreach (self::byType('MerosSync') as $eqLogic)
           {
-            log::add('MerosSync', 'debug', 'offline');
-            $eqLogic->setConfiguration('online', '0');
-            $eqLogic->save();
+            log::add('MerosSync', 'debug', 'ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
+            $inArray = false;
+            foreach( $results['result'] as $key=>$device )
+            {
+                if ($device['uuid'] == $eqLogic->getLogicalId())
+                {
+                  $inArray = true;
+                }
+            }
+            if (!$inArray)
+            {
+              log::add('MerosSync', 'debug', 'offline');
+              $eqLogic->setConfiguration('online', '0');
+              $eqLogic->save();
+            }
           }
         }
         log::add('MerosSync', 'info', __('syncMeross: synchronisation terminée.', __FILE__));
@@ -972,7 +975,7 @@ class MerosSync extends eqLogic {
             'progress_file' => jeedom::getTmpFolder('MerosSync') . '/dependance'
         ];
         $meross_version = trim(file_get_contents(dirname(__FILE__) . '/../../resources/meross-iot_version.txt'));
-        $cmd = "sudo pipx list | grep meross-iot | wc -l";
+        $cmd = "pipx list | grep meross-iot | wc -l";
         exec($cmd, $output, $return_var);
         log::add('MerosSync','debug','Statut installation : |'.$output[0].'&'.$return_var.'|');
         if ($output[0] == "1")
