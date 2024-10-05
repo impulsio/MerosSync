@@ -420,6 +420,43 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         await closeConnection()
         return -1
 
+    def setPosition(self, uuid, position_int):
+        logger.debug("setPosition called")
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            self.loop = asyncio.get_event_loop()
+            try:
+                retour=self.loop.run_until_complete(self.aSetPosition(uuid, position_int))
+            finally:
+                self.loop.close()
+            return retour
+        except:
+            logger.error("setPosition Failed: " + str(sys.exc_info()[1]))
+
+    async def aSetPosition(self, uuid, position_int):
+        logger.debug("aSetPosition called")
+        global manager
+        global args
+        await initConnection(args)
+        logger.debug("aSetPosition connected")
+        try:
+            logger.debug("aSetPosition " + uuid)
+            rollers = manager.find_devices(device_uuids="["+uuid+"]", device_class=RollerShutterTimerMixin)
+            if len(rollers)>0:
+                logger.debug("aSetPosition - This is a roller")
+                dev = rollers[0]
+                await dev.async_update()
+                logger.debug("aSetPosition - We set the position")
+                await dev.async_set_position(channel=0, position=position_int)
+                await closeConnection()
+                return "C'est fait - nouvelle position : "+ str(position_int)
+            else:
+                return "Nous ne savons pas gérer cette action"
+        except:
+            logger.error("aSetPosition - Failed: " + str(sys.exc_info()[1]))
+        await closeConnection()
+        return "Une erreur est survenue"
+
     def setLumi(self, uuid, lumi_int):
         logger.debug("setLumi called")
         try:
