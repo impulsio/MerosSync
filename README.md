@@ -49,6 +49,11 @@ Plugin jeedom permettant de contrôler les équipements Meross.
     <td>Ruban LED</td>
     <td><img src="desktop/images/msl320cp.png" width=150 /></td>
   </tr>
+  <tr>
+    <td>MTS960</td>
+    <td>Thermostat connecté</td>
+    <td><img src="desktop/images/mts960.png" width=150 /></td>
+  </tr>
 </table>
 
 Pour ajouter des compatibilités : me contacter !

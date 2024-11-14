@@ -35,7 +35,7 @@ echo 80 > ${PROGRESS_FILE}
 echo "Installation upgrade merossiot"
 BASEDIR=$(dirname "$0")
 meross_version=$(head -1 $BASEDIR/meross-iot_version.txt)
-/tmp/jeedom/.venvs/merosssync/bin/pip install meross_iot==0.4.7.3
+/tmp/jeedom/.venvs/merosssync/bin/pip install meross_iot==0.4.7.5
 echo 100 > ${PROGRESS_FILE}
 echo "Installation des dépendances terminée !"
 rm ${PROGRESS_FILE}

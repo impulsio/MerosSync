@@ -14,14 +14,14 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.model.enums import OnlineStatus, ThermostatMode, DiffuserSprayMode, DiffuserLightMode
+from meross_iot.model.enums import OnlineStatus, ThermostatMode, DiffuserSprayMode, DiffuserLightMode, ThermostatWorkingMode, ThermostatModeBState
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
 from meross_iot.controller.mixins.light import LightMixin
-from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatState
+from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatModeBMixin, ThermostatState
 from meross_iot.controller.mixins.roller_shutter import RollerShutterTimerMixin
 from meross_iot.controller.mixins.diffuser_spray import DiffuserSprayMixin
 from meross_iot.controller.mixins.diffuser_light import DiffuserLightMixin
@@ -527,7 +527,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.debug("aSetTemp " + uuid)
             therms = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeMixin)
             if len(therms)>0:
-                logger.debug("aSetTemp - This is a thermostat")
+                logger.debug("aSetTemp - This is a ThermostatModeMixin")
                 dev = therms[0]
                 await dev.async_update()
                 therm=dev.get_thermostat_state()
@@ -549,7 +549,19 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return "aSetTemp - Done - new temeperature : "+ str(temp_int)
             else:
-                return "aSetTemp - Not a thermostat"
+                logger.debug("aSetTemp " + uuid)
+                therms = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeBMixin)
+                if len(therms)>0:
+                    logger.debug("aSetTemp - This is a ThermostatModeBMixin")
+                    dev = therms[0]
+                    logger.debug("aSetTemp - We set the temperature : "+str(temp_int))
+                    temp_int=float(temp_int)
+                    logger.debug("aSetTemp - We set the temperature : "+str(temp_int))
+                    await dev.async_set_thermostat_config(channel=0,target_temperature_celsius=temp_int*10, on_not_off=True)
+                    await closeConnection()
+                    return "aSetTemp - Done - new temeperature : "+ str(temp_int)
+                else:
+                    return "aSetTemp - Not a thermostat"
         except:
             logger.error("aSetTemp - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
@@ -578,33 +590,49 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.debug("aSetTempMode " + str(uuid) + "-  mode " + str(lemode))
             diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeMixin)
             if len(diffs)>0:
-                logger.debug("aSetTemp - This is a thermostat")
+                logger.debug("aSetTempMode - This is a ThermostatModeMixin")
                 dev = diffs[0]
                 await dev.async_update()
                 if str(lemode)=="0":
-                    logger.debug("aSetTemp - We set the mode HEAT")
+                    logger.debug("aSetTempMode - We set the mode HEAT")
                     await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.HEAT, on_not_off=True)
                 elif str(lemode)=="1":
-                    logger.debug("aSetTemp - We set the mode COOL")
+                    logger.debug("aSetTempMode - We set the mode COOL")
                     await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.COOL, on_not_off=True)
                 elif str(lemode)=="2":
-                    logger.debug("aSetTemp - We set the mode ECONOMY")
+                    logger.debug("aSetTempMode - We set the mode ECONOMY")
                     await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.ECONOMY, on_not_off=True)
                 elif str(lemode)=="3":
-                    logger.debug("aSetTemp - We set the mode AUTO")
+                    logger.debug("aSetTempMode - We set the mode AUTO")
                     await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.AUTO, on_not_off=True)
                 elif str(lemode)=="4":
-                    logger.debug("aSetTemp - We set the mode MANUAL")
+                    logger.debug("aSetTempMode - We set the mode MANUAL")
                     await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.MANUAL, on_not_off=True)
                 else:
-                    logger.debug("aSetTemp - We set no mode")
+                    logger.debug("aSetTempMode - We set no mode")
                 await closeConnection()
                 return 1
             else:
-                return "aSetTemp - Not a thermostat"
-                return -1
+                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeBMixin)
+                if len(diffs)>0:
+                    logger.debug("aSetTempMode - This is a ThermostatModeBMixin")
+                    dev = diffs[0]
+                    await dev.async_update()
+                    therm=dev.get_thermostat_state()
+                    if str(lemode)=="1":
+                        logger.debug("aSetTempMode - We set the mode HEAT")
+                        await dev.async_set_thermostat_config(channel=0,mode=ThermostatWorkingMode.HEAT, target_temperature_celsius=therm.target_temperature_celsius, on_not_off=True)
+                    elif str(lemode)=="2":
+                        logger.debug("aSetTempMode - We set the mode COOL")
+                        await dev.async_set_thermostat_config(channel=0,mode=ThermostatWorkingMode.COOL, target_temperature_celsius=therm.target_temperature_celsius, on_not_off=True)
+                    await closeConnection()
+                    logger.debug("aSetTempMode - Done")
+                    return 1
+                else:
+                    logger.debug("aSetTempMode - Not a thermostat")
+                    return -1
         except:
-            logger.error("aSetTemp - Failed: " + str(sys.exc_info()[1]))
+            logger.error("aSetTempMode - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
         return -1
 
@@ -676,15 +704,64 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         d['lumin'] = False
         d['isrgb'] = False
         d['tempe'] = False
+        d['heat'] = False
         d['elec'] = False
         d['roller'] = False
         d['conso'] = False
         d['spray'] = False
 
-        #Récupération des sensors
-        ms100 = manager.find_devices(device_uuids="["+device.uuid+"]", device_type="ms100")
-        if len(ms100) > 0:
-            logger.debug("MS100")
+        #Récupération des thermostat
+        therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeBMixin)
+        if len(therms) > 0:
+            logger.debug("ThermostatModeBMixin")
+            dev = therms[0]
+            await dev.async_update()
+            therm=dev.get_thermostat_state()
+            d['heat']=True
+            try:
+                logger.debug("items")
+                logger.debug(therm._state.items())
+            except:
+                logger.debug("NO items")
+
+            d['values']['tempval']=therm.target_temperature_celsius/10.00
+            d['values']['on']=therm.is_on
+
+            if therm.workingMode == ThermostatWorkingMode.HEAT:
+                d['values']['mode'] = 'Chauffage'
+            elif therm.workingMode == ThermostatWorkingMode.COOL:
+                d['values']['mode'] = 'Climatisation'
+            else:
+                d['values']['mode']='Aucun mode'
+
+            # NE FONCTIONNE PAS
+            # d['modes'][1]='Mode chauffage'
+            # d['modes'][2]='Mode climatisation'
+
+            if therm.state == ThermostatModeBState.HEATING_COOLING:
+                if therm.workingMode == ThermostatWorkingMode.HEAT:
+                    d['values']['state'] = 'Chauffage en cours'
+                elif therm.workingMode == ThermostatWorkingMode.COOL:
+                    d['values']['state'] = 'Climatisation en cours'
+            elif therm.state == ThermostatModeBState.NOT_HEATING_COOLING:
+                if therm.workingMode == ThermostatWorkingMode.HEAT:
+                    d['values']['state'] = 'Chauffage arrêté'
+                elif therm.workingMode == ThermostatWorkingMode.COOL:
+                    d['values']['state'] = 'Climatisation arrêtée'
+            else:
+                d['values']['state']='Aucun état'
+
+            if therm.min_temperature_celsius is None:
+                d['minval']=0
+            else:
+                d['minval']=therm.min_temperature_celsius
+
+            if therm.max_temperature_celsius is None:
+                d['maxval']=35.00
+            else:
+                d['maxval']=therm.max_temperature_celsius
+
+            d['values']['tempcur']=therm.current_temperature_celsius/10.00
 
         #Récupération des lumières
         lights = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=LightMixin)
@@ -810,33 +887,33 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             dev = therms[0]
             await dev.async_update()
             therm=dev.get_thermostat_state()
-            d['tempe']=True
-            d['tempval']=therm.target_temperature_celsius
-            d['on']=therm.is_on
+            d['heat']=True
+            d['values']['tempval']=therm.target_temperature_celsius
+            d['values']['on']=therm.is_on
 
             if therm.mode == ThermostatMode.HEAT:
-                d['mode'] = 'Mode chauffage'
-                d['tempval']=therm.heat_temperature_celsius
+                d['values']['mode'] = 'Mode chauffage'
+                d['values']['tempval']=therm.heat_temperature_celsius
             elif therm.mode == ThermostatMode.COOL:
-                d['mode'] = 'Mode climatisation'
-                d['tempval']=therm.cool_temperature_celsius
+                d['values']['mode'] = 'Mode climatisation'
+                d['values']['tempval']=therm.cool_temperature_celsius
             elif therm.mode == ThermostatMode.ECONOMY:
-                d['mode'] = 'Mode eco'
-                d['tempval']=therm.eco_temperature_celsius
+                d['values']['mode'] = 'Mode eco'
+                d['values']['tempval']=therm.eco_temperature_celsius
             elif therm.mode == ThermostatMode.AUTO:
-                d['mode'] = 'Mode auto'
-                d['tempval']=therm.target_temperature_celsius
+                d['values']['mode'] = 'Mode auto'
+                d['values']['tempval']=therm.target_temperature_celsius
             elif therm.mode == ThermostatMode.MANUAL:
-                d['mode'] = 'Mode manuel'
-                d['tempval']=therm.manual_temperature_celsius
+                d['values']['mode'] = 'Mode manuel'
+                d['values']['tempval']=therm.manual_temperature_celsius
             else:
-                d['tempval']=therm.target_temperature_celsius
-                d['mode']='Aucun mode'
+                d['values']['mode']='Aucun mode'
+                d['values']['tempval']=therm.target_temperature_celsius
 
             if therm.warning:
-                d['warning']='Alerte'
+                d['values']['warning']='Alerte'
             else:
-                d['warning']='OK'
+                d['values']['warning']='OK'
 
             d['modes'][0]='Mode chauffage'
             d['modes'][1]='Mode climatisation'
@@ -844,9 +921,17 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['modes'][3]='Mode auto'
             d['modes'][4]='Mode manuel'
 
-            d['minval']=therm.min_temperature_celsius
-            d['maxval']=therm.max_temperature_celsius
-            d['tempcur']=therm.current_temperature_celsius
+            if therm.min_temperature_celsius is None:
+                d['minval']=0
+            else:
+                d['minval']=therm.min_temperature_celsius
+
+            if therm.max_temperature_celsius is None:
+                d['maxval']=35.00
+            else:
+                d['maxval']=therm.max_temperature_celsius
+
+            d['values']['tempcur']=therm.current_temperature_celsius/10
 
         #Récupérations des portes de garage
         openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
