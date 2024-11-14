@@ -1,4 +1,7 @@
-# 11 juillet 2024
+# 14th november 2024
+- Add compatibility MTS960
+
+# 11th july 2024
 - Update compatibility with Meross API. Including updgrade to avoid "mfaLockExpire" error
 
 # 0.9

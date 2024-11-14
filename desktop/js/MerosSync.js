@@ -90,6 +90,10 @@ function addCmdToTable(_cmd) {
     tr += '  <span class="type" type="' + init(_cmd.type) + '">' + jeedom.cmd.availableType() + '</span>';
     tr += '  <span class="subType" subType="' + init(_cmd.subType) + '"></span>';
     tr += '</td>';
+    // Etat
+    tr += '<td>';
+    tr += '  <span class="cmdAttr" data-l1key="htmlstate"></span>';
+    tr += '</td>';
     // Visible + Historized + Inverted
     // Unit + Min + Max
     tr += '<td>';

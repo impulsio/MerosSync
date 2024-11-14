@@ -52,6 +52,7 @@ class MerosSync extends eqLogic {
         else {
           log::add('MerosSync', 'info', 'noStreamSocket ' . $errno . ' - ' . $errstr);
           log::add('MerosSync', 'error', 'Merci de démarrer le démon !');
+          return array();
         }
         $result = (is_json($result)) ? json_decode($result, true) : $result;
         log::add('MerosSync', 'debug', 'result callMeross '.print_r($result, true));
@@ -68,27 +69,30 @@ class MerosSync extends eqLogic {
         {
           log::add('MerosSync', 'error', 'Aucun équipement connecté ou problème de connexion. Merci de consulter la log.');
         }
-        foreach( $results['result'] as $key=>$device )
+        else
         {
-            self::syncOneMeross($device);
-        }
-        log::add('MerosSync', 'debug', 'Check offline components');
-        foreach (self::byType('MerosSync') as $eqLogic)
-        {
-          log::add('MerosSync', 'debug', 'ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
-          $inArray = false;
           foreach( $results['result'] as $key=>$device )
           {
-              if ($device['uuid'] == $eqLogic->getLogicalId())
-              {
-                $inArray = true;
-              }
+              self::syncOneMeross($device);
           }
-          if (!$inArray)
+          log::add('MerosSync', 'debug', 'Check offline components');
+          foreach (self::byType('MerosSync') as $eqLogic)
           {
-            log::add('MerosSync', 'debug', 'offline');
-            $eqLogic->setConfiguration('online', '0');
-            $eqLogic->save();
+            log::add('MerosSync', 'debug', 'ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
+            $inArray = false;
+            foreach( $results['result'] as $key=>$device )
+            {
+                if ($device['uuid'] == $eqLogic->getLogicalId())
+                {
+                  $inArray = true;
+                }
+            }
+            if (!$inArray)
+            {
+              log::add('MerosSync', 'debug', 'offline');
+              $eqLogic->setConfiguration('online', '0');
+              $eqLogic->save();
+            }
           }
         }
         log::add('MerosSync', 'info', __('syncMeross: synchronisation terminée.', __FILE__));
@@ -181,7 +185,7 @@ class MerosSync extends eqLogic {
                         $value = __('Blanc', __FILE__);
                     }
                 }
-                if( $key == "spray" )
+                else if( $key == "spray" )
                 {
                     if( $value == 1 ) {
                         $value = __('Continu', __FILE__);
@@ -191,7 +195,7 @@ class MerosSync extends eqLogic {
                         $value = __('Arrêt', __FILE__);
                     }
                 }
-                if( $key == "rgbval" )
+                else if( $key == "rgbval" )
                 {
                     log::add('MerosSync', 'debug', 'syncMeross: - la couleur est '.$value);
                 }
@@ -203,7 +207,8 @@ class MerosSync extends eqLogic {
      * Sync one meross devices.
      * @return none
      */
-    public static function updateEqLogicCmds($_eqLogic, $_device) {
+    public static function updateEqLogicCmds($_eqLogic, $_device)
+    {
         log::add('MerosSync', 'debug', 'updateEqLogicCmds: Update eqLogic commands');
         $i = 0;
         $order = 1;
@@ -421,8 +426,8 @@ class MerosSync extends eqLogic {
                 $cmd->setGeneric_type('POWER');
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(1);
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
+                $cmd->setTemplate('dashboard', 'gauge');
+                $cmd->setTemplate('mobile', 'gauge');
                 $cmd->setLogicalId('power');
                 $cmd->setConfiguration('minValue', 0);
                 $cmd->setConfiguration('maxValue', 4000);
@@ -446,8 +451,8 @@ class MerosSync extends eqLogic {
                 $cmd->setSubType('numeric');
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(1);
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
+                $cmd->setTemplate('dashboard', 'gauge');
+                $cmd->setTemplate('mobile', 'gauge');
                 $cmd->setLogicalId('current');
                 $cmd->setGeneric_type('GENERIC_INFO');
                 $cmd->setConfiguration('minValue', 0);
@@ -472,8 +477,8 @@ class MerosSync extends eqLogic {
                 $cmd->setGeneric_type('VOLTAGE');
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(1);
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
+                $cmd->setTemplate('dashboard', 'gauge');
+                $cmd->setTemplate('mobile', 'gauge');
                 $cmd->setLogicalId('tension');
                 $cmd->setConfiguration('minValue', 0);
                 $cmd->setConfiguration('maxValue', 250);
@@ -498,16 +503,17 @@ class MerosSync extends eqLogic {
                 $cmd = new MerosSyncCmd();
                 $cmd->setName(__('Consommation', __FILE__));
                 $cmd->setType('info');
-                $cmd->setSubType('binary');
-                $cmd->setGeneric_type('GARAGE_STATE');
+                $cmd->setSubType('numeric');
+                $cmd->setGeneric_type('CONSUMPTION');
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(1);
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
+                $cmd->setTemplate('dashboard', 'tile');
+                $cmd->setTemplate('mobile', 'tile');
                 $cmd->setLogicalId('conso_totale');
                 $cmd->setUnite('kWh');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
+
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=conso_totale');
             }
             $cmd->setConfiguration('historyPurge','-2 years');
@@ -570,7 +576,7 @@ class MerosSync extends eqLogic {
             $order++;
         }
 
-        if( $_device['tempe'] )
+        if( $_device['tempe'] || $_device['heat'] )
         {
             # Temperature actuelle
             $cmd = $_eqLogic->getCmd(null, 'tempcur');
@@ -580,16 +586,26 @@ class MerosSync extends eqLogic {
                 $cmd->setName('Température actuelle');
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
-                $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
-                $cmd->setIsVisible(0);
+                if ($_device['tempe'])
+                {
+                  $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
+                }
+                else
+                {
+                  $cmd->setGeneric_type('THERMOSTAT_TEMPERATURE');
+                  $cmd->setUnite('°C');
+                }
+                $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(0);
                 $cmd->setLogicalId('tempcur');
+                $cmd->setTemplate('dashboard', 'tile');
+                $cmd->setTemplate('mobile', 'tile');
                 $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setConfiguration('minValue', -30);
+                $cmd->setConfiguration('maxValue', 110);
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempcur');
             }
-            $cmd->setConfiguration('minValue', 1);
-            $cmd->setConfiguration('maxValue', 100);
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
@@ -598,13 +614,23 @@ class MerosSync extends eqLogic {
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempval');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('temp');
+                $cmd->setName('Température cible');
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
-                $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
+                if ($_device['tempe'])
+                {
+                  $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
+                }
+                else
+                {
+                  $cmd->setGeneric_type('HEATING_STATE');
+                  $cmd->setUnite('°C');
+                }
                 $cmd->setIsVisible(0);
                 $cmd->setIsHistorized(0);
                 $cmd->setLogicalId('tempval');
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempval');
@@ -614,20 +640,28 @@ class MerosSync extends eqLogic {
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
+            $status_id =  $cmd->getId();
             # Temperature setter
             $cmd = $_eqLogic->getCmd(null, 'tempset');
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempset');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Température cible');
+                $cmd->setName('Changer la température');
                 $cmd->setType('action');
                 $cmd->setSubType('slider');
-                $cmd->setGeneric_type('LIGHT_SET_COLOR_TEMP');
+                if ($_device['tempe'])
+                {
+                  $cmd->setGeneric_type('LIGHT_SET_COLOR_TEMP');
+                }
+                else
+                {
+                  $cmd->setGeneric_type('THERMOSTAT_SET_SETPOINT');
+                }
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(0);
                 $cmd->setLogicalId('tempset');
-                $cmd->setTemplate('dashboard', 'light');
-                $cmd->setTemplate('mobile', 'light');
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempset');
@@ -636,9 +670,56 @@ class MerosSync extends eqLogic {
             $cmd->setConfiguration('maxValue', $_device['maxval']);
             $cmd->setOrder($order);
             $cmd->save();
-            $cmd->setValue($_device['tempval']);
+            $cmd->setValue($status_id);
             $cmd->save();
             $order++;
+
+            if ($_device['heat'])
+            {
+              # Heating mode
+              $cmd = $_eqLogic->getCmd(null, 'mode');
+              if (!is_object($cmd)) {
+                  log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=mode');
+                  $cmd = new MerosSyncCmd();
+                  $cmd->setName('Mode');
+                  $cmd->setType('info');
+                  $cmd->setSubType('string');
+                  $cmd->setGeneric_type('THERMOSTAT_MODE');
+                  $cmd->setIsVisible(1);
+                  $cmd->setIsHistorized(0);
+                  $cmd->setLogicalId('mode');
+                  $cmd->setTemplate('dashboard', 'default');
+                  $cmd->setTemplate('mobile', 'default');
+                  $cmd->setEqLogic_id($_eqLogic->getId());
+              } else {
+                  log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=mode');
+              }
+              $cmd->setOrder($order);
+              $cmd->save();
+              $order++;
+
+              # Heating mode
+              $cmd = $_eqLogic->getCmd(null, 'state');
+              if (!is_object($cmd)) {
+                  log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=state');
+                  $cmd = new MerosSyncCmd();
+                  $cmd->setName('Etat');
+                  $cmd->setType('info');
+                  $cmd->setSubType('string');
+                  $cmd->setGeneric_type('THERMOSTAT_MODE');
+                  $cmd->setIsVisible(1);
+                  $cmd->setIsHistorized(0);
+                  $cmd->setLogicalId('state');
+                  $cmd->setTemplate('dashboard', 'default');
+                  $cmd->setTemplate('mobile', 'default');
+                  $cmd->setEqLogic_id($_eqLogic->getId());
+              } else {
+                  log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=state');
+              }
+              $cmd->setOrder($order);
+              $cmd->save();
+              $order++;
+            }
 
             if (is_array($_device['modes']))
             {
@@ -835,7 +916,7 @@ class MerosSync extends eqLogic {
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
-            # Roller information
+            # Roller icone position
             $cmd = $_eqLogic->getCmd(null, 'position');
             if (!is_object($cmd)) {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=position');
@@ -852,6 +933,32 @@ class MerosSync extends eqLogic {
                 $cmd->setEqLogic_id($_eqLogic->getId());
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=position');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $status_id =  $cmd->getId();
+            $order++;
+            # Roller changement position
+            $cmd = $_eqLogic->getCmd(null, 'changePosition');
+            if (!is_object($cmd)) {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=changePosition');
+                $cmd = new MerosSyncCmd();
+                $cmd->setName('Ouverture');
+                $cmd->setType('action');
+                $cmd->setSubType('slider');
+                $cmd->setGeneric_type('FLAP_SLIDER');
+                $cmd->setIsVisible(1);
+                $cmd->setIsHistorized(0);
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setLogicalId('changePosition');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setValue($status_id);
+                $cmd->setConfiguration('minValue', 0);
+                $cmd->setConfiguration('maxValue', 100);
+                $cmd->setUnite('%');
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=changePosition');
             }
             $cmd->setOrder($order);
             $cmd->save();
@@ -971,10 +1078,10 @@ class MerosSync extends eqLogic {
             'progress_file' => jeedom::getTmpFolder('MerosSync') . '/dependance'
         ];
         $meross_version = trim(file_get_contents(dirname(__FILE__) . '/../../resources/meross-iot_version.txt'));
-        $cmd = "/usr/bin/python3 -c 'from distutils.version import LooseVersion;import pkg_resources,meross_iot,sys;" .
-            "sys.exit(LooseVersion(pkg_resources.get_distribution(\"meross_iot\").version)<LooseVersion(\"".$meross_version."\"))' 2>&1";
+        $cmd = "/tmp/jeedom/.venvs/merosssync/bin/pip list | grep meross[-_]iot | wc -l";
         exec($cmd, $output, $return_var);
-        if ($return_var == 0) {
+        if ($output[0] == "1")
+        {
             $return['state'] = 'ok';
         }
         return $return;
@@ -1007,7 +1114,7 @@ class MerosSync extends eqLogic {
         $MerosSync_path = realpath(dirname(__FILE__) . '/../../resources');
         $callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/MerosSync/core/php/jeeMerosSync.php';
 
-        $cmd = '/usr/bin/python3 ' . $MerosSync_path . '/MerossIOTd/MerossIOTd.py';
+        $cmd = '/tmp/jeedom/.venvs/merosssync/bin/python3 ' . $MerosSync_path . '/MerossIOTd/MerossIOTd.py';
         $cmd.= ' --muser "'.$user.'"';
         $cmd.= ' --mpswd "'.$pswd.'"';
         $cmd.= ' --callback '.$callback;
@@ -1023,7 +1130,7 @@ class MerosSync extends eqLogic {
         log::add('MerosSync','info',__('Lancement démon meross :', __FILE__).' '.$log);
         $result = exec($cmd . ' >> ' . log::getPathToLog('MerosSync') . ' 2>&1 &');
         $i = 0;
-        while ($i < 30)
+        while ($i < 60)
         {
             $deamon_info = self::deamon_info();
             if (($deamon_info['state'] == 'ok') || ($deamon_info['state'] == 'error'))
@@ -1033,9 +1140,14 @@ class MerosSync extends eqLogic {
             sleep(1);
             $i++;
         }
-        if (($i >= 10) || ($deamon_info['state'] == 'error'))
+        if ($deamon_info['state'] == 'error')
         {
-            log::add('MerosSync', 'error', __('Impossible de lancer le démon meross, vérifiez la log', __FILE__), 'unableStartDeamon');
+            log::add('MerosSync', 'error', 'Le démon meross est en erreur, vérifiez la log', 'unableStartDeamon');
+            return false;
+        }
+        else if ($i >= 60)
+        {
+            log::add('MerosSync', 'error', 'Le démon meross a mis trop de temps à démarrer, vérifiez la log', 'unableStartDeamon');
             return false;
         }
         message::removeAll('MerosSync', 'unableStartDeamon');
@@ -1089,6 +1201,7 @@ class MerosSync extends eqLogic {
       }
       elseif (file_exists($error_file))
       {
+        log::add('MerosSync', 'debug', 'File error contains '.file_get_contents($error_file));
         $return['state'] = 'error';
         shell_exec(system::getCmdSudo() . 'rm -rf ' . $error_file . ' 2>&1 > /dev/null');
       }
@@ -1205,7 +1318,7 @@ class MerosSyncCmd extends cmd {
                 log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
-              case "up":
+            case "up":
                 $res = MerosSync::callMeross('goUp', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
                 if ($res['result'] != -1)
@@ -1213,7 +1326,7 @@ class MerosSyncCmd extends cmd {
                   $eqLogic->checkAndUpdateCmd('position', $res['result']);
                 }
                 break;
-              case "down":
+            case "down":
                 $res = MerosSync::callMeross('goDown', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
                 if ($res['result'] != -1)
@@ -1221,13 +1334,20 @@ class MerosSyncCmd extends cmd {
                   $eqLogic->checkAndUpdateCmd('position', $res['result']);
                 }
                 break;
-              case "stop":
+            case "stop":
                 $res = MerosSync::callMeross('stop', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
                 if ($res['result'] != -1)
                 {
                   $eqLogic->checkAndUpdateCmd('position', $res['result']);
                 }
+                break;
+            case "changePosition":
+                $res = MerosSync::callMeross('setPosition', [$eqLogic->getLogicalId(), $_options['slider']]);
+                log::add('MerosSync', 'debug', 'setPosition '.$_options['slider'].': '.$res['result']);
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             default:
                 log::add('MerosSync','debug','action: Action='.$action.' '.__('non implementée.', __FILE__));

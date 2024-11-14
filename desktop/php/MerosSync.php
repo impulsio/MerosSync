@@ -145,7 +145,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
                         <tr>
                             <th>#</th>
                             <th style="width: 15%;">{{Nom}}</th>
-                            <th style="width: 30%;">{{Type}}</th>
+                            <th style="width: 15%;">{{Type}}</th>
+                            <th style="width: 15%;">{{Etat}}</th>
                             <th style="width: 30%;">{{Paramètres}}</th>
                             <th style="width: 15%;">{{Action}}</th>
                         </tr>

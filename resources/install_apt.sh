@@ -28,16 +28,14 @@ sudo apt-get install -y python3-dev
 echo 70 > ${PROGRESS_FILE}
 echo "Empty cache"
 sudo pip3 cache purge
-echo "Installation upgrade pip"
-sudo pip3 install --upgrade pip
+echo "Définition environnement virtuel python"
+mkdir -p /tmp/jeedom/.venvs
+python3 -m venv /tmp/jeedom/.venvs/merosssync
 echo 80 > ${PROGRESS_FILE}
-echo "Installation upgrade requests"
-sudo pip3 install --upgrade requests
-echo 90 > ${PROGRESS_FILE}
 echo "Installation upgrade merossiot"
 BASEDIR=$(dirname "$0")
 meross_version=$(head -1 $BASEDIR/meross-iot_version.txt)
-sudo python3 -m pip install meross_iot==$meross_version
+/tmp/jeedom/.venvs/merosssync/bin/pip install meross_iot==0.4.7.5
 echo 100 > ${PROGRESS_FILE}
 echo "Installation des dépendances terminée !"
 rm ${PROGRESS_FILE}
