@@ -41,7 +41,7 @@ class JeedomCallback:
         self.url = url
         self.messages = []
         self.t = threading.Thread(target=self.run)
-        self.t.setDaemon(True)
+        self.t.daemon = True
         self.t.start()
 
     def stop(self):
