@@ -14,7 +14,7 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.model.enums import OnlineStatus, ThermostatMode, DiffuserSprayMode, DiffuserLightMode, ThermostatWorkingMode, ThermostatModeBState
+from meross_iot.model.enums import OnlineStatus, ThermostatMode, DiffuserSprayMode, DiffuserLightMode, ThermostatWorkingMode, ThermostatModeBState, SprayMode
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.mixins.toggle import ToggleXMixin
@@ -24,6 +24,7 @@ from meross_iot.controller.mixins.light import LightMixin
 from meross_iot.controller.mixins.thermostat import ThermostatModeMixin, ThermostatModeBMixin, ThermostatState
 from meross_iot.controller.mixins.roller_shutter import RollerShutterTimerMixin
 from meross_iot.controller.mixins.diffuser_spray import DiffuserSprayMixin
+from meross_iot.controller.mixins.spray import SprayMixin
 from meross_iot.controller.mixins.diffuser_light import DiffuserLightMixin
 from meross_iot.utilities.misc import current_version
 
@@ -349,7 +350,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(lemode))
             diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserSprayMixin)
             if len(diffs)>0:
-                logger.debug("aSetSpray - This is a diffuser spray")
+                logger.debug("aSetSpray - This is a DiffuserSprayMixin")
                 dev = diffs[0]
                 await dev.async_update()
                 if str(lemode)=="0":
@@ -366,8 +367,27 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return 1
             else:
-                logger.debug("aSetSpray - Not a diffuser spray")
-                return -1
+                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=SprayMixin)
+                if len(diffs)>0:
+                    logger.debug("aSetSpray - This is a SprayMixin")
+                    dev = diffs[0]
+                    await dev.async_update()
+                    if str(lemode)=="0":
+                        logger.debug("aSetSpray - We set the mode OFF")
+                        await dev.async_set_mode(mode=SprayMode.OFF,channel=0)
+                    elif str(lemode)=="1":
+                        logger.debug("aSetSpray - We set the mode CONTINUOUS ")
+                        await dev.async_set_mode(mode=SprayMode.CONTINUOUS,channel=0)
+                    elif str(lemode)=="2":
+                        logger.debug("aSetSpray - We set the mode INTERMITTENT ")
+                        await dev.async_set_mode(mode=SprayMode.INTERMITTENT,channel=0)
+                    else:
+                        logger.debug("aSetSpray - We set the no mode")
+                    await closeConnection()
+                    return 1
+                else:
+                    logger.debug("aSetSpray - Not a spray")
+                    return -1
         except:
             logger.error("aSetSpray - Failed: " + str(sys.exc_info()[1]))
         await closeConnection()
@@ -826,6 +846,25 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['roller'] = True
             d['values']['position'] = position
 
+        #Récupération des humidificateurs
+        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=SprayMixin)
+        if len(diffs) > 0:
+            logger.debug("SprayMixin")
+            diff = diffs[0]
+            await diff.async_update()
+            spray = diff.get_current_mode(0)
+            d['spray'] = True
+            d['values']['spray'] = "Mode "+str(spray)
+            if spray == SprayMode.CONTINUOUS:
+                d['values']['spray'] = "Mode continue"
+            elif spray == SprayMode.INTERMITTENT:
+                d['values']['spray'] = "Mode intermitent"
+            elif spray == SprayMode.OFF:
+                d['values']['spray'] = "Arrêt"
+            d['spraymodes'][0]='Mode arrêt'
+            d['spraymodes'][1]='Mode continue'
+            d['spraymodes'][2]='Mode intermitent'
+
         #Récupération des diffuseurs huiles essentielles
         diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserSprayMixin)
         if len(diffs) > 0:
@@ -841,6 +880,9 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['spray'] = "Mode fort"
             elif spray == DiffuserSprayMode.OFF:
                 d['values']['spray'] = "Arrêt"
+            d['spraymodes'][0]='Diffusion légère'
+            d['spraymodes'][1]='Diffusion forte'
+            d['spraymodes'][2]='Arrêt diffuseur'
 
         #Récupération des diffuseurs huiles essentielles - partie lumière
         diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserLightMixin)
