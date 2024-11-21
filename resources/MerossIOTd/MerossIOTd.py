@@ -718,6 +718,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         })
         d['values'] = {}
         d['modes'] = {}
+        d['spraymodes'] = {}
         switch = []
 
         # valeurs par défaut
