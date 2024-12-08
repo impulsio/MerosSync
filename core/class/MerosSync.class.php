@@ -126,7 +126,25 @@ class MerosSync extends eqLogic {
             {
                 $eqLogic->setConfiguration('online', '0');
             }
-        } else {
+            if( $device['online'] == '1' )
+            {
+                if ($device['ip'] != '') {
+                    $eqLogic->setConfiguration('ip', $device['ip']);
+                }
+                $eqLogic->setIsEnable(1);
+                $eqLogic->save();
+                # Les Commandes
+                self::updateEqLogicCmds($eqLogic, $device);
+                self::updateEqLogicVals($eqLogic, $device['values']);
+            } else
+            {
+                $eqLogic->setIsEnable(0);
+                $eqLogic->save();
+                $humanName = $eqLogic->getHumanName();
+                message::add('MerosSync', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
+            }
+        } else
+        {
             log::add('MerosSync', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic->setName($device['name']);
             if ($device['online'] != '')
@@ -139,21 +157,6 @@ class MerosSync extends eqLogic {
         }
         # Si online, on continue
         log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
-        if( $device['online'] == '1' ) {
-            if ($device['ip'] != '') {
-                $eqLogic->setConfiguration('ip', $device['ip']);
-            }
-            $eqLogic->setIsEnable(1);
-            $eqLogic->save();
-            # Les Commandes
-            self::updateEqLogicCmds($eqLogic, $device);
-            self::updateEqLogicVals($eqLogic, $device['values']);
-        } else {
-            $eqLogic->setIsEnable(0);
-            $eqLogic->save();
-            $humanName = $eqLogic->getHumanName();
-            message::add('MerosSync', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
-        }
     }
     /**
      * Update Values.
