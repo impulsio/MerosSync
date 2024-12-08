@@ -855,16 +855,16 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             await diff.async_update()
             spray = diff.get_current_mode(0)
             d['spray'] = True
-            d['values']['spray'] = "Mode "+str(spray)
+            d['values']['spray'] = "Mode diffusion "+str(spray)
             if spray == SprayMode.CONTINUOUS:
-                d['values']['spray'] = "Mode continue"
+                d['values']['spray'] = "Diffusion continue"
             elif spray == SprayMode.INTERMITTENT:
-                d['values']['spray'] = "Mode intermitent"
+                d['values']['spray'] = "Diffusion intermitent"
             elif spray == SprayMode.OFF:
                 d['values']['spray'] = "Arrêt"
-            d['spraymodes'][0]='Mode arrêt'
-            d['spraymodes'][1]='Mode continue'
-            d['spraymodes'][2]='Mode intermitent'
+            d['spraymodes'][0]='Arrêt diffusion'
+            d['spraymodes'][1]='Diffusion continue'
+            d['spraymodes'][2]='Diffusion intermitente'
 
         #Récupération des diffuseurs huiles essentielles
         diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserSprayMixin)

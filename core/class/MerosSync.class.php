@@ -962,7 +962,7 @@ class MerosSync extends eqLogic {
           {
             foreach ($_device['spraymodes'] as $key => $value)
             {
-              $cmd = $_eqLogic->getCmd(null, 'lightmode_'.$key);
+              $cmd = $_eqLogic->getCmd(null, 'spray_'.$key);
               if (!is_object($cmd))
               {
                   log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_'.$key);
