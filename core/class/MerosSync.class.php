@@ -128,14 +128,8 @@ class MerosSync extends eqLogic {
             }
             if( $device['online'] == '1' )
             {
-                if ($device['ip'] != '') {
-                    $eqLogic->setConfiguration('ip', $device['ip']);
-                }
                 $eqLogic->setIsEnable(1);
                 $eqLogic->save();
-                # Les Commandes
-                self::updateEqLogicCmds($eqLogic, $device);
-                self::updateEqLogicVals($eqLogic, $device['values']);
             } else
             {
                 $eqLogic->setIsEnable(0);
@@ -154,6 +148,17 @@ class MerosSync extends eqLogic {
             {
                 $eqLogic->setConfiguration('online', '0');
             }
+        }
+        if( $device['online'] == '1' )
+        {
+            if ($device['ip'] != '')
+            {
+                $eqLogic->setConfiguration('ip', $device['ip']);
+                $eqLogic->save();
+            }
+            # Mise à jour des Commandes
+            self::updateEqLogicCmds($eqLogic, $device);
+            self::updateEqLogicVals($eqLogic, $device['values']);
         }
         # Si online, on continue
         log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
