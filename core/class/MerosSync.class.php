@@ -1304,17 +1304,13 @@ class MerosSyncCmd extends cmd {
             case "stop":
                 $res = MerosSync::callMeross('stop', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
-                if ($res['result'] != -1)
-                {
-                  $eqLogic->checkAndUpdateCmd('position', $res['result']);
-                }
+                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
+                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                MerosSync::syncOneMeross($res['result']);
                 break;
             case "changePosition":
                 $res = MerosSync::callMeross('setPosition', [$eqLogic->getLogicalId(), $_options['slider']]);
                 log::add('MerosSync', 'debug', 'setPosition '.$_options['slider'].': '.$res['result']);
-                $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
-                MerosSync::syncOneMeross($res['result']);
                 break;
             default:
                 log::add('MerosSync','debug','action: Action='.$action.' '.__('non implementée.', __FILE__));
