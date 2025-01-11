@@ -126,7 +126,19 @@ class MerosSync extends eqLogic {
             {
                 $eqLogic->setConfiguration('online', '0');
             }
-        } else {
+            if( $device['online'] == '1' )
+            {
+                $eqLogic->setIsEnable(1);
+                $eqLogic->save();
+            } else
+            {
+                $eqLogic->setIsEnable(0);
+                $eqLogic->save();
+                $humanName = $eqLogic->getHumanName();
+                message::add('MerosSync', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
+            }
+        } else
+        {
             log::add('MerosSync', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic->setName($device['name']);
             if ($device['online'] != '')
@@ -137,23 +149,19 @@ class MerosSync extends eqLogic {
                 $eqLogic->setConfiguration('online', '0');
             }
         }
-        # Si online, on continue
-        log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
-        if( $device['online'] == '1' ) {
-            if ($device['ip'] != '') {
+        if( $device['online'] == '1' )
+        {
+            if ($device['ip'] != '')
+            {
                 $eqLogic->setConfiguration('ip', $device['ip']);
+                $eqLogic->save();
             }
-            $eqLogic->setIsEnable(1);
-            $eqLogic->save();
-            # Les Commandes
+            # Mise à jour des Commandes
             self::updateEqLogicCmds($eqLogic, $device);
             self::updateEqLogicVals($eqLogic, $device['values']);
-        } else {
-            $eqLogic->setIsEnable(0);
-            $eqLogic->save();
-            $humanName = $eqLogic->getHumanName();
-            message::add('MerosSync', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
         }
+        # Si online, on continue
+        log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
     }
     /**
      * Update Values.
@@ -183,16 +191,6 @@ class MerosSync extends eqLogic {
                     } else
                     {
                         $value = __('Blanc', __FILE__);
-                    }
-                }
-                else if( $key == "spray" )
-                {
-                    if( $value == 1 ) {
-                        $value = __('Continu', __FILE__);
-                    } elseif( $value == 2 ) {
-                        $value = __('Intermittent', __FILE__);
-                    } else {
-                        $value = __('Arrêt', __FILE__);
                     }
                 }
                 else if( $key == "rgbval" )
@@ -968,88 +966,57 @@ class MerosSync extends eqLogic {
         # Spray Mode
         if( $_device['spray'] )
         {
-            # Spray OFF
-            $cmd = $_eqLogic->getCmd(null, 'spray_0');
-            if (!is_object($cmd)) {
-                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_0');
-                $cmd = new MerosSyncCmd();
-                $cmd->setName('Diffusion légère');
-                $cmd->setType('action');
-                $cmd->setSubType('other');
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
-                $cmd->setIsVisible(1);
-                $cmd->setLogicalId('spray_0');
-                $cmd->setEqLogic_id($_eqLogic->getId());
-            } else {
-                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_0');
-            }
-            $cmd->setOrder($order);
-            $cmd->save();
-            $order++;
-            # Spray continue
-            $cmd = $_eqLogic->getCmd(null, 'spray_1');
-            if (!is_object($cmd)) {
-                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_1');
-                $cmd = new MerosSyncCmd();
-                $cmd->setName('Diffusion forte');
-                $cmd->setType('action');
-                $cmd->setSubType('other');
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
-                $cmd->setIsVisible(1);
-                $cmd->setLogicalId('spray_1');
-                $cmd->setEqLogic_id($_eqLogic->getId());
-            } else
+          if (is_array($_device['spraymodes']))
+          {
+            foreach ($_device['spraymodes'] as $key => $value)
             {
-                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_1');
+              $cmd = $_eqLogic->getCmd(null, 'spray_'.$key);
+              if (!is_object($cmd))
+              {
+                  log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_'.$key);
+                  $cmd = new MerosSyncCmd();
+                  $cmd->setName($value);
+                  $cmd->setType('action');
+                  $cmd->setSubType('other');
+                  $cmd->setIsVisible(1);
+                  $cmd->setIsHistorized(0);
+                  $cmd->setTemplate('dashboard', 'default');
+                  $cmd->setTemplate('mobile', 'default');
+                  $cmd->setLogicalId('spray_'.$key);
+                  $cmd->setEqLogic_id($_eqLogic->getId());
+              } else
+              {
+                $cmd->setName($value);
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_'.$key);
+              }
+              $cmd->setOrder($order);
+              $cmd->save();
+              $order++;
             }
-            $cmd->setOrder($order);
-            $cmd->save();
-            $order++;
-            # Spray intermitent
-            $cmd = $_eqLogic->getCmd(null, 'spray_2');
-            if (!is_object($cmd)) {
-                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray_2');
-                $cmd = new MerosSyncCmd();
-                $cmd->setName('Arrêt diffuseur');
-                $cmd->setType('action');
-                $cmd->setSubType('other');
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
-                $cmd->setIsVisible(1);
-                $cmd->setLogicalId('spray_2');
-                $cmd->setEqLogic_id($_eqLogic->getId());
-            } else
-            {
-                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_2');
-            }
-            $cmd->setOrder($order);
-            $cmd->save();
-            $order++;
-            # Spray information
-            $cmd = $_eqLogic->getCmd(null, 'spray');
-            if (!is_object($cmd))
-            {
-                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray');
-                $cmd = new MerosSyncCmd();
-                $cmd->setName('Mode diffusion');
-                $cmd->setType('info');
-                $cmd->setSubType('string');
-                $cmd->setGeneric_type('GENERIC_INFO');
-                $cmd->setIsVisible(1);
-                $cmd->setIsHistorized(0);
-                $cmd->setTemplate('dashboard', 'default');
-                $cmd->setTemplate('mobile', 'default');
-                $cmd->setLogicalId('spray');
-                $cmd->setEqLogic_id($_eqLogic->getId());
-            } else
-            {
-                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray');
-            }
-            $cmd->setOrder($order);
-            $cmd->save();
-            $order++;
+          }
+          # Spray information
+          $cmd = $_eqLogic->getCmd(null, 'spray');
+          if (!is_object($cmd))
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=spray');
+              $cmd = new MerosSyncCmd();
+              $cmd->setName('Mode diffusion');
+              $cmd->setType('info');
+              $cmd->setSubType('string');
+              $cmd->setGeneric_type('GENERIC_INFO');
+              $cmd->setIsVisible(1);
+              $cmd->setIsHistorized(0);
+              $cmd->setTemplate('dashboard', 'default');
+              $cmd->setTemplate('mobile', 'default');
+              $cmd->setLogicalId('spray');
+              $cmd->setEqLogic_id($_eqLogic->getId());
+          } else
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray');
+          }
+          $cmd->setOrder($order);
+          $cmd->save();
+          $order++;
         }
         log::add('MerosSync', 'debug', 'updateEqLogicCmdVal: Update eqLogic informations Completed');
     }
