@@ -1,3 +1,6 @@
+# 15th january 2025
+- Change python install directory to avoid reinstalling dependencies each time jeedom restarts
+
 # 14th november 2024
 - Add compatibility MTS960
 
