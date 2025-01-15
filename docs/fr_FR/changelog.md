@@ -1,3 +1,6 @@
+# 15 janvier 2025
+- Changement répertoire installation python pour éviter de réinstaller les dépendances à chaque redémarrage jeedom
+
 # 14 novembre 2024
 - Ajout compatibilité MTS960
 
