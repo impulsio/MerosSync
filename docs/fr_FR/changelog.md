@@ -1,3 +1,6 @@
+# 16 janvier 2025
+- Correction fonction dépréciée : jeedom.eqLogic.builSelectCmd remplacée par jeedom.eqLogic.buildSelectCmd
+
 # 15 janvier 2025
 - Changement répertoire installation python pour éviter de réinstaller les dépendances à chaque redémarrage jeedom
 
