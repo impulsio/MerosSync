@@ -1,3 +1,6 @@
+# 16th january 2025
+- Deprecated function update : jeedom.eqLogic.builSelectCmd replaced by jeedom.eqLogic.buildSelectCmd
+
 # 15th january 2025
 - Change python install directory to avoid reinstalling dependencies each time jeedom restarts
 
