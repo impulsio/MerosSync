@@ -39,4 +39,4 @@ meross_version=$(head -1 $BASEDIR/meross-iot_version.txt)
 $BASEDIR/.venvs/merosssync/bin/pip install meross_iot==$meross_version
 echo 100 > ${PROGRESS_FILE}
 echo "Installation des dépendances terminée !"
-rm ${PROGRESS_FILE}
+rm ${PROGRESS_FILE} 
