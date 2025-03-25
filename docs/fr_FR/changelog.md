@@ -1,3 +1,9 @@
+# 17 Mars 2025
+- Correction de bugs
+- MerossIOT 0.4.9.0
+- Arrêt support python 3.7
+- paho-mqtt vers V2
+
 # 16 janvier 2025
 - Correction fonction dépréciée : jeedom.eqLogic.builSelectCmd remplacée par jeedom.eqLogic.buildSelectCmd
 

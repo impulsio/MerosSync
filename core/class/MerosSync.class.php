@@ -1071,6 +1071,10 @@ class MerosSync extends eqLogic {
      */
     public static function deamon_start()
     {
+        //Arrêt du démon avant de le relancer
+        self::deamon_stop();
+
+        //Vérification que le démon est lançable
         $deamon_info = self::deamon_info();
         if ($deamon_info['launchable'] != 'ok') {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
@@ -1131,19 +1135,8 @@ class MerosSync extends eqLogic {
             $pid = intval(trim(file_get_contents($pid_file)));
             system::kill($pid);
         }
-        $i = 0;
-        while ($i < 30) {
-            $deamon_info = self::deamon_info();
-            if ($deamon_info['state'] == 'nok') {
-                break;
-            }
-            sleep(1);
-            $i++;
-        }
-        if ($i >= 5) {
-            log::add('MerosSync', 'error', __('Impossible de stopper le démon meross, tuons le', __FILE__));
-            system::kill('MerossIOTd.py');
-        }
+        system::kill('MerossIOTd.py');
+        system::fuserk(config::byKey('socketport', 'MerosSync'));
     }
     /**
      * Return information (status) about daemon.
