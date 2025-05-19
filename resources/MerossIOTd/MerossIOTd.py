@@ -730,6 +730,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         d['roller'] = False
         d['conso'] = False
         d['spray'] = False
+        d['lightmode'] = False
 
         #Récupération des thermostat
         therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeBMixin)
