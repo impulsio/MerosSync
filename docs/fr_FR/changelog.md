@@ -1,5 +1,6 @@
 #22 Janvier 2025
 - MerossIOT 0.4.10.4 (pour ceux utilisant le HUB Meross)
+- Réduction des logs info
 
 # 17 Mars 2025
 - Correction de bugs
