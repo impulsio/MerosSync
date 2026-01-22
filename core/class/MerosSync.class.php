@@ -63,7 +63,7 @@ class MerosSync extends eqLogic {
      * @return none
      */
     public static function syncMeross() {
-        log::add('MerosSync', 'info', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
+        log::add('MerosSync', 'debug', __('Synchronisation des équipements depuis le Cloud Meross', __FILE__));
         $results = self::callMeross('syncMeross');
         if (count($results)==0 || count($results['result'])==0)
         {
@@ -139,7 +139,7 @@ class MerosSync extends eqLogic {
             }
         } else
         {
-            log::add('MerosSync', 'info', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
+            log::add('MerosSync', 'debug', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic->setName($device['name']);
             if ($device['online'] != '')
             {
