@@ -1128,7 +1128,7 @@ async def ashutdown():
     logger.debug("Effacement fichier socket " + str(_sockfile))
     if os.path.exists(_sockfile):
         os.remove(_sockfile)
-    logger.debug("Exit 0")
+    logger.info("Démon arrêté")
 
 def shutdown():
     loop = asyncio.new_event_loop()
