@@ -1,3 +1,6 @@
+#8th February 2025
+- Switching jeedom logic id from UUID to Internal ID to take into account devices linked to HUB that get same UUID as the HUB.
+
 #22nd January 2025
 - MerossIOT 0.4.10.4 (for those using Meross HUB)
 - Reduce info logs
