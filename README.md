@@ -40,11 +40,6 @@ Plugin jeedom permettant de contrôler les équipements Meross.
     <td><img src="desktop/images/mrs100.png" width=150 /></td>
   </tr>
   <tr>
-    <td>MTS960</td>
-    <td>Thermostat chauffage</td>
-    <td><img src="desktop/images/mts960.png" width=150 /></td>
-  </tr>
-  <tr>
     <td>MSL320CP & MSL320HK & MSL320PHK</td>
     <td>Ruban LED</td>
     <td><img src="desktop/images/msl320cp.png" width=150 /></td>
