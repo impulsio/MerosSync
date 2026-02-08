@@ -81,7 +81,7 @@ class MerosSync extends eqLogic {
             $inArray = false;
             foreach( $results['result'] as $key=>$device )
             {
-                if ($device['uuid'] == $eqLogic->getLogicalId())
+                if ($device['internal_id'] == $eqLogic->getLogicalId())
                 {
                   $inArray = true;
                 }
@@ -100,16 +100,33 @@ class MerosSync extends eqLogic {
      * Sync one meross devices.
      * @return none
      */
-    public static function syncOneMeross($device) {
-        $key = $device['uuid'];
+    public static function syncOneMeross($device)
+    {
+        $key = $device['internal_id'];
         $eqLogic = self::byLogicalId($key, 'MerosSync');
+        $update=false;
         # Création ou Update
-        if (!is_object($eqLogic)) {
+        if (!is_object($eqLogic))
+        {
+          //Vérification avec l'ancien key (uuid)
+          $eqLogic = self::byLogicalId($device['uuid'], 'MerosSync');
+          if (is_object($eqLogic))
+          {
+            //Il existe avec l'ancienne clé => on met à jour vers internal_id
+            log::add('MerosSync', 'debug', 'Mise à jour logicalID : ' . $device["name"] . ' - ' . $key);
+            $eqLogic->setLogicalId($key);
+            $eqLogic->save();
+            $update=true;
+          }
+          else
+          {
+            //Il n'existe vraiment pas
             log::add('MerosSync', 'info', __('syncMeross: Ajout de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic = new MerosSync();
             $eqLogic->setName($device['name']);
             $eqLogic->setEqType_name('MerosSync');
             $eqLogic->setLogicalId($key);
+            $eqLogic->setConfiguration('uuid', $device['uuid']); // on sauvegarde l'uuid pour plus tard
             if ($device['type'] != '')
             {
                 $eqLogic->setConfiguration('type', $device['type']);
@@ -136,37 +153,44 @@ class MerosSync extends eqLogic {
                 $humanName = $eqLogic->getHumanName();
                 message::add('MerosSync', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
             }
-        } else
-        {
-            log::add('MerosSync', 'debug', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
-            $eqLogic->setName($device['name']);
-            if ($device['online'] != '')
-            {
-                $eqLogic->setConfiguration('online', $device['online']);
-            } else
-            {
-                $eqLogic->setConfiguration('online', '0');
-            }
         }
-        if( $device['online'] == '1' )
-        {
-            if ($device['ip'] != '')
-            {
-                $eqLogic->setConfiguration('ip', $device['ip']);
-                $eqLogic->save();
-            }
-            # Mise à jour des Commandes
-            self::updateEqLogicCmds($eqLogic, $device);
-            self::updateEqLogicVals($eqLogic, $device['values']);
-        }
-        # Si online, on continue
-        log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
+      }
+      else
+      {
+        $update=true;
+      }
+      if ($update)
+      {
+          log::add('MerosSync', 'debug', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
+          $eqLogic->setName($device['name']);
+          if ($device['online'] != '')
+          {
+              $eqLogic->setConfiguration('online', $device['online']);
+          } else
+          {
+              $eqLogic->setConfiguration('online', '0');
+          }
+      }
+      if( $device['online'] == '1' )
+      {
+          if ($device['ip'] != '')
+          {
+              $eqLogic->setConfiguration('ip', $device['ip']);
+              $eqLogic->save();
+          }
+          # Mise à jour des Commandes
+          self::updateEqLogicCmds($eqLogic, $device);
+          self::updateEqLogicVals($eqLogic, $device['values']);
+      }
+      # Si online, on continue
+      log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
     }
     /**
      * Update Values.
      * @return none
      */
-    public static function updateEqLogicVals($_eqLogic, $values) {
+    public static function updateEqLogicVals($_eqLogic, $values)
+    {
         # Valeurs
         log::add('MerosSync', 'debug', 'updateEqLogicVals: Update eqLogic values');
         foreach ($values as $key => $value)

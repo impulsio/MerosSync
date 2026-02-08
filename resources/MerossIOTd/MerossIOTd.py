@@ -165,8 +165,8 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetOn connected")
         try:
             logger.debug("aSetOn " + uuid)
-            openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
-            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+            openers = manager.find_devices(internal_ids="["+uuid+"]", device_class=GarageOpenerMixin)
+            diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(openers)>0:
                 logger.debug("aSetOn - Garage door found")
                 dev = openers[0]
@@ -183,7 +183,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return 1
             else:
-                plugs = manager.find_devices(device_uuids="["+uuid+"]")
+                plugs = manager.find_devices(internal_ids="["+uuid+"]")
                 if len(plugs) < 1:
                     logger.error("aSetOn - Device not found " + uuid)
                 else:
@@ -222,8 +222,8 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetOff connected")
         try:
             logger.debug("aSetOff " + uuid)
-            openers = manager.find_devices(device_uuids="["+uuid+"]", device_class=GarageOpenerMixin)
-            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+            openers = manager.find_devices(internal_ids="["+uuid+"]", device_class=GarageOpenerMixin)
+            diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(openers)>0:
                 logger.debug("aSetOff - Garage door found")
                 dev = openers[0]
@@ -240,7 +240,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return 0
             else:
-                plugs = manager.find_devices(device_uuids="["+uuid+"]")
+                plugs = manager.find_devices(internal_ids="["+uuid+"]")
                 if len(plugs) < 1:
                     logger.error("aSetOff - Device not found " + uuid)
                 else:
@@ -304,7 +304,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aMove connected")
         try:
             logger.debug("aMove " + str(uuid))
-            rollers = manager.find_devices(device_uuids="["+uuid+"]", device_class=RollerShutterTimerMixin)
+            rollers = manager.find_devices(internal_ids="["+uuid+"]", device_class=RollerShutterTimerMixin)
             if len(rollers)>0:
                 logger.debug("aMove - This is a roller")
                 dev = rollers[0]
@@ -348,7 +348,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetSpray connected")
         try:
             logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(lemode))
-            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserSprayMixin)
+            diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserSprayMixin)
             if len(diffs)>0:
                 logger.debug("aSetSpray - This is a DiffuserSprayMixin")
                 dev = diffs[0]
@@ -367,7 +367,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return 1
             else:
-                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=SprayMixin)
+                diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=SprayMixin)
                 if len(diffs)>0:
                     logger.debug("aSetSpray - This is a SprayMixin")
                     dev = diffs[0]
@@ -414,7 +414,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetLightmode connected")
         try:
             logger.debug("aSetLightmode " + str(uuid) + "-  mode " + str(lemode))
-            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+            diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
             if len(diffs)>0:
                 logger.debug("aSetLightmode - This is a diffuser light")
                 dev = diffs[0]
@@ -461,7 +461,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetPosition connected")
         try:
             logger.debug("aSetPosition " + uuid)
-            rollers = manager.find_devices(device_uuids="["+uuid+"]", device_class=RollerShutterTimerMixin)
+            rollers = manager.find_devices(internal_ids="["+uuid+"]", device_class=RollerShutterTimerMixin)
             if len(rollers)>0:
                 logger.debug("aSetPosition - This is a roller")
                 dev = rollers[0]
@@ -498,7 +498,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetLumi connected")
         try:
             logger.debug("aSetLumi " + uuid)
-            lights = manager.find_devices(device_uuids="["+uuid+"]", device_class=LightMixin)
+            lights = manager.find_devices(internal_ids="["+uuid+"]", device_class=LightMixin)
             if len(lights)>0:
                 logger.debug("aSetLumi - This is a light")
                 dev = lights[0]
@@ -508,7 +508,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
             else:
-                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+                diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
                 if len(diffs)>0:
                     logger.debug("aSetLumi - This is a diffuser light")
                     dev = diffs[0]
@@ -545,7 +545,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetTemp connected")
         try:
             logger.debug("aSetTemp " + uuid)
-            therms = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeMixin)
+            therms = manager.find_devices(internal_ids="["+uuid+"]", device_class=ThermostatModeMixin)
             if len(therms)>0:
                 logger.debug("aSetTemp - This is a ThermostatModeMixin")
                 dev = therms[0]
@@ -570,7 +570,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 return "aSetTemp - Done - new temeperature : "+ str(temp_int)
             else:
                 logger.debug("aSetTemp " + uuid)
-                therms = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeBMixin)
+                therms = manager.find_devices(internal_ids="["+uuid+"]", device_class=ThermostatModeBMixin)
                 if len(therms)>0:
                     logger.debug("aSetTemp - This is a ThermostatModeBMixin")
                     dev = therms[0]
@@ -608,7 +608,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetTempMode connected")
         try:
             logger.debug("aSetTempMode " + str(uuid) + "-  mode " + str(lemode))
-            diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeMixin)
+            diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=ThermostatModeMixin)
             if len(diffs)>0:
                 logger.debug("aSetTempMode - This is a ThermostatModeMixin")
                 dev = diffs[0]
@@ -633,7 +633,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return 1
             else:
-                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=ThermostatModeBMixin)
+                diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=ThermostatModeBMixin)
                 if len(diffs)>0:
                     logger.debug("aSetTempMode - This is a ThermostatModeBMixin")
                     dev = diffs[0]
@@ -677,7 +677,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSetRGB connected")
         try:
             logger.debug("aSetRGB " + uuid)
-            lights = manager.find_devices(device_uuids="["+uuid+"]", device_class=LightMixin)
+            lights = manager.find_devices(internal_ids="["+uuid+"]", device_class=LightMixin)
             if len(lights)>0:
                 logger.debug("aSetRGB - This is a light")
                 dev = lights[0]
@@ -687,7 +687,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await closeConnection()
                 return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
             else:
-                diffs = manager.find_devices(device_uuids="["+uuid+"]", device_class=DiffuserLightMixin)
+                diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
                 if len(diffs)>0:
                     logger.debug("aSetRGB - This is a diffuser light")
                     dev = diffs[0]
@@ -734,7 +734,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         d['lightmode'] = False
 
         #Récupération des thermostat
-        therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeBMixin)
+        therms = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=ThermostatModeBMixin)
         if len(therms) > 0:
             logger.debug("ThermostatModeBMixin")
             dev = therms[0]
@@ -787,7 +787,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['values']['tempcur']=therm.current_temperature_celsius/10.00
 
         #Récupération des lumières
-        lights = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=LightMixin)
+        lights = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=LightMixin)
         if len(lights) > 0:
             logger.debug("LightMixin")
             light=lights[0]
@@ -816,7 +816,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['tempval']=light.get_color_temperature()
 
         #Récupération des consommations instantannées
-        plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ElectricityMixin)
+        plugs = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=ElectricityMixin)
         if len(plugs) > 0:
             logger.debug("ElectricityMixin")
             instant_consumption = await device.async_get_instant_metrics()
@@ -826,7 +826,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['values']['tension'] = instant_consumption.voltage
 
         #Récupérations des consommations
-        plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ConsumptionXMixin)
+        plugs = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=ConsumptionXMixin)
         if len(plugs) > 0:
             logger.debug("ConsumptionXMixin")
             d['conso'] = True
@@ -840,7 +840,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                         d['values']['conso_totale'] = float(c['total_consumption_kwh'])
 
         #Récupération des commande volets roulants
-        rollers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=RollerShutterTimerMixin)
+        rollers = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=RollerShutterTimerMixin)
         if len(rollers) > 0:
             logger.debug("RollerShutterTimerMixin")
             roller = rollers[0]
@@ -850,7 +850,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['values']['position'] = position
 
         #Récupération des humidificateurs
-        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=SprayMixin)
+        diffs = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=SprayMixin)
         if len(diffs) > 0:
             logger.debug("SprayMixin")
             diff = diffs[0]
@@ -869,7 +869,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['spraymodes'][2]='Diffusion intermitente'
 
         #Récupération des diffuseurs huiles essentielles
-        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserSprayMixin)
+        diffs = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=DiffuserSprayMixin)
         if len(diffs) > 0:
             logger.debug("DiffuserSprayMixin")
             diff = diffs[0]
@@ -888,7 +888,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['spraymodes'][2]='Arrêt diffuseur'
 
         #Récupération des diffuseurs huiles essentielles - partie lumière
-        diffs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=DiffuserLightMixin)
+        diffs = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=DiffuserLightMixin)
         if len(diffs) > 0:
             logger.debug("DiffuserLightMixin")
             diff = diffs[0]
@@ -926,7 +926,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['modes'][2]='Mode intensité'
 
         #Récupération des thermostats
-        therms = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ThermostatModeMixin)
+        therms = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=ThermostatModeMixin)
         if len(therms) > 0:
             logger.debug("ThermostatModeMixin")
             dev = therms[0]
@@ -979,7 +979,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['values']['tempcur']=therm.current_temperature_celsius/10
 
         #Récupérations des portes de garage
-        openers = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=GarageOpenerMixin)
+        openers = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=GarageOpenerMixin)
         if len(openers) > 0:
             logger.debug("GarageOpenerMixin")
             device = openers[0]
@@ -1009,7 +1009,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['famille'] = 'GenericGarageDoorOpener'
         elif len(lights) < 1:
             #Récupérations des switch si ce n'est pas des portes de garage ni des lumières
-            plugs = manager.find_devices(device_uuids="["+device.uuid+"]", device_class=ToggleXMixin)
+            plugs = manager.find_devices(internal_ids="["+device.uuid+"]", device_class=ToggleXMixin)
             if len(plugs) > 0:
                 logger.debug("ToggleXMixin")
                 onoff = []
@@ -1091,7 +1091,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         device=0
         logger.debug("aSyncDevice connected")
         try:
-            meross_device = manager.find_devices(device_uuids="["+uuid+"]")
+            meross_device = manager.find_devices(internal_ids="["+uuid+"]")
             logger.debug("aSyncDevice - " + str(len(meross_device)) + " devices found")
             if (len(meross_device) == 1):
                 device = await self.aSyncOneMeross(meross_device[0])
