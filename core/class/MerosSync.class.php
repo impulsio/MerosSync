@@ -1041,6 +1041,34 @@ class MerosSync extends eqLogic {
           $cmd->save();
           $order++;
         }
+
+        # Ms405Sensor
+        if( $_device['famille'] == 'Ms405Sensor' )
+        {
+          # Spray information
+          $cmd = $_eqLogic->getCmd(null, 'isDry');
+          if (!is_object($cmd))
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=isDry');
+              $cmd = new MerosSyncCmd();
+              $cmd->setName('Fuite d\'eau');
+              $cmd->setType('info');
+              $cmd->setSubType('binary');
+              $cmd->setGeneric_type('WATER_LEAK');
+              $cmd->setIsVisible(1);
+              $cmd->setIsHistorized(0);
+              $cmd->setTemplate('dashboard', 'flood');
+              $cmd->setTemplate('mobile', 'flood');
+              $cmd->setLogicalId('isDry');
+              $cmd->setEqLogic_id($_eqLogic->getId());
+          } else
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=isLeaking');
+          }
+          $cmd->setOrder($order);
+          $cmd->save();
+          $order++;
+        }
         log::add('MerosSync', 'debug', 'updateEqLogicCmdVal: Update eqLogic informations Completed');
     }
     /**
