@@ -127,15 +127,15 @@ class MerosSync extends eqLogic {
             $eqLogic->setEqType_name('MerosSync');
             $eqLogic->setLogicalId($key);
             $eqLogic->setConfiguration('uuid', $device['uuid']); // on sauvegarde l'uuid pour plus tard
-            if ($device['type'] != '')
+            if (isset($device['type']))
             {
                 $eqLogic->setConfiguration('type', $device['type']);
             }
-            if ($device['famille'] != '')
+            if (isset($device['famille']))
             {
                 $eqLogic->setConfiguration('famille', $device['famille']);
             }
-            if ($device['online'] != '')
+            if (isset($device['online']))
             {
                 $eqLogic->setConfiguration('online', $device['online']);
             } else
@@ -173,7 +173,7 @@ class MerosSync extends eqLogic {
       }
       if( $device['online'] == '1' )
       {
-          if ($device['ip'] != '')
+          if (isset($device['ip']))
           {
               $eqLogic->setConfiguration('ip', $device['ip']);
               $eqLogic->save();
