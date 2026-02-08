@@ -711,6 +711,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         d = dict({
             'name': device.name,
             'uuid': device.uuid,
+            'internal_id': device.internal_id,
             'famille': str(device.__class__.__name__),
             'online': device_online,
             'type': device.type,

@@ -78,7 +78,6 @@ class MerosSync extends eqLogic {
           log::add('MerosSync', 'debug', 'Check offline components');
           foreach (self::byType('MerosSync') as $eqLogic)
           {
-            log::add('MerosSync', 'debug', 'ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
             $inArray = false;
             foreach( $results['result'] as $key=>$device )
             {
@@ -89,7 +88,7 @@ class MerosSync extends eqLogic {
             }
             if (!$inArray)
             {
-              log::add('MerosSync', 'debug', 'offline');
+              log::add('MerosSync', 'debug', 'OFFLINE ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
               $eqLogic->setConfiguration('online', '0');
               $eqLogic->save();
             }
@@ -1129,14 +1128,17 @@ class MerosSync extends eqLogic {
      * Stop python daemon.
      * @return array Shell command return.
      */
-    public static function deamon_stop() {
-        $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
-        if (file_exists($pid_file)) {
-            $pid = intval(trim(file_get_contents($pid_file)));
-            system::kill($pid);
-        }
-        system::kill('MerossIOTd.py');
-        system::fuserk(config::byKey('socketport', 'MerosSync'));
+    public static function deamon_stop()
+    {
+      log::add('MerosSync','info','Arrêt démon meross.');
+      $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
+      if (file_exists($pid_file)) {
+        $pid = intval(trim(file_get_contents($pid_file)));
+        log::add('MerosSync','info','Arrêt job '.$pid);
+        system::kill($pid);
+      }
+      system::kill('MerossIOTd.py');
+      system::fuserk(config::byKey('socketport', 'MerosSync'));
     }
     /**
      * Return information (status) about daemon.
