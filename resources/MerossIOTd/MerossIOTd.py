@@ -844,7 +844,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
 
             d['values']['tempcur']=therm.current_temperature_celsius/10
 
-        #Récupérations des portes de garage
+        #Récupérations des Water Leak Sensor
         sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms405Sensor)
         if len(sensors) > 0:
             logger.debug("Ms405Sensor")
@@ -981,7 +981,7 @@ async def ashutdown():
     global thread_run
     logger.debug("Arrêt")
     thread_run=False
-    manager.unregister_push_notification_handler_coroutine(merossSyncEventListener)
+    manager.unregister_push_notification_handler_coroutine(managerEventListener)
     await closeConnection()
     logger.debug("Stop callback server")
     jc.stop()
@@ -1009,7 +1009,8 @@ def hex_to_rgb(hex):
 
 # ----------------------------------------------------------------------------
 
-async def merossSyncEventListener(namespace: Namespace, data: dict, device_internal_id: str, *args, **kwargs):
+async def managerEventListener(namespace: Namespace, data: dict, device_internal_id: str, *args, **kwargs):
+    logger.debug("managerEventListener")
     d = dict({
         'internal_id': device_internal_id,
         'action':'updateKeyValue'
@@ -1034,6 +1035,32 @@ async def merossSyncEventListener(namespace: Namespace, data: dict, device_inter
         logger.debug(f"Event occurred: {namespace}, Event data: {data}")
 
 
+async def deviceEventListener(namespace: Namespace, data: dict, device_internal_id: str):
+    logger.debug("deviceEventListener")
+    d = dict({
+        'internal_id': device_internal_id,
+        'action':'updateKeyValue'
+    })
+    if namespace == Namespace.CONTROL_ALARM:
+        logger.debug(f"Alarm occurred! Event data: {data}")
+        d['key']='isDry'
+        d['value']=0
+        jc.send(d)
+    elif namespace == Namespace.HUB_SENSOR_WATERLEAK:
+        logger.debug(f"Water leak occurred! Event data: {data}")
+        d['key']='isDry'
+        d['value']=0
+        jc.send(d)
+    elif namespace == Namespace.CONTROL_TOGGLEX:
+        logger.debug(f"ToggleX Event data: {data}")
+        d['key']='onoff'
+        d['value']=data['togglex'][0]['onoff']
+        d['channel']=data['togglex'][0]['channel']
+        jc.send(d)
+    else:
+        logger.debug(f"Event occurred: {namespace}, Event data: {data}")
+
+
 async def initConnection(args):
     global manager
     global http_api_client
@@ -1050,7 +1077,10 @@ async def initConnection(args):
         manager = MerossManager(http_client=http_api_client)
         await manager.async_device_discovery()
         logger.debug('Push notification register')
-        manager.register_push_notification_handler_coroutine(merossSyncEventListener)
+        manager.register_push_notification_handler_coroutine(managerEventListener)
+        meross_devices = manager.find_devices()
+        for dev in meross_devices:
+            dev.register_push_notification_handler_coroutine(deviceEventListener)
         connected=True
     except Exception as e:
         print(e)
@@ -1058,7 +1088,7 @@ async def initConnection(args):
 
 async def closeConnection():
     global manager
-    manager.unregister_push_notification_handler_coroutine(merossSyncEventListener)
+    manager.unregister_push_notification_handler_coroutine(managerEventListener)
     logger.debug("Close connection")
     manager.close()
     await http_api_client.async_logout()
