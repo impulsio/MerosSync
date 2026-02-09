@@ -951,10 +951,10 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         device=0
         logger.debug("aSyncDevice connected")
         try:
-            meross_device = manager.find_devices(internal_ids="["+uuid+"]")
-            logger.debug("aSyncDevice - " + str(len(meross_device)) + " devices found")
-            if (len(meross_device) == 1):
-                device = await self.aSyncOneMeross(meross_device[0])
+            devices = manager.find_devices(internal_ids="["+uuid+"]")
+            logger.debug("aSyncDevice - " + str(len(devices)) + " devices found with ID " + str(uuid))
+            for dev in devices:
+                device = await self.aSyncOneMeross(dev)
         except:
             logger.error("aSyncDevice Failed: " + str(sys.exc_info()[1]))
         return device
