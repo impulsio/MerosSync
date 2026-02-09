@@ -948,16 +948,17 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSyncDevice(self, uuid):
         logger.debug("aSyncDevice called")
         global manager
-        device=0
+        d_devices=[]
         logger.debug("aSyncDevice connected")
         try:
             devices = manager.find_devices(internal_ids="["+uuid+"]")
             logger.debug("aSyncDevice - " + str(len(devices)) + " devices found with ID " + str(uuid))
             for dev in devices:
-                device = await self.aSyncOneMeross(dev)
+                d = await self.aSyncOneMeross(dev)
+                d_devices.append(d)
         except:
             logger.error("aSyncDevice Failed: " + str(sys.exc_info()[1]))
-        return device
+        return d_devices
 
 # Les fonctions du daemon ------------------------------------------------------
 def convert_log_level(level='error'):

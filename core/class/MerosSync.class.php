@@ -1337,7 +1337,10 @@ class MerosSyncCmd extends cmd {
             case "refresh":
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
-                MerosSync::syncOneMeross($res['result']);
+                foreach( $res['result'] as $key=>$device )
+                {
+                    MerosSync::syncOneMeross($device);
+                }
                 break;
             case "up":
                 $res = MerosSync::callMeross('goUp', [$eqLogic->getLogicalId()]);
