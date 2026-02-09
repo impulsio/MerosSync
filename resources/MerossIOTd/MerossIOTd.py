@@ -995,7 +995,7 @@ async def ashutdown():
     logger.info("Démon arrêté")
 
 def shutdown():
-    self._run_async(ashutdown())
+    asyncio.run_coroutine_threadsafe(ashutdown(), global_loop).result()
 
 def rgb_to_hex(rgb):
     return '#{:02x}{:02x}{:02x}'.format(rgb[0],rgb[1],rgb[2])
