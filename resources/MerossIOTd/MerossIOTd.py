@@ -14,7 +14,7 @@ import asyncio
 from datetime import datetime
 from meross_iot.manager import MerossManager
 from meross_iot.http_api import MerossHttpClient
-from meross_iot.model.enums import OnlineStatus, ThermostatMode, DiffuserSprayMode, DiffuserLightMode, ThermostatWorkingMode, ThermostatModeBState, SprayMode
+from meross_iot.model.enums import *
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 from meross_iot.controller.subdevice import Mts100v3Valve, Ms100Sensor, Ms405Sensor
@@ -92,30 +92,7 @@ class JeedomCallback:
 
     def event_handler(self, eventobj):
         logger.debug("Event : {}".format(eventobj.event_type))
-        if eventobj.event_type == MerossEventType.DEVICE_SWITCH_STATUS:
-            self.send({'action': 'switch', 'uuid':eventobj.device.uuid, 'channel':eventobj.channel_id, 'status':int(eventobj.switch_state)})
-        elif eventobj.event_type == MerossEventType.DEVICE_ONLINE_STATUS:
-            self.send({'action': 'online', 'uuid':eventobj.device.uuid, 'status':eventobj.status})
-        elif eventobj.event_type == MerossEventType.DEVICE_BULB_SWITCH_STATE:
-            self.send({'action': 'switch', 'uuid':eventobj.device.uuid, 'channel':eventobj.channel, 'status':int(eventobj.is_on)})
-        elif eventobj.event_type == MerossEventType.DEVICE_BULB_STATE:
-            self.send({'action': 'bulb', 'uuid':eventobj.device.uuid, 'channel':eventobj.channel, 'status':eventobj.light_state})
-        elif eventobj.event_type == MerossEventType.GARAGE_DOOR_STATUS:
-            self.send({'action': 'door', 'uuid':eventobj.device.uuid, 'channel':eventobj.channel, 'status':eventobj.door_state})
-        #HUMIDIFIER
-        elif eventobj.event_type == MerossEventType.HUMIDIFIER_LIGHT_EVENT:
-            self.send({'action': 'hlight', 'uuid':eventobj.device.uuid, 'channel':eventobj.channel, 'status':int(eventobj.is_on), 'rgb':int(to_rgb(eventobj.rgb)), 'luminance':eventobj.luminance})
-        elif eventobj.event_type == MerossEventType.HUMIDIFIER_SPRY_EVENT:
-            self.send({'action': 'hspray', 'uuid':eventobj.device.uuid, 'channel':eventobj.channel, 'status':int(eventobj.spry_mode.value)})
-        #ADDITIONS
-        elif eventobj.event_type == MerossEventType.CLIENT_CONNECTION:
-            self.send({'action': 'connect', 'status':eventobj.status.value})
-        elif eventobj.event_type == MerossEventType.DEVICE_BIND:
-            self.send({'action': 'bind', 'uuid':eventobj.device.uuid, 'data':eventobj.bind_data})
-        elif eventobj.event_type == MerossEventType.DEVICE_UNBIND:
-            self.send({'action': 'unbind', 'uuid':eventobj.device.uuid})
-        #elif eventobj.event_type == MerossEventType.THERMOSTAT_MODE_CHANGE:
-        #elif eventobj.event_type == MerossEventType.THERMOSTAT_TEMPERATURE_CHANGE:
+
 
 # Reception de Jeedom ----------------------------------------------------------
 class JeedomHandler(socketserver.BaseRequestHandler):
@@ -144,25 +121,21 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         except:
             logger.error("handle Failed: " + str(sys.exc_info()[1]))
 
+    def _run_async(self, coroutine):
+        # On utilise la boucle globale définie au démarrage
+        return asyncio.run_coroutine_threadsafe(coroutine, global_loop).result()
+
     def setOn(self, uuid, channel=0):
-        retour=0
         logger.debug("setOn called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetOn(uuid, channel))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetOn(uuid, channel))
         except:
             logger.error("setOn Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetOn(self, uuid, channel):
         logger.debug("aSetOn called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetOn connected")
         try:
             logger.debug("aSetOn " + uuid)
@@ -174,14 +147,12 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await dev.async_update()
                 logger.debug("aSetOn - We open the door")
                 await dev.async_open(channel)
-                await closeConnection()
                 return 1
             elif len(diffs)>0:
                 logger.debug("aSetOn - Diffuser Light")
                 dev = diffs[0]
                 await dev.async_update()
                 await dev.async_set_light_mode(channel=0,onoff=True)
-                await closeConnection()
                 return 1
             else:
                 plugs = manager.find_devices(internal_ids="["+uuid+"]")
@@ -194,32 +165,22 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     await dev.async_update()
                     logger.debug("aSetOn - Device turn on")
                     await dev.async_turn_on(channel)
-                    await closeConnection()
                     return 1
         except:
             logger.error("aSetOn - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return 0
 
     def setOff(self, uuid, channel=0):
-        retour=0
         logger.debug("setOff called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetOff(uuid, channel))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetOff(uuid, channel))
         except:
             logger.error("setOff Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetOff(self, uuid, channel):
         logger.debug("aSetOff called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetOff connected")
         try:
             logger.debug("aSetOff " + uuid)
@@ -231,14 +192,12 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await dev.async_update()
                 logger.debug("aSetOff - We close the door "+str(channel))
                 await dev.async_close(channel)
-                await closeConnection()
                 return 0
             elif len(diffs)>0:
                 logger.debug("aSetOn - Diffuser Light")
                 dev = diffs[0]
                 await dev.async_update()
                 await dev.async_set_light_mode(channel=0,onoff=False)
-                await closeConnection()
                 return 0
             else:
                 plugs = manager.find_devices(internal_ids="["+uuid+"]")
@@ -251,57 +210,38 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     await dev.async_update()
                     logger.debug("aSetOff - Device turn on")
                     await dev.async_turn_off(channel)
-                    await closeConnection()
                     return 0
         except:
             logger.error("aSetOff - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return 1
 
     def goUp(self, uuid):
         logger.debug("goUp called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aMove(uuid,1))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aMove(uuid,1))
         except:
             logger.error("goUp Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     def goDown(self, uuid):
         logger.debug("goDown called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aMove(uuid,-1))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aMove(uuid,-1))
         except:
             logger.error("goDown Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     def stop(self, uuid):
         logger.debug("stop called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aMove(uuid,0))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aMove(uuid,0))
         except:
             logger.error("stop Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aMove(self, uuid, sens):
         logger.debug("aMove called "+str(sens))
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aMove connected")
         try:
             logger.debug("aMove " + str(uuid))
@@ -319,33 +259,24 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 elif sens==1:
                     logger.debug("aMove - goUp")
                     await dev.async_open(0)
-                await closeConnection()
                 return 1
             else:
                 return -1
         except:
             logger.error("aMove - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return -1
 
     def setSpray(self, uuid, lemode):
         logger.debug("setSpray called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetSpray(uuid, lemode))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetSpray(uuid, lemode))
         except:
             logger.error("setSpray Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetSpray(self, uuid, lemode):
         logger.debug("aSetSpray called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetSpray connected")
         try:
             logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(lemode))
@@ -365,7 +296,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     await dev.async_set_spray_mode(mode=DiffuserSprayMode.OFF,channel=0)
                 else:
                     logger.debug("aSetSpray - We set the no mode")
-                await closeConnection()
                 return 1
             else:
                 diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=SprayMixin)
@@ -384,34 +314,25 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                         await dev.async_set_mode(mode=SprayMode.INTERMITTENT,channel=0)
                     else:
                         logger.debug("aSetSpray - We set the no mode")
-                    await closeConnection()
                     return 1
                 else:
                     logger.debug("aSetSpray - Not a spray")
                     return -1
         except:
             logger.error("aSetSpray - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return -1
 
     def setLightmode(self, uuid, lemode):
         logger.debug("setLightmode called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetLightmode(uuid, lemode))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetLightmode(uuid, lemode))
         except:
             logger.error("setLightmode Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetLightmode(self, uuid, lemode):
         logger.debug("aSetLightmode called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetLightmode connected")
         try:
             logger.debug("aSetLightmode " + str(uuid) + "-  mode " + str(lemode))
@@ -431,34 +352,25 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     await dev.async_set_light_mode(channel=0, mode=DiffuserLightMode.FIXED_LUMINANCE, brightness=100, onoff=True)
                 else:
                     logger.debug("aSetLightmode - We set the no mode")
-                await closeConnection()
                 return 1
             else:
                 logger.debug("aSetLightmode - Not a diffuser light")
                 return -1
         except:
             logger.error("aSetLightmode - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return -1
 
     def setPosition(self, uuid, position_int):
         logger.debug("setPosition called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetPosition(uuid, position_int))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetPosition(uuid, position_int))
         except:
             logger.error("setPosition Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetPosition(self, uuid, position_int):
         logger.debug("aSetPosition called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetPosition connected")
         try:
             logger.debug("aSetPosition " + uuid)
@@ -469,33 +381,24 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await dev.async_update()
                 logger.debug("aSetPosition - We set the position")
                 await dev.async_set_position(channel=0, position=position_int)
-                await closeConnection()
                 return "C'est fait - nouvelle position : "+ str(position_int)
             else:
                 return "Nous ne savons pas gérer cette action"
         except:
             logger.error("aSetPosition - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return "Une erreur est survenue"
 
     def setLumi(self, uuid, lumi_int):
         logger.debug("setLumi called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetLumi(uuid, lumi_int))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetLumi(uuid, lumi_int))
         except:
             logger.error("setLumi Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetLumi(self, uuid, lumi_int):
         logger.debug("aSetLumi called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetLumi connected")
         try:
             logger.debug("aSetLumi " + uuid)
@@ -506,7 +409,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await dev.async_update()
                 logger.debug("aSetLumi - We set the luminance")
                 await dev.async_set_light_color(channel=0,onoff=True,brightness=lumi_int)
-                await closeConnection()
                 return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
             else:
                 diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
@@ -516,33 +418,24 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     await dev.async_update()
                     logger.debug("aSetLumi - We set the luminance")
                     await dev.async_set_light_mode(channel=0,onoff=True,brightness=lumi_int, mode=DiffuserLightMode.FIXED_LUMINANCE)
-                    await closeConnection()
                     return "C'est fait - nouvelle luminosité : "+ str(lumi_int)
                 else:
                     return "Nous ne savons pas gérer cette action"
         except:
             logger.error("aSetLumi - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return "Une erreur est survenue"
 
     def setTemp(self, uuid, temp_int):
         logger.debug("setTemp called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetTemp(uuid, temp_int))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetTemp(uuid, temp_int))
         except:
             logger.error("setTemp Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetTemp(self, uuid, temp_int):
         logger.debug("aSetTemp called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetTemp connected")
         try:
             logger.debug("aSetTemp " + uuid)
@@ -566,8 +459,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 else:
                     logger.debug("aSetTemp - no mode, going to auto")
                     await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.AUTO,heat_temperature_celsius=temp_int, cool_temperature_celsius=temp_int, on_not_off=True)
-
-                await closeConnection()
                 return "aSetTemp - Done - new temeperature : "+ str(temp_int)
             else:
                 logger.debug("aSetTemp " + uuid)
@@ -579,33 +470,24 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     temp_int=float(temp_int)
                     logger.debug("aSetTemp - We set the temperature : "+str(temp_int))
                     await dev.async_set_thermostat_config(channel=0,target_temperature_celsius=temp_int*10, on_not_off=True)
-                    await closeConnection()
                     return "aSetTemp - Done - new temeperature : "+ str(temp_int)
                 else:
                     return "aSetTemp - Not a thermostat"
         except:
             logger.error("aSetTemp - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return "Une erreur est survenue"
 
     def setTempMode(self, uuid, lemode):
         logger.debug("setTempMode called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetTempMode(uuid, lemode))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetTempMode(uuid, lemode))
         except:
             logger.error("setTempMode Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetTempMode(self, uuid, lemode):
         logger.debug("aSetTempMode called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetTempMode connected")
         try:
             logger.debug("aSetTempMode " + str(uuid) + "-  mode " + str(lemode))
@@ -631,7 +513,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     await dev.async_set_thermostat_config(channel=0,mode=ThermostatMode.MANUAL, on_not_off=True)
                 else:
                     logger.debug("aSetTempMode - We set no mode")
-                await closeConnection()
                 return 1
             else:
                 diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=ThermostatModeBMixin)
@@ -646,7 +527,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     elif str(lemode)=="2":
                         logger.debug("aSetTempMode - We set the mode COOL")
                         await dev.async_set_thermostat_config(channel=0,mode=ThermostatWorkingMode.COOL, target_temperature_celsius=therm.target_temperature_celsius, on_not_off=True)
-                    await closeConnection()
                     logger.debug("aSetTempMode - Done")
                     return 1
                 else:
@@ -654,27 +534,19 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     return -1
         except:
             logger.error("aSetTempMode - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return -1
 
     def setRGB(self, uuid, rgb):
         logger.debug("setRGB called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSetRGB(uuid, rgb))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSetRGB(uuid, rgb))
         except:
             logger.error("setRGB Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSetRGB(self, uuid, rgb):
         logger.debug("aSetRGB called")
         global manager
-        global args
-        await initConnection(args)
         logger.debug("aSetRGB connected")
         try:
             logger.debug("aSetRGB " + uuid)
@@ -685,7 +557,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 await dev.async_update()
                 logger.debug("aSetRGB - We set the color "+str(rgb))
                 await dev.async_set_light_color(0,None,hex_to_rgb(rgb),None,None)
-                await closeConnection()
                 return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
             else:
                 diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
@@ -695,13 +566,11 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                     await dev.async_update()
                     logger.debug("aSetRGB - We set the color "+str(rgb))
                     await dev.async_set_light_mode(channel=0, rgb=hex_to_rgb(rgb), onoff=True, mode=DiffuserLightMode.FIXED_RGB)
-                    await closeConnection()
                     return "C'est fait - nouvelle couleur : "+ str(rgb) +" = "+str(hex_to_rgb(rgb))
                 else:
                     return "Nous ne savons pas gérer cette action"
         except:
             logger.error("aSetRGB - Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return "Une erreur est survenue"
 
     async def aSyncOneMeross(self, device):
@@ -757,10 +626,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['mode'] = 'Climatisation'
             else:
                 d['values']['mode']='Aucun mode'
-
-            # NE FONCTIONNE PAS
-            # d['modes'][1]='Mode chauffage'
-            # d['modes'][2]='Mode climatisation'
 
             if therm.state == ThermostatModeBState.HEATING_COOLING:
                 if therm.workingMode == ThermostatWorkingMode.HEAT:
@@ -1048,24 +913,16 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         return d
 
     def syncMeross(self):
-        retour=0
         logger.debug("syncMeross called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSyncMeross())
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSyncMeross())
         except:
             logger.error("syncMeross Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSyncMeross(self):
         logger.debug("aSyncMeross called")
         global manager
-        global args
-        await initConnection(args)
         d_devices=[]
         logger.debug("aSyncMeross connected")
         try:
@@ -1078,28 +935,19 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d_devices.append(d)
         except:
             logger.error("aSyncMeross Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return d_devices
 
     def syncDevice(self, uuid):
-        retour=0
         logger.debug("syncDevice called")
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            self.loop = asyncio.get_event_loop()
-            try:
-                retour=self.loop.run_until_complete(self.aSyncDevice(uuid))
-            finally:
-                self.loop.close()
-            return retour
+            return self._run_async(self.aSyncDevice(uuid))
         except:
             logger.error("syncDevice Failed: " + str(sys.exc_info()[1]))
+            return 0
 
     async def aSyncDevice(self, uuid):
         logger.debug("aSyncDevice called")
         global manager
-        global args
-        await initConnection(args)
         device=0
         logger.debug("aSyncDevice connected")
         try:
@@ -1109,7 +957,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 device = await self.aSyncOneMeross(meross_device[0])
         except:
             logger.error("aSyncDevice Failed: " + str(sys.exc_info()[1]))
-        await closeConnection()
         return device
 
 # Les fonctions du daemon ------------------------------------------------------
@@ -1133,8 +980,11 @@ async def ashutdown():
     global thread_run
     logger.debug("Arrêt")
     thread_run=False
+    manager.unregister_push_notification_handler_coroutine(merossSyncEventListener)
+    await closeConnection()
     logger.debug("Stop callback server")
     jc.stop()
+    global_loop.close()
     logger.debug("Effacement fichier PID " + str(_pidfile))
     if os.path.exists(_pidfile):
         os.remove(_pidfile)
@@ -1144,10 +994,7 @@ async def ashutdown():
     logger.info("Démon arrêté")
 
 def shutdown():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(ashutdown())
-    loop.close()
+    self._run_async(ashutdown())
 
 def rgb_to_hex(rgb):
     return '#{:02x}{:02x}{:02x}'.format(rgb[0],rgb[1],rgb[2])
@@ -1160,20 +1007,31 @@ def hex_to_rgb(hex):
     return tuple(rgb)
 
 # ----------------------------------------------------------------------------
-def syncOneElectricity(device):
-    # Puissance
-    if device.supports_electricity_reading():
-        try:
-            d = dict({'power': 0,'current': 0,'voltage':0})
-            electricity = device.get_electricity()
-            d['power'] = float(electricity['power'] / 1000.)
-            d['current'] = float(electricity['current'] / 1000.)
-            d['voltage'] = float(electricity['voltage'] / 10.)
-            return d
-        except:
-            pass
-    # Fini
-    return False
+
+async def merossSyncEventListener(namespace: Namespace, data: dict, device_internal_id: str, *args, **kwargs):
+    d = dict({
+        'internal_id': device_internal_id,
+        'action':'updateKeyValue'
+    })
+    if namespace == Namespace.CONTROL_ALARM:
+        logger.debug(f"Alarm occurred! Event data: {data}")
+        d['key']='isDry'
+        d['value']=0
+        jc.send(d)
+    elif namespace == Namespace.HUB_SENSOR_WATERLEAK:
+        logger.debug(f"Water leak occurred! Event data: {data}")
+        d['key']='isDry'
+        d['value']=0
+        jc.send(d)
+    elif namespace == Namespace.CONTROL_TOGGLEX:
+        logger.debug(f"Water leak occurred! Event data: {data}")
+        d['key']='onoff'
+        d['value']=data.togglex.onoff
+        d['channel']=data.togglex.channel
+        jc.send(d)
+    else:
+        logger.debug(f"Event occurred: {namespace}, Event data: {data}")
+
 
 async def initConnection(args):
     global manager
@@ -1190,6 +1048,8 @@ async def initConnection(args):
         # Register event handlers for the manager...
         manager = MerossManager(http_client=http_api_client)
         await manager.async_device_discovery()
+        logger.debug('Push notification register')
+        manager.register_push_notification_handler_coroutine(merossSyncEventListener)
         connected=True
     except Exception as e:
         print(e)
@@ -1197,15 +1057,14 @@ async def initConnection(args):
 
 async def closeConnection():
     global manager
+    manager.unregister_push_notification_handler_coroutine(merossSyncEventListener)
     logger.debug("Close connection")
     manager.close()
     await http_api_client.async_logout()
 
-async def testConnection(args):
-    global connected
-    await initConnection(args)
-    if connected:
-        await closeConnection()
+def start_async_loop(loop):
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
 
 # ----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
@@ -1252,7 +1111,7 @@ target_version=f.readline().strip('\n')
 f.close()
 
 if (target_version != current_version()):
-    logger.error("La version isntallée "+current_version()+" ne correspond pas à la version attendue : "+target_version+". Merci d'installer les dépendances.")
+    logger.error("La version installée "+current_version()+" ne correspond pas à la version attendue : "+target_version+". Merci d'installer les dépendances.")
     pid = str(os.getpid())
     logger.debug("Ecriture du PID " + pid + " dans " + str(args.errorfile))
     with open(args.errorfile, 'w') as fp:
@@ -1288,24 +1147,23 @@ if os.path.exists(args.socket):
 server = socketserver.UnixStreamServer(args.socket, JeedomHandler)
 
 logger.debug('Test connection Meross')
-asyncio.set_event_loop(asyncio.new_event_loop())
-loop = asyncio.get_event_loop()
-try:
-    loop.run_until_complete(testConnection(args))
-finally:
-    loop.close()
+global_loop = asyncio.new_event_loop()
+
+# 1. Lancer la boucle de fond dans un thread dédié
+t_loop = threading.Thread(target=start_async_loop, args=(global_loop,), daemon=True)
+t_loop.start()
+# 2. Initialiser la connexion Meross DANS cette boucle
+asyncio.run_coroutine_threadsafe(initConnection(args), global_loop).result()
 
 if connected:
     logger.debug('Test connection Meross ok')
-
     pid = str(os.getpid())
     logger.debug("Ecriture du PID " + pid + " dans " + str(args.pidfile))
     with open(args.pidfile, 'w') as fp:
         fp.write("%s\n" % pid)
 
     logger.debug('Ouverture socket')
-    t = threading.Thread(target=server.serve_forever())
-    t.start()
+    server.serve_forever()
 else:
     pid = str(os.getpid())
     logger.debug("Ecriture du PID " + pid + " dans " + str(args.errorfile))
