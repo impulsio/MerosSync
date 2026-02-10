@@ -1035,7 +1035,7 @@ async def deviceEventListener(namespace: Namespace, data: dict, device_internal_
         logger.debug(f"Water leak occurred! Event data: {data}")
         # c'est l'internal id du HUB, on recherche l'internal ID du water leak sensor
         hubs = manager.find_devices(internal_ids="["+device_internal_id+"]", device_class=HubDevice)
-        logger.debug(f"Found: {hubs}"))
+        logger.debug(f"Found: {hubs}")
         if len(hubs)>0:
             subdevice = hubs[0].get_subdevice(data['waterLeak'][0]['id'])
             d['internal_id']=subdevice.internal_id
