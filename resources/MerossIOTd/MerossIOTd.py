@@ -18,7 +18,7 @@ from meross_iot.model.enums import *
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
 # HUB Devices and SubDevices
-from merros_iot.controller.device import HubDevice, GenericSubDevice
+from meross_iot.controller.device import HubDevice, GenericSubDevice
 from meross_iot.controller.subdevice import Mts100v3Valve, Ms100Sensor, Ms405Sensor
 from meross_iot.model.plugin.hub import BatteryInfo
 
