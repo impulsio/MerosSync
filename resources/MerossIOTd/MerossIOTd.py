@@ -606,6 +606,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         d['conso'] = False
         d['spray'] = False
         d['lightmode'] = False
+        d['tempHumSensor'] = False
 
         #Récupération des thermostat
         therms = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ThermostatModeBMixin)
@@ -847,6 +848,25 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['maxval']=therm.max_temperature_celsius
 
             d['values']['tempcur']=therm.current_temperature_celsius/10
+
+        #Récupérations des Water Leak Sensor
+        sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms100Sensor)
+        if len(sensors) > 0:
+            logger.debug("Ms100Sensor")
+            device = sensors[0]
+            await device.async_update()
+            d['tempHumSensor']=True
+            d['values']['tempcur']=device.last_sampled_temperature
+            d['values']['humcur']=device.last_sampled_humidity
+            d['values']['lasttime']=device.last_sampled_time
+            if therm.min_temperature_celsius is None:
+                d['minval']=0
+            else:
+                d['minval']=device.min_supported_temperature
+            if therm.max_temperature_celsius is None:
+                d['maxval']=35.00
+            else:
+                d['maxval']=device.max_supported_temperature
 
         #Récupérations des Water Leak Sensor
         sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms405Sensor)

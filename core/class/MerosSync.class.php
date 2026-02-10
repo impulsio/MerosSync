@@ -604,42 +604,98 @@ class MerosSync extends eqLogic {
             $order++;
         }
 
-        if( $_device['tempe'] || $_device['heat'] )
+        if ($_device['tempe'] || $_device['heat'] || $_device['tempHumSensor'])
         {
-            # Temperature actuelle
-            $cmd = $_eqLogic->getCmd(null, 'tempcur');
-            if (!is_object($cmd)) {
-                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempcur');
+          # Temperature actuelle
+          $cmd = $_eqLogic->getCmd(null, 'tempcur');
+          if (!is_object($cmd))
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempcur');
+              $cmd = new MerosSyncCmd();
+              $cmd->setName('Température actuelle');
+              $cmd->setType('info');
+              $cmd->setSubType('numeric');
+              if ($_device['tempe'])
+              {
+                $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
+              }
+              else
+              {
+                $cmd->setGeneric_type('THERMOSTAT_TEMPERATURE');
+                $cmd->setUnite('°C');
+              }
+              $cmd->setIsVisible(1);
+              $cmd->setIsHistorized(0);
+              $cmd->setLogicalId('tempcur');
+              $cmd->setTemplate('dashboard', 'tile');
+              $cmd->setTemplate('mobile', 'tile');
+              $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setConfiguration('minValue', $_device['minval']);
+              $cmd->setConfiguration('maxValue', $_device['maxval']);
+          } else {
+              log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempcur');
+          }
+          $cmd->setOrder($order);
+          $cmd->save();
+          $order++;
+        }
+
+        if ($_device['tempHumSensor'])
+        {
+            # Humidité actuelle
+            $cmd = $_eqLogic->getCmd(null, 'humcur');
+            if (!is_object($cmd))
+            {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=humcur');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Température actuelle');
+                $cmd->setName('Humidité actuelle');
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
-                if ($_device['tempe'])
-                {
-                  $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
-                }
-                else
-                {
-                  $cmd->setGeneric_type('THERMOSTAT_TEMPERATURE');
-                  $cmd->setUnite('°C');
-                }
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(0);
-                $cmd->setLogicalId('tempcur');
+                $cmd->setLogicalId('humcur');
                 $cmd->setTemplate('dashboard', 'tile');
                 $cmd->setTemplate('mobile', 'tile');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setConfiguration('minValue', -30);
-                $cmd->setConfiguration('maxValue', 110);
+                $cmd->setConfiguration('minValue', 0);
+                $cmd->setConfiguration('maxValue', 100);
             } else {
-                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempcur');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=humcur');
             }
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
-            # Temperature information
+            # Dernière vérification
+            $cmd = $_eqLogic->getCmd(null, 'lasttime');
+            if (!is_object($cmd))
+            {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lasttime');
+                $cmd = new MerosSyncCmd();
+                $cmd->setName('Dernière vérification');
+                $cmd->setType('info');
+                $cmd->setSubType('string');
+                $cmd->setIsVisible(1);
+                $cmd->setIsHistorized(0);
+                $cmd->setLogicalId('lasttime');
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setConfiguration('minValue', 0);
+                $cmd->setConfiguration('maxValue', 100);
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=lasttime');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
+        }
+
+        if( $_device['tempe'] || $_device['heat'] )
+        {
+            # Temperature cible
             $cmd = $_eqLogic->getCmd(null, 'tempval');
-            if (!is_object($cmd)) {
+            if (!is_object($cmd))
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempval');
                 $cmd = new MerosSyncCmd();
                 $cmd->setName('Température cible');
@@ -671,7 +727,8 @@ class MerosSync extends eqLogic {
             $status_id =  $cmd->getId();
             # Temperature setter
             $cmd = $_eqLogic->getCmd(null, 'tempset');
-            if (!is_object($cmd)) {
+            if (!is_object($cmd))
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempset');
                 $cmd = new MerosSyncCmd();
                 $cmd->setName('Changer la température');
