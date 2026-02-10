@@ -17,7 +17,11 @@ from meross_iot.http_api import MerossHttpClient
 from meross_iot.model.enums import *
 from meross_iot.model.http.exception import TooManyTokensException, TokenExpiredException, AuthenticatedPostException, HttpApiError, BadLoginException
 from meross_iot.controller.mixins.electricity import ElectricityMixin #electricity sensor
+# HUB Devices and SubDevices
+from merros_iot.controller.device import HubDevice, GenericSubDevice
 from meross_iot.controller.subdevice import Mts100v3Valve, Ms100Sensor, Ms405Sensor
+from meross_iot.model.plugin.hub import BatteryInfo
+
 from meross_iot.controller.mixins.toggle import ToggleXMixin
 from meross_iot.controller.mixins.consumption import ConsumptionXMixin
 from meross_iot.controller.mixins.garage import GarageOpenerMixin
@@ -854,6 +858,8 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['isDry'] = 0
             else:
                 d['values']['isDry'] = 1
+            battery = device.async_get_battery_life()
+            logger.debug(battery)
 
         #Récupérations des portes de garage
         openers = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=GarageOpenerMixin)
@@ -1011,28 +1017,7 @@ def hex_to_rgb(hex):
 
 async def managerEventListener(namespace: Namespace, data: dict, device_internal_id: str, *args, **kwargs):
     logger.debug("managerEventListener")
-    d = dict({
-        'internal_id': device_internal_id,
-        'action':'updateKeyValue'
-    })
-    if namespace == Namespace.CONTROL_ALARM:
-        logger.debug(f"Alarm occurred! Event data: {data}")
-        d['key']='isDry'
-        d['value']=0
-        jc.send(d)
-    elif namespace == Namespace.HUB_SENSOR_WATERLEAK:
-        logger.debug(f"Water leak occurred! Event data: {data}")
-        d['key']='isDry'
-        d['value']=0
-        jc.send(d)
-    elif namespace == Namespace.CONTROL_TOGGLEX:
-        logger.debug(f"Water leak occurred! Event data: {data}")
-        d['key']='onoff'
-        d['value']=data.togglex.onoff
-        d['channel']=data.togglex.channel
-        jc.send(d)
-    else:
-        logger.debug(f"Event occurred: {namespace}, Event data: {data}")
+    logger.debug(f"Event occurred: {namespace}, Event data: {data}")
 
 
 async def deviceEventListener(namespace: Namespace, data: dict, device_internal_id: str):
@@ -1048,6 +1033,12 @@ async def deviceEventListener(namespace: Namespace, data: dict, device_internal_
         jc.send(d)
     elif namespace == Namespace.HUB_SENSOR_WATERLEAK:
         logger.debug(f"Water leak occurred! Event data: {data}")
+        # c'est l'internal id du HUB, on recherche l'internal ID du water leak sensor
+        hubs = manager.find_devices(internal_ids="["+device_internal_id+"]", device_class=HubDevice)
+        logger.debug(f"Found: {hubs}"))
+        if len(hubs)>0:
+            subdevice = hubs[0].get_subdevice(data['waterLeak'][0]['id'])
+            d['internal_id']=subdevice.internal_id
         d['key']='isDry'
         d['value']=0
         jc.send(d)
