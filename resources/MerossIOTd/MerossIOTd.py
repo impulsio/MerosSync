@@ -991,6 +991,7 @@ async def ashutdown():
     await closeConnection()
     logger.debug("Stop callback server")
     jc.stop()
+    global_loop.stop()
     global_loop.close()
     logger.debug("Effacement fichier PID " + str(_pidfile))
     if os.path.exists(_pidfile):
