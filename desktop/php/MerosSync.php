@@ -54,15 +54,22 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
               //Find the good image
               $imageName=$eqLogic->getConfiguration('type');
+              $matches=array();
               if (file_exists(dirname(__FILE__) . '/../../desktop/images/' . $imageName . '.png'))
               {
                   echo '<img src="plugins/MerosSync/desktop/images/' . $imageName . '.png' . '" height="105" width="105" />';
               }
               else if (preg_match('/^([a-z]*[0-9]*)([a-z]*)$/',$imageName,$matches) == 1)
               {
-                $matches=array();
                 $imageName=$matches[1];
-                echo '<img src="plugins/MerosSync/desktop/images/' . $imageName . '.png' . '" height="105" width="105" />';
+                if (file_exists(dirname(__FILE__) . '/../../desktop/images/' . $imageName . '.png'))
+                {
+                  echo '<img src="plugins/MerosSync/desktop/images/' . $imageName . '.png' . '" height="105" width="105" />';
+                }
+                else
+                {
+                    echo '<img src="' . $plugin->getPathImgIcon() . '" height="105" width="95" />';
+                }
               }
               else
               {
