@@ -848,7 +848,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['tempHumSensor']=True
             d['values']['tempcur']=device.last_sampled_temperature
             d['values']['humcur']=device.last_sampled_humidity
-            d['values']['lasttime']=device.last_sampled_time
+            d['values']['lasttime']=device.last_sampled_time.strftime("%d/%m/%Y %H:%M:%S")
             if device.min_supported_temperature is None:
                 d['minval']=0
             else:
@@ -1054,8 +1054,12 @@ async def deviceEventListener(namespace: Namespace, data: dict, device_internal_
     elif namespace == Namespace.CONTROL_TOGGLEX:
         logger.debug(f"ToggleX Event data: {data}")
         d['key']='onoff'
-        d['value']=data['togglex'][0]['onoff']
-        d['channel']=data['togglex'][0]['channel']
+        if type(data['togglex']) == list:
+            d['value']=data['togglex'][0]['onoff']
+            d['channel']=data['togglex'][0]['channel']
+        else:
+            d['value']=data['togglex']['onoff']
+            d['channel']=data['togglex']['channel']
         jc.send(d)
     else:
         logger.debug(f"Event occurred: {namespace}, Event data: {data}")
