@@ -47,19 +47,32 @@ $eqLogics = eqLogic::byType($plugin->getId());
         <input class="form-control" placeholder="{{Rechercher}}" id="in_searchEqlogic" />
         <div class="eqLogicThumbnailContainer">
             <?php
-            foreach ($eqLogics as $eqLogic) {
-				$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
-				echo '<div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '">';
-                if (file_exists(dirname(__FILE__) . '/../../desktop/images/' . $eqLogic->getConfiguration('type') . '.png')) {
-                    echo '<img src="plugins/MerosSync/desktop/images/' . $eqLogic->getConfiguration('type') . '.png' . '" height="105" width="105" />';
-                } else {
-                    echo '<img src="' . $plugin->getPathImgIcon() . '" height="105" width="95" />';
-                }
-				echo '<br>';
-				echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '('.$eqLogic->getConfiguration('type').')</span>';
-				echo '</div>';
-			}
-			?>
+            foreach ($eqLogics as $eqLogic)
+            {
+              $opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
+              echo '<div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '">';
+
+              //Find the good image
+              $imageName=$eqLogic->getConfiguration('type');
+              if (file_exists(dirname(__FILE__) . '/../../desktop/images/' . $imageName . '.png'))
+              {
+                  echo '<img src="plugins/MerosSync/desktop/images/' . $imageName . '.png' . '" height="105" width="105" />';
+              }
+              else if (preg_match('/^([a-z]*[0-9]*)([a-z]*)$/',$imageName,$matches) == 1)
+              {
+                $matches=array();
+                $imageName=$matches[1];
+                echo '<img src="plugins/MerosSync/desktop/images/' . $imageName . '.png' . '" height="105" width="105" />';
+              }
+              else
+              {
+                  echo '<img src="' . $plugin->getPathImgIcon() . '" height="105" width="95" />';
+              }
+              echo '<br>';
+              echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '('.$eqLogic->getConfiguration('type').')</span>';
+              echo '</div>';
+            }
+            ?>
         </div>
     </div>
 

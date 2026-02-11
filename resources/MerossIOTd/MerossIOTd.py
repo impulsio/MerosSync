@@ -140,7 +140,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetOn(self, uuid, channel):
         logger.debug("aSetOn called")
         global manager
-        logger.debug("aSetOn connected")
         try:
             logger.debug("aSetOn " + uuid)
             openers = manager.find_devices(internal_ids="["+uuid+"]", device_class=GarageOpenerMixin)
@@ -185,7 +184,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetOff(self, uuid, channel):
         logger.debug("aSetOff called")
         global manager
-        logger.debug("aSetOff connected")
         try:
             logger.debug("aSetOff " + uuid)
             openers = manager.find_devices(internal_ids="["+uuid+"]", device_class=GarageOpenerMixin)
@@ -246,7 +244,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aMove(self, uuid, sens):
         logger.debug("aMove called "+str(sens))
         global manager
-        logger.debug("aMove connected")
         try:
             logger.debug("aMove " + str(uuid))
             rollers = manager.find_devices(internal_ids="["+uuid+"]", device_class=RollerShutterTimerMixin)
@@ -281,7 +278,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetSpray(self, uuid, lemode):
         logger.debug("aSetSpray called")
         global manager
-        logger.debug("aSetSpray connected")
         try:
             logger.debug("aSetSpray " + str(uuid) + "-  mode " + str(lemode))
             diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserSprayMixin)
@@ -337,7 +333,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetLightmode(self, uuid, lemode):
         logger.debug("aSetLightmode called")
         global manager
-        logger.debug("aSetLightmode connected")
         try:
             logger.debug("aSetLightmode " + str(uuid) + "-  mode " + str(lemode))
             diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=DiffuserLightMixin)
@@ -375,7 +370,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetPosition(self, uuid, position_int):
         logger.debug("aSetPosition called")
         global manager
-        logger.debug("aSetPosition connected")
         try:
             logger.debug("aSetPosition " + uuid)
             rollers = manager.find_devices(internal_ids="["+uuid+"]", device_class=RollerShutterTimerMixin)
@@ -403,7 +397,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetLumi(self, uuid, lumi_int):
         logger.debug("aSetLumi called")
         global manager
-        logger.debug("aSetLumi connected")
         try:
             logger.debug("aSetLumi " + uuid)
             lights = manager.find_devices(internal_ids="["+uuid+"]", device_class=LightMixin)
@@ -440,7 +433,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetTemp(self, uuid, temp_int):
         logger.debug("aSetTemp called")
         global manager
-        logger.debug("aSetTemp connected")
         try:
             logger.debug("aSetTemp " + uuid)
             therms = manager.find_devices(internal_ids="["+uuid+"]", device_class=ThermostatModeMixin)
@@ -492,7 +484,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetTempMode(self, uuid, lemode):
         logger.debug("aSetTempMode called")
         global manager
-        logger.debug("aSetTempMode connected")
         try:
             logger.debug("aSetTempMode " + str(uuid) + "-  mode " + str(lemode))
             diffs = manager.find_devices(internal_ids="["+uuid+"]", device_class=ThermostatModeMixin)
@@ -551,7 +542,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
     async def aSetRGB(self, uuid, rgb):
         logger.debug("aSetRGB called")
         global manager
-        logger.debug("aSetRGB connected")
         try:
             logger.debug("aSetRGB " + uuid)
             lights = manager.find_devices(internal_ids="["+uuid+"]", device_class=LightMixin)
@@ -859,11 +849,11 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             d['values']['tempcur']=device.last_sampled_temperature
             d['values']['humcur']=device.last_sampled_humidity
             d['values']['lasttime']=device.last_sampled_time
-            if therm.min_temperature_celsius is None:
+            if device.min_supported_temperature is None:
                 d['minval']=0
             else:
                 d['minval']=device.min_supported_temperature
-            if therm.max_temperature_celsius is None:
+            if device.max_supported_temperature is None:
                 d['maxval']=35.00
             else:
                 d['maxval']=device.max_supported_temperature
@@ -950,7 +940,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSyncMeross called")
         global manager
         d_devices=[]
-        logger.debug("aSyncMeross connected")
         try:
             await manager.async_device_discovery()
             meross_devices = manager.find_devices()
@@ -975,7 +964,6 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         logger.debug("aSyncDevice called")
         global manager
         d_devices=[]
-        logger.debug("aSyncDevice connected")
         try:
             devices = manager.find_devices(internal_ids="["+uuid+"]")
             logger.debug("aSyncDevice - " + str(len(devices)) + " devices found with ID " + str(uuid))
