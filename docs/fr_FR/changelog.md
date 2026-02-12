@@ -1,8 +1,9 @@
-#08 Février 2025
+# 12 Février 2025
 - Bascule identifiant logic jeedom de UUID vers Internal ID pour prendre en compte les équipements raccordés au HUB qui ont le même UUID que le hub.
-- Ajout compatibilité MS405
+- Ajout compatibilité MS405 & MS100 (via HUB)
+- Récupération temps réel d'informations allumage/extinction, alarme fuite, ...
 
-#22 Janvier 2025
+# 22 Janvier 2025
 - MerossIOT 0.4.10.4 (pour ceux utilisant le HUB Meross)
 - Réduction des logs info
 

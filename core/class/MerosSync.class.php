@@ -1133,6 +1133,35 @@ class MerosSync extends eqLogic {
           $cmd->save();
           $order++;
         }
+
+        if (in_array('charge', $device['values']))
+        {
+          # Niveau batterie
+          $cmd = $_eqLogic->getCmd(null, 'charge');
+          if (!is_object($cmd))
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=charge');
+              $cmd = new MerosSyncCmd();
+              $cmd->setName('Niveau batterie');
+              $cmd->setType('info');
+              $cmd->setSubType('numeric');
+              $cmd->setGeneric_type('BATTERY');
+              $cmd->setIsVisible(1);
+              $cmd->setIsHistorized(0);
+              $cmd->setLogicalId('charge');
+              $cmd->setTemplate('dashboard', 'gauge');
+              $cmd->setTemplate('mobile', 'gauge');
+              $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setConfiguration('minValue', 0);
+              $cmd->setConfiguration('maxValue', 100);
+          } else {
+              log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=charge');
+          }
+          $cmd->setOrder($order);
+          $cmd->save();
+          $order++;
+        }
+
         log::add('MerosSync', 'debug', 'updateEqLogicCmdVal: Update eqLogic informations Completed');
     }
     /**

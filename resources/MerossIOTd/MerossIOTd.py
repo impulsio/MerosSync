@@ -839,7 +839,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
 
             d['values']['tempcur']=therm.current_temperature_celsius/10
 
-        #Récupérations des Water Leak Sensor
+        #Récupérations des Ms100Sensor
         sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms100Sensor)
         if len(sensors) > 0:
             logger.debug("Ms100Sensor")
@@ -857,6 +857,8 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['maxval']=35.00
             else:
                 d['maxval']=device.max_supported_temperature
+            battery = device.async_get_battery_life()
+            d['values']['charge']=battery.remaining_charge
 
         #Récupérations des Water Leak Sensor
         sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms405Sensor)
@@ -869,7 +871,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
             else:
                 d['values']['isDry'] = 1
             battery = device.async_get_battery_life()
-            logger.debug(battery)
+            d['values']['charge']=battery.remaining_charge
 
         #Récupérations des portes de garage
         openers = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=GarageOpenerMixin)
@@ -1037,8 +1039,17 @@ async def deviceEventListener(namespace: Namespace, data: dict, device_internal_
     })
     if namespace == Namespace.CONTROL_ALARM:
         logger.debug(f"Alarm occurred! Event data: {data}")
+        # c'est l'internal id du HUB, on recherche l'internal ID du water leak sensor
+        hubs = manager.find_devices(internal_ids="["+device_internal_id+"]", device_class=HubDevice)
+        logger.debug(f"Found: {hubs}")
+        if len(hubs)>0:
+            subdevice = hubs[0].get_subdevice(data['waterLeak'][0]['id'])
+            d['internal_id']=subdevice.internal_id
         d['key']='isDry'
-        d['value']=0
+        if data['waterLeak'][0]['latestWaterLeak']==1:
+            d['value']=0
+        else:
+            d['value']=1
         jc.send(d)
     elif namespace == Namespace.HUB_SENSOR_WATERLEAK:
         logger.debug(f"Water leak occurred! Event data: {data}")
@@ -1049,7 +1060,10 @@ async def deviceEventListener(namespace: Namespace, data: dict, device_internal_
             subdevice = hubs[0].get_subdevice(data['waterLeak'][0]['id'])
             d['internal_id']=subdevice.internal_id
         d['key']='isDry'
-        d['value']=0
+        if data['waterLeak'][0]['latestWaterLeak']==1:
+            d['value']=0
+        else:
+            d['value']=1
         jc.send(d)
     elif namespace == Namespace.CONTROL_TOGGLEX:
         logger.debug(f"ToggleX Event data: {data}")

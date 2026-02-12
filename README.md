@@ -64,6 +64,11 @@ Plugin jeedom permettant de contrôler les équipements Meross.
     <td>Détecteur de fuite (nécessite le HUB Wi-fi)</td>
     <td><img src="desktop/images/ms405.png" width=150 /></td>
   </tr>
+  <tr>
+    <td>MS100</td>
+    <td>Thermomètre et Hygromètre (nécessite le HUB Wi-fi)</td>
+    <td><img src="desktop/images/ms100f.png" width=150 /></td>
+  </tr>
 </table>
 
 Pour ajouter des compatibilités : me contacter !
