@@ -2,6 +2,8 @@
 - Switching jeedom logic id from UUID to Internal ID to take into account devices linked to HUB that get same UUID as the HUB.
 - Add compatibility with MS405 & MS100 (through HUB)
 - Live gather of switching on/off, water leak alarm, ...
+- Improve images (for example MSL320CP & MSL320HK & MSL320PHK have the same image) decrease of size for the application
+- Performance : better use of loops for async methods + no connection at each action, the connection stay open
 
 #22nd January 2025
 - MerossIOT 0.4.10.4 (for those using Meross HUB)
