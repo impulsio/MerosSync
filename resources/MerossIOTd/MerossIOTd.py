@@ -857,7 +857,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['maxval']=35.00
             else:
                 d['maxval']=device.max_supported_temperature
-            battery = device.async_get_battery_life()
+            await battery = device.async_get_battery_life()
             d['values']['charge']=battery.remaining_charge
 
         #Récupérations des Water Leak Sensor
@@ -870,7 +870,7 @@ class JeedomHandler(socketserver.BaseRequestHandler):
                 d['values']['isDry'] = 0
             else:
                 d['values']['isDry'] = 1
-            battery = device.async_get_battery_life()
+            await battery = device.async_get_battery_life()
             d['values']['charge']=battery.remaining_charge
 
         #Récupérations des portes de garage
