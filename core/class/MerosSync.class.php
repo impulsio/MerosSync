@@ -1134,7 +1134,7 @@ class MerosSync extends eqLogic {
           $order++;
         }
 
-        if (in_array('charge', $_device['values']))
+        if (array_key_exists('charge', $_device['values']))
         {
           # Niveau batterie
           $cmd = $_eqLogic->getCmd(null, 'charge');
