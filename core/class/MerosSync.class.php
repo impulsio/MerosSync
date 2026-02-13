@@ -653,6 +653,7 @@ class MerosSync extends eqLogic {
                 $cmd->setSubType('numeric');
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(0);
+                $cmd->setUnite('%');
                 $cmd->setLogicalId('humcur');
                 $cmd->setTemplate('dashboard', 'tile');
                 $cmd->setTemplate('mobile', 'tile');
@@ -1148,6 +1149,7 @@ class MerosSync extends eqLogic {
               $cmd->setGeneric_type('BATTERY');
               $cmd->setIsVisible(1);
               $cmd->setIsHistorized(0);
+              $cmd->setUnite('%');
               $cmd->setLogicalId('charge');
               $cmd->setTemplate('dashboard', 'gauge');
               $cmd->setTemplate('mobile', 'gauge');
