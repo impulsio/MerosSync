@@ -901,11 +901,11 @@ class MerosSync extends eqLogic {
                 $cmd->setTemplate('mobile', 'default');
                 $cmd->setLogicalId('lightmode');
                 $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=lightmode');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
 
             if (is_array($_device['modes']))
@@ -926,13 +926,13 @@ class MerosSync extends eqLogic {
                     $cmd->setTemplate('mobile', 'default');
                     $cmd->setLogicalId('lightmode_'.$key);
                     $cmd->setEqLogic_id($_eqLogic->getId());
+                    $cmd->setOrder($order);
+                    $cmd->save();
                 } else
                 {
                   $cmd->setName($value);
                   log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=setLightmode_'.$key);
                 }
-                $cmd->setOrder($order);
-                $cmd->save();
                 $order++;
               }
             }
@@ -956,11 +956,11 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('up_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('Monter');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=up_0');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
             # Roller down
             $cmd = $_eqLogic->getCmd(null, 'down_0');
@@ -976,11 +976,11 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('down_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('Descendre');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=down_0');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
             # Roller stop
             $cmd = $_eqLogic->getCmd(null, 'stop_0');
@@ -996,11 +996,11 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('stop_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('STOP');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=stop_0');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
             # Roller icone position
             $cmd = $_eqLogic->getCmd(null, 'position');
@@ -1017,11 +1017,11 @@ class MerosSync extends eqLogic {
                 $cmd->setTemplate('mobile', 'default');
                 $cmd->setLogicalId('position');
                 $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=position');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $status_id =  $cmd->getId();
             $order++;
             # Roller changement position
@@ -1043,11 +1043,11 @@ class MerosSync extends eqLogic {
                 $cmd->setConfiguration('minValue', 0);
                 $cmd->setConfiguration('maxValue', 100);
                 $cmd->setUnite('%');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=changePosition');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
         }
 
@@ -1072,13 +1072,13 @@ class MerosSync extends eqLogic {
                   $cmd->setTemplate('mobile', 'default');
                   $cmd->setLogicalId('spray_'.$key);
                   $cmd->setEqLogic_id($_eqLogic->getId());
+                  $cmd->setOrder($order);
+                  $cmd->save();
               } else
               {
                 $cmd->setName($value);
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_'.$key);
               }
-              $cmd->setOrder($order);
-              $cmd->save();
               $order++;
             }
           }
@@ -1098,12 +1098,12 @@ class MerosSync extends eqLogic {
               $cmd->setTemplate('mobile', 'default');
               $cmd->setLogicalId('spray');
               $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setOrder($order);
+              $cmd->save();
           } else
           {
               log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray');
           }
-          $cmd->setOrder($order);
-          $cmd->save();
           $order++;
         }
 
@@ -1126,12 +1126,12 @@ class MerosSync extends eqLogic {
               $cmd->setTemplate('mobile', 'flood');
               $cmd->setLogicalId('isDry');
               $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setOrder($order);
+              $cmd->save();
           } else
           {
               log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=isDry');
           }
-          $cmd->setOrder($order);
-          $cmd->save();
           $order++;
         }
 
@@ -1156,11 +1156,15 @@ class MerosSync extends eqLogic {
               $cmd->setEqLogic_id($_eqLogic->getId());
               $cmd->setConfiguration('minValue', 0);
               $cmd->setConfiguration('maxValue', 100);
+              if( $_device['famille'] == 'Ms405Sensor' )
+              {
+                $cmd->setConfiguration('battery_type','2x AAA');
+              }
+              $cmd->setOrder($order);
+              $cmd->save();
           } else {
               log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=charge');
           }
-          $cmd->setOrder($order);
-          $cmd->save();
           $order++;
         }
 
