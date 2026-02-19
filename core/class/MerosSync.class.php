@@ -1132,6 +1132,7 @@ class MerosSync extends eqLogic {
           {
               log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=isDry');
           }
+          $_eqLogic->addConfiguration('battery_type', '2x AAA');
           $order++;
         }
 
@@ -1156,10 +1157,6 @@ class MerosSync extends eqLogic {
               $cmd->setEqLogic_id($_eqLogic->getId());
               $cmd->setConfiguration('minValue', 0);
               $cmd->setConfiguration('maxValue', 100);
-              if( $_device['famille'] == 'Ms405Sensor' )
-              {
-                $cmd->setConfiguration('battery_type','2x AAA');
-              }
               $cmd->setOrder($order);
               $cmd->save();
           } else {
