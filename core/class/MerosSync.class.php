@@ -78,18 +78,17 @@ class MerosSync extends eqLogic {
           log::add('MerosSync', 'debug', 'Check offline components');
           foreach (self::byType('MerosSync') as $eqLogic)
           {
-            log::add('MerosSync', 'debug', 'ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
             $inArray = false;
             foreach( $results['result'] as $key=>$device )
             {
-                if ($device['uuid'] == $eqLogic->getLogicalId())
+                if ($device['internal_id'] == $eqLogic->getLogicalId())
                 {
                   $inArray = true;
                 }
             }
             if (!$inArray)
             {
-              log::add('MerosSync', 'debug', 'offline');
+              log::add('MerosSync', 'debug', 'OFFLINE ID '.$eqLogic->getLogicalId().' - '.$eqLogic->getEqType_name().' - '.$eqLogic->getName());
               $eqLogic->setConfiguration('online', '0');
               $eqLogic->save();
             }
@@ -101,25 +100,44 @@ class MerosSync extends eqLogic {
      * Sync one meross devices.
      * @return none
      */
-    public static function syncOneMeross($device) {
-        $key = $device['uuid'];
+    public static function syncOneMeross($device)
+    {
+      if (isset($device['internal_id']))
+      {
+        $key = $device['internal_id'];
         $eqLogic = self::byLogicalId($key, 'MerosSync');
+        $update=false;
         # Création ou Update
-        if (!is_object($eqLogic)) {
+        if (!is_object($eqLogic))
+        {
+          //Vérification avec l'ancien key (uuid)
+          $eqLogic = self::byLogicalId($device['uuid'], 'MerosSync');
+          if (is_object($eqLogic))
+          {
+            //Il existe avec l'ancienne clé => on met à jour vers internal_id
+            log::add('MerosSync', 'debug', 'Mise à jour logicalID : ' . $device["name"] . ' - ' . $key);
+            $eqLogic->setLogicalId($key);
+            $eqLogic->save();
+            $update=true;
+          }
+          else
+          {
+            //Il n'existe vraiment pas
             log::add('MerosSync', 'info', __('syncMeross: Ajout de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic = new MerosSync();
             $eqLogic->setName($device['name']);
             $eqLogic->setEqType_name('MerosSync');
             $eqLogic->setLogicalId($key);
-            if ($device['type'] != '')
+            $eqLogic->setConfiguration('uuid', $device['uuid']); // on sauvegarde l'uuid pour plus tard
+            if (isset($device['type']))
             {
                 $eqLogic->setConfiguration('type', $device['type']);
             }
-            if ($device['famille'] != '')
+            if (isset($device['famille']))
             {
                 $eqLogic->setConfiguration('famille', $device['famille']);
             }
-            if ($device['online'] != '')
+            if (isset($device['online']))
             {
                 $eqLogic->setConfiguration('online', $device['online']);
             } else
@@ -137,7 +155,13 @@ class MerosSync extends eqLogic {
                 $humanName = $eqLogic->getHumanName();
                 message::add('MerosSync', $humanName.' '.__('semble manquant, il a été désactivé.', __FILE__));
             }
-        } else
+          }
+        }
+        else
+        {
+          $update=true;
+        }
+        if ($update)
         {
             log::add('MerosSync', 'debug', __('syncMeross: Mise à jour de ', __FILE__) . $device["name"] . ' - ' . $key);
             $eqLogic->setName($device['name']);
@@ -151,7 +175,7 @@ class MerosSync extends eqLogic {
         }
         if( $device['online'] == '1' )
         {
-            if ($device['ip'] != '')
+            if (isset($device['ip']))
             {
                 $eqLogic->setConfiguration('ip', $device['ip']);
                 $eqLogic->save();
@@ -162,12 +186,18 @@ class MerosSync extends eqLogic {
         }
         # Si online, on continue
         log::add('MerosSync', 'debug',  __('syncMeross: En ligne : ', __FILE__) . $device["online"] . ' - ' . $key);
+      }
+      else
+      {
+        log::add('MerosSync', 'error', 'Information reçue innatendue ! Consultez la log.');
+      }
     }
     /**
      * Update Values.
      * @return none
      */
-    public static function updateEqLogicVals($_eqLogic, $values) {
+    public static function updateEqLogicVals($_eqLogic, $values)
+    {
         # Valeurs
         log::add('MerosSync', 'debug', 'updateEqLogicVals: Update eqLogic values');
         foreach ($values as $key => $value)
@@ -574,42 +604,99 @@ class MerosSync extends eqLogic {
             $order++;
         }
 
-        if( $_device['tempe'] || $_device['heat'] )
+        if ($_device['tempe'] || $_device['heat'] || $_device['tempHumSensor'])
         {
-            # Temperature actuelle
-            $cmd = $_eqLogic->getCmd(null, 'tempcur');
-            if (!is_object($cmd)) {
-                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempcur');
+          # Temperature actuelle
+          $cmd = $_eqLogic->getCmd(null, 'tempcur');
+          if (!is_object($cmd))
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempcur');
+              $cmd = new MerosSyncCmd();
+              $cmd->setName('Température actuelle');
+              $cmd->setType('info');
+              $cmd->setSubType('numeric');
+              if ($_device['tempe'])
+              {
+                $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
+              }
+              else
+              {
+                $cmd->setGeneric_type('THERMOSTAT_TEMPERATURE');
+                $cmd->setUnite('°C');
+              }
+              $cmd->setIsVisible(1);
+              $cmd->setIsHistorized(0);
+              $cmd->setLogicalId('tempcur');
+              $cmd->setTemplate('dashboard', 'tile');
+              $cmd->setTemplate('mobile', 'tile');
+              $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setConfiguration('minValue', $_device['minval']);
+              $cmd->setConfiguration('maxValue', $_device['maxval']);
+          } else {
+              log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempcur');
+          }
+          $cmd->setOrder($order);
+          $cmd->save();
+          $order++;
+        }
+
+        if ($_device['tempHumSensor'])
+        {
+            # Humidité actuelle
+            $cmd = $_eqLogic->getCmd(null, 'humcur');
+            if (!is_object($cmd))
+            {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=humcur');
                 $cmd = new MerosSyncCmd();
-                $cmd->setName('Température actuelle');
+                $cmd->setName('Humidité actuelle');
                 $cmd->setType('info');
                 $cmd->setSubType('numeric');
-                if ($_device['tempe'])
-                {
-                  $cmd->setGeneric_type('LIGHT_COLOR_TEMP');
-                }
-                else
-                {
-                  $cmd->setGeneric_type('THERMOSTAT_TEMPERATURE');
-                  $cmd->setUnite('°C');
-                }
                 $cmd->setIsVisible(1);
                 $cmd->setIsHistorized(0);
-                $cmd->setLogicalId('tempcur');
+                $cmd->setUnite('%');
+                $cmd->setLogicalId('humcur');
                 $cmd->setTemplate('dashboard', 'tile');
                 $cmd->setTemplate('mobile', 'tile');
                 $cmd->setEqLogic_id($_eqLogic->getId());
-                $cmd->setConfiguration('minValue', -30);
-                $cmd->setConfiguration('maxValue', 110);
+                $cmd->setConfiguration('minValue', 0);
+                $cmd->setConfiguration('maxValue', 100);
             } else {
-                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=tempcur');
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=humcur');
             }
             $cmd->setOrder($order);
             $cmd->save();
             $order++;
-            # Temperature information
+            # Dernière vérification
+            $cmd = $_eqLogic->getCmd(null, 'lasttime');
+            if (!is_object($cmd))
+            {
+                log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=lasttime');
+                $cmd = new MerosSyncCmd();
+                $cmd->setName('Dernière vérification');
+                $cmd->setType('info');
+                $cmd->setSubType('string');
+                $cmd->setIsVisible(1);
+                $cmd->setIsHistorized(0);
+                $cmd->setLogicalId('lasttime');
+                $cmd->setTemplate('dashboard', 'default');
+                $cmd->setTemplate('mobile', 'default');
+                $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setConfiguration('minValue', 0);
+                $cmd->setConfiguration('maxValue', 100);
+            } else {
+                log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=lasttime');
+            }
+            $cmd->setOrder($order);
+            $cmd->save();
+            $order++;
+        }
+
+        if( $_device['tempe'] || $_device['heat'] )
+        {
+            # Temperature cible
             $cmd = $_eqLogic->getCmd(null, 'tempval');
-            if (!is_object($cmd)) {
+            if (!is_object($cmd))
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempval');
                 $cmd = new MerosSyncCmd();
                 $cmd->setName('Température cible');
@@ -641,7 +728,8 @@ class MerosSync extends eqLogic {
             $status_id =  $cmd->getId();
             # Temperature setter
             $cmd = $_eqLogic->getCmd(null, 'tempset');
-            if (!is_object($cmd)) {
+            if (!is_object($cmd))
+            {
                 log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=tempset');
                 $cmd = new MerosSyncCmd();
                 $cmd->setName('Changer la température');
@@ -813,11 +901,11 @@ class MerosSync extends eqLogic {
                 $cmd->setTemplate('mobile', 'default');
                 $cmd->setLogicalId('lightmode');
                 $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=lightmode');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
 
             if (is_array($_device['modes']))
@@ -838,13 +926,13 @@ class MerosSync extends eqLogic {
                     $cmd->setTemplate('mobile', 'default');
                     $cmd->setLogicalId('lightmode_'.$key);
                     $cmd->setEqLogic_id($_eqLogic->getId());
+                    $cmd->setOrder($order);
+                    $cmd->save();
                 } else
                 {
                   $cmd->setName($value);
                   log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=setLightmode_'.$key);
                 }
-                $cmd->setOrder($order);
-                $cmd->save();
                 $order++;
               }
             }
@@ -868,11 +956,11 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('up_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('Monter');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=up_0');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
             # Roller down
             $cmd = $_eqLogic->getCmd(null, 'down_0');
@@ -888,11 +976,11 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('down_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('Descendre');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=down_0');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
             # Roller stop
             $cmd = $_eqLogic->getCmd(null, 'stop_0');
@@ -908,11 +996,11 @@ class MerosSync extends eqLogic {
                 $cmd->setLogicalId('stop_0');
                 $cmd->setEqLogic_id($_eqLogic->getId());
                 $cmd->setName('STOP');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=stop_0');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
             # Roller icone position
             $cmd = $_eqLogic->getCmd(null, 'position');
@@ -929,11 +1017,11 @@ class MerosSync extends eqLogic {
                 $cmd->setTemplate('mobile', 'default');
                 $cmd->setLogicalId('position');
                 $cmd->setEqLogic_id($_eqLogic->getId());
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=position');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $status_id =  $cmd->getId();
             $order++;
             # Roller changement position
@@ -955,11 +1043,11 @@ class MerosSync extends eqLogic {
                 $cmd->setConfiguration('minValue', 0);
                 $cmd->setConfiguration('maxValue', 100);
                 $cmd->setUnite('%');
+                $cmd->setOrder($order);
+                $cmd->save();
             } else {
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=changePosition');
             }
-            $cmd->setOrder($order);
-            $cmd->save();
             $order++;
         }
 
@@ -984,13 +1072,13 @@ class MerosSync extends eqLogic {
                   $cmd->setTemplate('mobile', 'default');
                   $cmd->setLogicalId('spray_'.$key);
                   $cmd->setEqLogic_id($_eqLogic->getId());
+                  $cmd->setOrder($order);
+                  $cmd->save();
               } else
               {
                 $cmd->setName($value);
                 log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray_'.$key);
               }
-              $cmd->setOrder($order);
-              $cmd->save();
               $order++;
             }
           }
@@ -1010,14 +1098,73 @@ class MerosSync extends eqLogic {
               $cmd->setTemplate('mobile', 'default');
               $cmd->setLogicalId('spray');
               $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setOrder($order);
+              $cmd->save();
           } else
           {
               log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=spray');
           }
-          $cmd->setOrder($order);
-          $cmd->save();
           $order++;
         }
+
+        # Ms405Sensor
+        if( $_device['famille'] == 'Ms405Sensor' )
+        {
+          # Spray information
+          $cmd = $_eqLogic->getCmd(null, 'isDry');
+          if (!is_object($cmd))
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=isDry');
+              $cmd = new MerosSyncCmd();
+              $cmd->setName('Fuite d\'eau');
+              $cmd->setType('info');
+              $cmd->setSubType('binary');
+              $cmd->setGeneric_type('WATER_LEAK');
+              $cmd->setIsVisible(1);
+              $cmd->setIsHistorized(0);
+              $cmd->setTemplate('dashboard', 'flood');
+              $cmd->setTemplate('mobile', 'flood');
+              $cmd->setLogicalId('isDry');
+              $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setOrder($order);
+              $cmd->save();
+          } else
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=isDry');
+          }
+          $_eqLogic->addConfiguration('battery_type', '2x AAA');
+          $order++;
+        }
+
+        if (array_key_exists('charge', $_device['values']))
+        {
+          # Niveau batterie
+          $cmd = $_eqLogic->getCmd(null, 'charge');
+          if (!is_object($cmd))
+          {
+              log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=charge');
+              $cmd = new MerosSyncCmd();
+              $cmd->setName('Niveau batterie');
+              $cmd->setType('info');
+              $cmd->setSubType('numeric');
+              $cmd->setGeneric_type('BATTERY');
+              $cmd->setIsVisible(1);
+              $cmd->setIsHistorized(0);
+              $cmd->setUnite('%');
+              $cmd->setLogicalId('charge');
+              $cmd->setTemplate('dashboard', 'gauge');
+              $cmd->setTemplate('mobile', 'gauge');
+              $cmd->setEqLogic_id($_eqLogic->getId());
+              $cmd->setConfiguration('minValue', 0);
+              $cmd->setConfiguration('maxValue', 100);
+              $cmd->setOrder($order);
+              $cmd->save();
+          } else {
+              log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=charge');
+          }
+          $order++;
+        }
+
         log::add('MerosSync', 'debug', 'updateEqLogicCmdVal: Update eqLogic informations Completed');
     }
     /**
@@ -1129,14 +1276,17 @@ class MerosSync extends eqLogic {
      * Stop python daemon.
      * @return array Shell command return.
      */
-    public static function deamon_stop() {
-        $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
-        if (file_exists($pid_file)) {
-            $pid = intval(trim(file_get_contents($pid_file)));
-            system::kill($pid);
-        }
-        system::kill('MerossIOTd.py');
-        system::fuserk(config::byKey('socketport', 'MerosSync'));
+    public static function deamon_stop()
+    {
+      log::add('MerosSync','info','Arrêt démon meross.');
+      $pid_file = jeedom::getTmpFolder('MerosSync') . '/daemon.pid';
+      if (file_exists($pid_file)) {
+        $pid = intval(trim(file_get_contents($pid_file)));
+        log::add('MerosSync','info','Arrêt job '.$pid);
+        system::kill($pid);
+      }
+      system::kill('MerossIOTd.py');
+      system::fuserk(config::byKey('socketport', 'MerosSync'));
     }
     /**
      * Return information (status) about daemon.
@@ -1276,7 +1426,10 @@ class MerosSyncCmd extends cmd {
             case "refresh":
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
-                MerosSync::syncOneMeross($res['result']);
+                foreach( $res['result'] as $key=>$device )
+                {
+                    MerosSync::syncOneMeross($device);
+                }
                 break;
             case "up":
                 $res = MerosSync::callMeross('goUp', [$eqLogic->getLogicalId()]);

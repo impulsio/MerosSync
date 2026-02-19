@@ -4,12 +4,12 @@ Plugin jeedom MerosSync
 Plugin jeedom permettant de contrôler les équipements Meross.
 
 # Testé sur :
-- Jeedom 4.2
+- Jeedom 4.5
 
 # Ce qui fonctionne :
 - Fonctionnalités on/off (y compris multi prises)
 - Récupération des consommations / puissance / intensité / voltage
-- Synchronisation toutes les 10 minutes (pour éviter)
+- Synchronisation toutes les 10 minutes (pour éviter d'être bloqué par le réseau Meross)
 
 # Equipements compatbiles :
 
@@ -20,7 +20,7 @@ Plugin jeedom permettant de contrôler les équipements Meross.
     <td><img src="desktop/images/mod150.png" width=150 /></td>
   </tr>
   <tr>
-    <td>MSS310</td>
+    <td>MSS210 & MSS310 & MS425</td>
     <td>Prise connectée avec mesure de consommation</td>
     <td><img src="desktop/images/mss310.png" width=150 /></td>
   </tr>
@@ -40,19 +40,34 @@ Plugin jeedom permettant de contrôler les équipements Meross.
     <td><img src="desktop/images/mrs100.png" width=150 /></td>
   </tr>
   <tr>
-    <td>MTS960</td>
-    <td>Thermostat chauffage</td>
-    <td><img src="desktop/images/mts960.png" width=150 /></td>
-  </tr>
-  <tr>
     <td>MSL320CP & MSL320HK & MSL320PHK</td>
     <td>Ruban LED</td>
-    <td><img src="desktop/images/msl320cp.png" width=150 /></td>
+    <td><img src="desktop/images/msl320.png" width=150 /></td>
   </tr>
   <tr>
     <td>MTS960</td>
     <td>Thermostat connecté</td>
     <td><img src="desktop/images/mts960.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MSL420 & MSL450</td>
+    <td>Lampe LED d'ambiance</td>
+    <td><img src="desktop/images/msl450.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MSH400</td>
+    <td>HUB Wi-fi</td>
+    <td><img src="desktop/images/msh400.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MS405</td>
+    <td>Détecteur de fuite (nécessite le HUB Wi-fi)</td>
+    <td><img src="desktop/images/ms405.png" width=150 /></td>
+  </tr>
+  <tr>
+    <td>MS100</td>
+    <td>Thermomètre et Hygromètre (nécessite le HUB Wi-fi)</td>
+    <td><img src="desktop/images/ms100f.png" width=150 /></td>
   </tr>
 </table>
 
