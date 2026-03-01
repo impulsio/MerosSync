@@ -1132,7 +1132,7 @@ class MerosSync extends eqLogic {
           {
               log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=isDry');
           }
-          $_eqLogic->addConfiguration('battery_type', '2x AAA');
+          $_eqLogic->setConfiguration('battery_type', '2x AAA');
           $order++;
         }
 

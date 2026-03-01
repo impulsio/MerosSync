@@ -568,366 +568,373 @@ class JeedomHandler(socketserver.BaseRequestHandler):
         return "Une erreur est survenue"
 
     async def aSyncOneMeross(self, device):
-        await device.async_update()
-        device_online = '0'
-        if device.online_status == OnlineStatus.ONLINE:
-            device_online = '1'
         d = dict({
-            'name': device.name,
-            'uuid': device.uuid,
-            'internal_id': device.internal_id,
-            'famille': str(device.__class__.__name__),
-            'online': device_online,
-            'type': device.type,
-            'ip': device.lan_ip
+            'name': device.name
         })
-        d['values'] = {}
-        d['modes'] = {}
-        d['spraymodes'] = {}
-        switch = []
-
-        # valeurs par défaut
-        d['lumin'] = False
-        d['isrgb'] = False
-        d['tempe'] = False
-        d['heat'] = False
-        d['elec'] = False
-        d['roller'] = False
-        d['conso'] = False
-        d['spray'] = False
-        d['lightmode'] = False
-        d['tempHumSensor'] = False
-
-        #Récupération des thermostat
-        therms = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ThermostatModeBMixin)
-        if len(therms) > 0:
-            logger.debug("ThermostatModeBMixin")
-            dev = therms[0]
-            await dev.async_update()
-            therm=dev.get_thermostat_state()
-            d['heat']=True
-            try:
-                logger.debug("items")
-                logger.debug(therm._state.items())
-            except:
-                logger.debug("NO items")
-
-            d['values']['tempval']=therm.target_temperature_celsius/10.00
-            d['values']['on']=therm.is_on
-
-            if therm.workingMode == ThermostatWorkingMode.HEAT:
-                d['values']['mode'] = 'Chauffage'
-            elif therm.workingMode == ThermostatWorkingMode.COOL:
-                d['values']['mode'] = 'Climatisation'
-            else:
-                d['values']['mode']='Aucun mode'
-
-            if therm.state == ThermostatModeBState.HEATING_COOLING:
-                if therm.workingMode == ThermostatWorkingMode.HEAT:
-                    d['values']['state'] = 'Chauffage en cours'
-                elif therm.workingMode == ThermostatWorkingMode.COOL:
-                    d['values']['state'] = 'Climatisation en cours'
-            elif therm.state == ThermostatModeBState.NOT_HEATING_COOLING:
-                if therm.workingMode == ThermostatWorkingMode.HEAT:
-                    d['values']['state'] = 'Chauffage arrêté'
-                elif therm.workingMode == ThermostatWorkingMode.COOL:
-                    d['values']['state'] = 'Climatisation arrêtée'
-            else:
-                d['values']['state']='Aucun état'
-
-            if therm.min_temperature_celsius is None:
-                d['minval']=0
-            else:
-                d['minval']=therm.min_temperature_celsius
-
-            if therm.max_temperature_celsius is None:
-                d['maxval']=35.00
-            else:
-                d['maxval']=therm.max_temperature_celsius
-
-            d['values']['tempcur']=therm.current_temperature_celsius/10.00
-
-        #Récupération des lumières
-        lights = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=LightMixin)
-        if len(lights) > 0:
-            logger.debug("LightMixin")
-            light=lights[0]
-
-            d['famille'] = 'GenericBulb'
-            onoff = []
-            onoff.append('Etat')
-            isOn=0
-            if light.get_light_is_on():
-                isOn=1
-            switch.append(isOn)
-            d['onoff'] = onoff
-            d['values']['switch'] = switch
-
-            if light.get_supports_luminance():
-                logger.debug("Support luminance")
-                d['lumin']=True
-                d['values']['lumival']=light.get_luminance()
-            if light.get_supports_rgb():
-                logger.debug("Support RGB")
-                d['isrgb']=True
-                d['values']['rgbval']=rgb_to_hex(light.get_rgb_color())
-            if light.get_supports_temperature():
-                logger.debug("Support Temperature")
-                d['tempe']=True
-                d['values']['tempval']=light.get_color_temperature()
-
-        #Récupération des consommations instantannées
-        plugs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ElectricityMixin)
-        if len(plugs) > 0:
-            logger.debug("ElectricityMixin")
-            instant_consumption = await device.async_get_instant_metrics()
-            d['elec'] = True
-            d['values']['power'] = instant_consumption.power
-            d['values']['current'] = instant_consumption.current
-            d['values']['tension'] = instant_consumption.voltage
-
-        #Récupérations des consommations
-        plugs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ConsumptionXMixin)
-        if len(plugs) > 0:
-            logger.debug("ConsumptionXMixin")
-            d['conso'] = True
-            conso = await device.async_get_daily_power_consumption()
-            if len(conso) > 0:
-                logger.debug(json.dumps(conso, default=str))
-                d['values']['conso_totale'] = 0
-                today = datetime.today().strftime("%Y-%m-%d 00:00:00")
-                for c in conso:
-                    if str(c['date']) == str(today):
-                        d['values']['conso_totale'] = float(c['total_consumption_kwh'])
-
-        #Récupération des commande volets roulants
-        rollers = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=RollerShutterTimerMixin)
-        if len(rollers) > 0:
-            logger.debug("RollerShutterTimerMixin")
-            roller = rollers[0]
-            await roller.async_update()
-            position = roller.get_position(0)
-            d['roller'] = True
-            d['values']['position'] = position
-
-        #Récupération des humidificateurs
-        diffs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=SprayMixin)
-        if len(diffs) > 0:
-            logger.debug("SprayMixin")
-            diff = diffs[0]
-            await diff.async_update()
-            spray = diff.get_current_mode(0)
-            d['spray'] = True
-            d['values']['spray'] = "Mode diffusion "+str(spray)
-            if spray == SprayMode.CONTINUOUS:
-                d['values']['spray'] = "Diffusion continue"
-            elif spray == SprayMode.INTERMITTENT:
-                d['values']['spray'] = "Diffusion intermitent"
-            elif spray == SprayMode.OFF:
-                d['values']['spray'] = "Arrêt"
-            d['spraymodes'][0]='Arrêt diffusion'
-            d['spraymodes'][1]='Diffusion continue'
-            d['spraymodes'][2]='Diffusion intermitente'
-
-        #Récupération des diffuseurs huiles essentielles
-        diffs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=DiffuserSprayMixin)
-        if len(diffs) > 0:
-            logger.debug("DiffuserSprayMixin")
-            diff = diffs[0]
-            await diff.async_update()
-            spray = diff.get_current_spray_mode(0)
-            d['spray'] = True
-            d['values']['spray'] = "Mode "+str(spray)
-            if spray == DiffuserSprayMode.LIGHT:
-                d['values']['spray'] = "Mode léger"
-            elif spray == DiffuserSprayMode.STRONG:
-                d['values']['spray'] = "Mode fort"
-            elif spray == DiffuserSprayMode.OFF:
-                d['values']['spray'] = "Arrêt"
-            d['spraymodes'][0]='Diffusion légère'
-            d['spraymodes'][1]='Diffusion forte'
-            d['spraymodes'][2]='Arrêt diffuseur'
-
-        #Récupération des diffuseurs huiles essentielles - partie lumière
-        diffs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=DiffuserLightMixin)
-        if len(diffs) > 0:
-            logger.debug("DiffuserLightMixin")
-            diff = diffs[0]
-            await diff.async_update()
-
-            d['famille'] = 'GenericBulb'
-            onoff = []
-            onoff.append('Etat')
-            isOn=0
-            if diff.get_light_is_on(0):
-                isOn=1
-            switch.append(isOn)
-            d['onoff'] = onoff
-            d['values']['switch'] = switch
-
-            d['lumin'] = True
-            d['values']['lumival'] = diff.get_light_brightness(0)
-
-            d['isrgb'] = True
-            d['values']['rgbval'] = rgb_to_hex(diff.get_light_rgb_color(0))
-
-            logger.debug("DiffuserLightMixin - " + str(d['values']['rgbval']) + " - " + str(d['values']['lumival']))
-
-            lightmode = diff.get_light_mode(0)
-            d['lightmode'] = True
-            d['values']['lightmode']="Mode "+str(lightmode)
-            if lightmode == DiffuserLightMode.ROTATING_COLORS:
-                d['values']['lightmode']="Mode multicolor"
-            elif lightmode == DiffuserLightMode.FIXED_RGB:
-                d['values']['lightmode']="Mode fixe"
-            elif lightmode == DiffuserLightMode.FIXED_LUMINANCE:
-                d['values']['lightmode']="Mode intensité"
-            d['modes'][0]='Mode multicolor'
-            d['modes'][1]='Mode fixe'
-            d['modes'][2]='Mode intensité'
-
-        #Récupération des thermostats
-        therms = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ThermostatModeMixin)
-        if len(therms) > 0:
-            logger.debug("ThermostatModeMixin")
-            dev = therms[0]
-            await dev.async_update()
-            therm=dev.get_thermostat_state()
-            d['heat']=True
-            d['values']['tempval']=therm.target_temperature_celsius
-            d['values']['on']=therm.is_on
-
-            if therm.mode == ThermostatMode.HEAT:
-                d['values']['mode'] = 'Mode chauffage'
-                d['values']['tempval']=therm.heat_temperature_celsius
-            elif therm.mode == ThermostatMode.COOL:
-                d['values']['mode'] = 'Mode climatisation'
-                d['values']['tempval']=therm.cool_temperature_celsius
-            elif therm.mode == ThermostatMode.ECONOMY:
-                d['values']['mode'] = 'Mode eco'
-                d['values']['tempval']=therm.eco_temperature_celsius
-            elif therm.mode == ThermostatMode.AUTO:
-                d['values']['mode'] = 'Mode auto'
-                d['values']['tempval']=therm.target_temperature_celsius
-            elif therm.mode == ThermostatMode.MANUAL:
-                d['values']['mode'] = 'Mode manuel'
-                d['values']['tempval']=therm.manual_temperature_celsius
-            else:
-                d['values']['mode']='Aucun mode'
-                d['values']['tempval']=therm.target_temperature_celsius
-
-            if therm.warning:
-                d['values']['warning']='Alerte'
-            else:
-                d['values']['warning']='OK'
-
-            d['modes'][0]='Mode chauffage'
-            d['modes'][1]='Mode climatisation'
-            d['modes'][2]='Mode eco'
-            d['modes'][3]='Mode auto'
-            d['modes'][4]='Mode manuel'
-
-            if therm.min_temperature_celsius is None:
-                d['minval']=0
-            else:
-                d['minval']=therm.min_temperature_celsius
-
-            if therm.max_temperature_celsius is None:
-                d['maxval']=35.00
-            else:
-                d['maxval']=therm.max_temperature_celsius
-
-            d['values']['tempcur']=therm.current_temperature_celsius/10
-
-        #Récupérations des Ms100Sensor
-        sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms100Sensor)
-        if len(sensors) > 0:
-            logger.debug("Ms100Sensor")
-            device = sensors[0]
+        try:
             await device.async_update()
-            d['tempHumSensor']=True
-            d['values']['tempcur']=device.last_sampled_temperature
-            d['values']['humcur']=device.last_sampled_humidity
-            d['values']['lasttime']=device.last_sampled_time.strftime("%d/%m/%Y %H:%M:%S")
-            if device.min_supported_temperature is None:
-                d['minval']=0
-            else:
-                d['minval']=device.min_supported_temperature
-            if device.max_supported_temperature is None:
-                d['maxval']=35.00
-            else:
-                d['maxval']=device.max_supported_temperature
-            battery = await device.async_get_battery_life()
-            d['values']['charge']=battery.remaining_charge
+            logger.debug("Sync update finish")
+            device_online = '0'
+            if device.online_status == OnlineStatus.ONLINE:
+                device_online = '1'
+            d = dict({
+                'name': device.name,
+                'uuid': device.uuid,
+                'internal_id': device.internal_id,
+                'famille': str(device.__class__.__name__),
+                'online': device_online,
+                'type': device.type,
+                'ip': device.lan_ip
+            })
+            d['values'] = {}
+            d['modes'] = {}
+            d['spraymodes'] = {}
+            switch = []
 
-        #Récupérations des Water Leak Sensor
-        sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms405Sensor)
-        if len(sensors) > 0:
-            logger.debug("Ms405Sensor")
-            device = sensors[0]
-            await device.async_update()
-            if device.is_leaking:
-                d['values']['isDry'] = 0
-            else:
-                d['values']['isDry'] = 1
-            battery = await device.async_get_battery_life()
-            d['values']['charge']=battery.remaining_charge
+            # valeurs par défaut
+            d['lumin'] = False
+            d['isrgb'] = False
+            d['tempe'] = False
+            d['heat'] = False
+            d['elec'] = False
+            d['roller'] = False
+            d['conso'] = False
+            d['spray'] = False
+            d['lightmode'] = False
+            d['tempHumSensor'] = False
 
-        #Récupérations des portes de garage
-        openers = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=GarageOpenerMixin)
-        if len(openers) > 0:
-            logger.debug("GarageOpenerMixin")
-            device = openers[0]
-            onoff = []
-            await device.async_update()
-            #Gestion multi porte pour un seul device
-            if len(device.channels) == 1:
-                onoff.append('Etat')
-            else:
-                onoff.append('Tout')
-            channel=0
-            while channel<len(device.channels):
+            #Récupération des thermostat
+            therms = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ThermostatModeBMixin)
+            if len(therms) > 0:
+                logger.debug("ThermostatModeBMixin")
+                dev = therms[0]
+                await dev.async_update()
+                therm=dev.get_thermostat_state()
+                d['heat']=True
                 try:
-                    if channel > 0:
-                        onoff.append(device.channels[channel].name)
-                    isOn = 1
-                    if device.get_is_open(channel):
-                        isOn = 0
-                    logger.debug("Channel "+str(channel)+"Is open = "+str(device.get_is_open(channel)))
-                    switch.append(isOn)
+                    logger.debug("items")
+                    logger.debug(therm._state.items())
                 except:
-                    logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
-                channel = channel + 1
+                    logger.debug("NO items")
 
-            d['onoff'] = onoff
-            d['values']['switch'] = switch
-            d['famille'] = 'GenericGarageDoorOpener'
-        elif len(lights) < 1:
-            #Récupérations des switch si ce n'est pas des portes de garage ni des lumières
-            plugs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ToggleXMixin)
-            if len(plugs) > 0:
-                logger.debug("ToggleXMixin")
+                d['values']['tempval']=therm.target_temperature_celsius/10.00
+                d['values']['on']=therm.is_on
+
+                if therm.workingMode == ThermostatWorkingMode.HEAT:
+                    d['values']['mode'] = 'Chauffage'
+                elif therm.workingMode == ThermostatWorkingMode.COOL:
+                    d['values']['mode'] = 'Climatisation'
+                else:
+                    d['values']['mode']='Aucun mode'
+
+                if therm.state == ThermostatModeBState.HEATING_COOLING:
+                    if therm.workingMode == ThermostatWorkingMode.HEAT:
+                        d['values']['state'] = 'Chauffage en cours'
+                    elif therm.workingMode == ThermostatWorkingMode.COOL:
+                        d['values']['state'] = 'Climatisation en cours'
+                elif therm.state == ThermostatModeBState.NOT_HEATING_COOLING:
+                    if therm.workingMode == ThermostatWorkingMode.HEAT:
+                        d['values']['state'] = 'Chauffage arrêté'
+                    elif therm.workingMode == ThermostatWorkingMode.COOL:
+                        d['values']['state'] = 'Climatisation arrêtée'
+                else:
+                    d['values']['state']='Aucun état'
+
+                if therm.min_temperature_celsius is None:
+                    d['minval']=0
+                else:
+                    d['minval']=therm.min_temperature_celsius
+
+                if therm.max_temperature_celsius is None:
+                    d['maxval']=35.00
+                else:
+                    d['maxval']=therm.max_temperature_celsius
+
+                d['values']['tempcur']=therm.current_temperature_celsius/10.00
+
+            #Récupération des lumières
+            lights = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=LightMixin)
+            if len(lights) > 0:
+                logger.debug("LightMixin")
+                light=lights[0]
+
+                d['famille'] = 'GenericBulb'
                 onoff = []
-                channel=0
+                onoff.append('Etat')
+                isOn=0
+                if light.get_light_is_on():
+                    isOn=1
+                switch.append(isOn)
+                d['onoff'] = onoff
+                d['values']['switch'] = switch
+
+                if light.get_supports_luminance():
+                    logger.debug("Support luminance")
+                    d['lumin']=True
+                    d['values']['lumival']=light.get_luminance()
+                if light.get_supports_rgb():
+                    logger.debug("Support RGB")
+                    d['isrgb']=True
+                    d['values']['rgbval']=rgb_to_hex(light.get_rgb_color())
+                if light.get_supports_temperature():
+                    logger.debug("Support Temperature")
+                    d['tempe']=True
+                    d['values']['tempval']=light.get_color_temperature()
+
+            #Récupération des consommations instantannées
+            plugs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ElectricityMixin)
+            if len(plugs) > 0:
+                logger.debug("ElectricityMixin")
+                instant_consumption = await device.async_get_instant_metrics()
+                d['elec'] = True
+                d['values']['power'] = instant_consumption.power
+                d['values']['current'] = instant_consumption.current
+                d['values']['tension'] = instant_consumption.voltage
+
+            #Récupérations des consommations
+            plugs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ConsumptionXMixin)
+            if len(plugs) > 0:
+                logger.debug("ConsumptionXMixin")
+                d['conso'] = True
+                conso = await device.async_get_daily_power_consumption()
+                if len(conso) > 0:
+                    logger.debug(json.dumps(conso, default=str))
+                    d['values']['conso_totale'] = 0
+                    today = datetime.today().strftime("%Y-%m-%d 00:00:00")
+                    for c in conso:
+                        if str(c['date']) == str(today):
+                            d['values']['conso_totale'] = float(c['total_consumption_kwh'])
+
+            #Récupération des commande volets roulants
+            rollers = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=RollerShutterTimerMixin)
+            if len(rollers) > 0:
+                logger.debug("RollerShutterTimerMixin")
+                roller = rollers[0]
+                await roller.async_update()
+                position = roller.get_position(0)
+                d['roller'] = True
+                d['values']['position'] = position
+
+            #Récupération des humidificateurs
+            diffs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=SprayMixin)
+            if len(diffs) > 0:
+                logger.debug("SprayMixin")
+                diff = diffs[0]
+                await diff.async_update()
+                spray = diff.get_current_mode(0)
+                d['spray'] = True
+                d['values']['spray'] = "Mode diffusion "+str(spray)
+                if spray == SprayMode.CONTINUOUS:
+                    d['values']['spray'] = "Diffusion continue"
+                elif spray == SprayMode.INTERMITTENT:
+                    d['values']['spray'] = "Diffusion intermitent"
+                elif spray == SprayMode.OFF:
+                    d['values']['spray'] = "Arrêt"
+                d['spraymodes'][0]='Arrêt diffusion'
+                d['spraymodes'][1]='Diffusion continue'
+                d['spraymodes'][2]='Diffusion intermitente'
+
+            #Récupération des diffuseurs huiles essentielles
+            diffs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=DiffuserSprayMixin)
+            if len(diffs) > 0:
+                logger.debug("DiffuserSprayMixin")
+                diff = diffs[0]
+                await diff.async_update()
+                spray = diff.get_current_spray_mode(0)
+                d['spray'] = True
+                d['values']['spray'] = "Mode "+str(spray)
+                if spray == DiffuserSprayMode.LIGHT:
+                    d['values']['spray'] = "Mode léger"
+                elif spray == DiffuserSprayMode.STRONG:
+                    d['values']['spray'] = "Mode fort"
+                elif spray == DiffuserSprayMode.OFF:
+                    d['values']['spray'] = "Arrêt"
+                d['spraymodes'][0]='Diffusion légère'
+                d['spraymodes'][1]='Diffusion forte'
+                d['spraymodes'][2]='Arrêt diffuseur'
+
+            #Récupération des diffuseurs huiles essentielles - partie lumière
+            diffs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=DiffuserLightMixin)
+            if len(diffs) > 0:
+                logger.debug("DiffuserLightMixin")
+                diff = diffs[0]
+                await diff.async_update()
+
+                d['famille'] = 'GenericBulb'
+                onoff = []
+                onoff.append('Etat')
+                isOn=0
+                if diff.get_light_is_on(0):
+                    isOn=1
+                switch.append(isOn)
+                d['onoff'] = onoff
+                d['values']['switch'] = switch
+
+                d['lumin'] = True
+                d['values']['lumival'] = diff.get_light_brightness(0)
+
+                d['isrgb'] = True
+                d['values']['rgbval'] = rgb_to_hex(diff.get_light_rgb_color(0))
+
+                logger.debug("DiffuserLightMixin - " + str(d['values']['rgbval']) + " - " + str(d['values']['lumival']))
+
+                lightmode = diff.get_light_mode(0)
+                d['lightmode'] = True
+                d['values']['lightmode']="Mode "+str(lightmode)
+                if lightmode == DiffuserLightMode.ROTATING_COLORS:
+                    d['values']['lightmode']="Mode multicolor"
+                elif lightmode == DiffuserLightMode.FIXED_RGB:
+                    d['values']['lightmode']="Mode fixe"
+                elif lightmode == DiffuserLightMode.FIXED_LUMINANCE:
+                    d['values']['lightmode']="Mode intensité"
+                d['modes'][0]='Mode multicolor'
+                d['modes'][1]='Mode fixe'
+                d['modes'][2]='Mode intensité'
+
+            #Récupération des thermostats
+            therms = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ThermostatModeMixin)
+            if len(therms) > 0:
+                logger.debug("ThermostatModeMixin")
+                dev = therms[0]
+                await dev.async_update()
+                therm=dev.get_thermostat_state()
+                d['heat']=True
+                d['values']['tempval']=therm.target_temperature_celsius
+                d['values']['on']=therm.is_on
+
+                if therm.mode == ThermostatMode.HEAT:
+                    d['values']['mode'] = 'Mode chauffage'
+                    d['values']['tempval']=therm.heat_temperature_celsius
+                elif therm.mode == ThermostatMode.COOL:
+                    d['values']['mode'] = 'Mode climatisation'
+                    d['values']['tempval']=therm.cool_temperature_celsius
+                elif therm.mode == ThermostatMode.ECONOMY:
+                    d['values']['mode'] = 'Mode eco'
+                    d['values']['tempval']=therm.eco_temperature_celsius
+                elif therm.mode == ThermostatMode.AUTO:
+                    d['values']['mode'] = 'Mode auto'
+                    d['values']['tempval']=therm.target_temperature_celsius
+                elif therm.mode == ThermostatMode.MANUAL:
+                    d['values']['mode'] = 'Mode manuel'
+                    d['values']['tempval']=therm.manual_temperature_celsius
+                else:
+                    d['values']['mode']='Aucun mode'
+                    d['values']['tempval']=therm.target_temperature_celsius
+
+                if therm.warning:
+                    d['values']['warning']='Alerte'
+                else:
+                    d['values']['warning']='OK'
+
+                d['modes'][0]='Mode chauffage'
+                d['modes'][1]='Mode climatisation'
+                d['modes'][2]='Mode eco'
+                d['modes'][3]='Mode auto'
+                d['modes'][4]='Mode manuel'
+
+                if therm.min_temperature_celsius is None:
+                    d['minval']=0
+                else:
+                    d['minval']=therm.min_temperature_celsius
+
+                if therm.max_temperature_celsius is None:
+                    d['maxval']=35.00
+                else:
+                    d['maxval']=therm.max_temperature_celsius
+
+                d['values']['tempcur']=therm.current_temperature_celsius/10
+
+            #Récupérations des Ms100Sensor
+            sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms100Sensor)
+            if len(sensors) > 0:
+                logger.debug("Ms100Sensor")
+                device = sensors[0]
+                await device.async_update()
+                d['tempHumSensor']=True
+                d['values']['tempcur']=device.last_sampled_temperature
+                d['values']['humcur']=device.last_sampled_humidity
+                d['values']['lasttime']=device.last_sampled_time.strftime("%d/%m/%Y %H:%M:%S")
+                if device.min_supported_temperature is None:
+                    d['minval']=0
+                else:
+                    d['minval']=device.min_supported_temperature
+                if device.max_supported_temperature is None:
+                    d['maxval']=35.00
+                else:
+                    d['maxval']=device.max_supported_temperature
+                battery = await device.async_get_battery_life()
+                d['values']['charge']=battery.remaining_charge
+
+            #Récupérations des Water Leak Sensor
+            sensors = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=Ms405Sensor)
+            if len(sensors) > 0:
+                logger.debug("Ms405Sensor")
+                device = sensors[0]
+                await device.async_update()
+                if device.is_leaking:
+                    d['values']['isDry'] = 0
+                else:
+                    d['values']['isDry'] = 1
+                battery = await device.async_get_battery_life()
+                d['values']['charge']=battery.remaining_charge
+
+            #Récupérations des portes de garage
+            openers = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=GarageOpenerMixin)
+            if len(openers) > 0:
+                logger.debug("GarageOpenerMixin")
+                device = openers[0]
+                onoff = []
+                await device.async_update()
+                #Gestion multi porte pour un seul device
                 if len(device.channels) == 1:
                     onoff.append('Etat')
                 else:
                     onoff.append('Tout')
+                channel=0
                 while channel<len(device.channels):
                     try:
                         if channel > 0:
                             onoff.append(device.channels[channel].name)
-                        isOn = 0
-                        if device.is_on(channel):
-                            isOn = 1
+                        isOn = 1
+                        if device.get_is_open(channel):
+                            isOn = 0
+                        logger.debug("Channel "+str(channel)+"Is open = "+str(device.get_is_open(channel)))
                         switch.append(isOn)
                     except:
                         logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
                     channel = channel + 1
+
                 d['onoff'] = onoff
                 d['values']['switch'] = switch
-            else:
-                pass
+                d['famille'] = 'GenericGarageDoorOpener'
+            elif len(lights) < 1:
+                #Récupérations des switch si ce n'est pas des portes de garage ni des lumières
+                plugs = manager.find_devices(internal_ids="["+device.internal_id+"]", device_class=ToggleXMixin)
+                if len(plugs) > 0:
+                    logger.debug("ToggleXMixin")
+                    onoff = []
+                    channel=0
+                    if len(device.channels) == 1:
+                        onoff.append('Etat')
+                    else:
+                        onoff.append('Tout')
+                    while channel<len(device.channels):
+                        try:
+                            if channel > 0:
+                                onoff.append(device.channels[channel].name)
+                            isOn = 0
+                            if device.is_on(channel):
+                                isOn = 1
+                            switch.append(isOn)
+                        except:
+                            logger.error("SyncOneMeross Failed: " + str(sys.exc_info()[1]))
+                        channel = channel + 1
+                    d['onoff'] = onoff
+                    d['values']['switch'] = switch
+                else:
+                    pass
+        except:
+            logger.error("aSyncOneMeross Failed: " +device.name+" error:" + str(sys.exc_info()[1]))
         return d
 
     def syncMeross(self):
