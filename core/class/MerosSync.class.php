@@ -189,7 +189,8 @@ class MerosSync extends eqLogic {
       }
       else
       {
-        log::add('MerosSync', 'error', 'Information reçue innatendue ! Consultez la log.');
+        log::add('MerosSync','info','Il me manque le champ internal_id: '.json_encode($device))
+        log::add('MerosSync', 'error', 'Information reçue inattendue ! Consultez la log.');
       }
     }
     /**
@@ -1349,7 +1350,7 @@ class MerosSyncCmd extends cmd {
                 {
                   //Interrupteur global
                   $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                  log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                  log::add('MerosSync', 'debug', 'refresh_on: '.json_encode($res['result']));
                   MerosSync::syncOneMeross($res['result']);
                 }
                 else
@@ -1366,7 +1367,7 @@ class MerosSyncCmd extends cmd {
                 {
                   //Interrupteur global
                   $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                  log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                  log::add('MerosSync', 'debug', 'refresh_off: '.json_encode($res['result']));
                   MerosSync::syncOneMeross($res['result']);
                 }
                 else
@@ -1379,7 +1380,7 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('setLumi', [$eqLogic->getLogicalId(), $_options['slider']]);
                 log::add('MerosSync', 'debug', 'setLumi '.$_options['slider'].': '.$res['result']);
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                log::add('MerosSync', 'debug', 'refresh_lumiset: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
             case "tempset":
@@ -1388,7 +1389,7 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('setTemp', [$eqLogic->getLogicalId(), $_options['slider']]);
                 log::add('MerosSync', 'debug', 'setTemp '.$_options['slider'].': '.$res['result']);
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                log::add('MerosSync', 'debug', 'refresh_tempset: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
             case "tempmode":
@@ -1396,7 +1397,7 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('setTempMode', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setTempMode: '.json_encode($res['result']));
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                log::add('MerosSync', 'debug', 'refresh_tempmode: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
             case "rgbset":
@@ -1404,7 +1405,7 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('setRGB', [$eqLogic->getLogicalId(), substr($_options['color'],-6)]);
                 log::add('MerosSync', 'debug', 'setRGB '.$_options['color'].' : '.$res['result']);
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                log::add('MerosSync', 'debug', 'refresh_rgbset: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
             case "spray":
@@ -1412,7 +1413,7 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('setSpray', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setSpray: '.json_encode($res['result']));
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                log::add('MerosSync', 'debug', 'refresh_spray: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
             case "lightmode":
@@ -1420,7 +1421,7 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('setLightmode', [$eqLogic->getLogicalId(), $channel]);
                 log::add('MerosSync', 'debug', 'setLightmode: '.json_encode($res['result']));
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                log::add('MerosSync', 'debug', 'refresh_lightmode: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
             case "refresh":
@@ -1451,7 +1452,7 @@ class MerosSyncCmd extends cmd {
                 $res = MerosSync::callMeross('stop', [$eqLogic->getLogicalId()]);
                 log::add('MerosSync', 'debug', 'mise à jour position '.$res['result']);
                 $res = MerosSync::callMeross('syncDevice', [$eqLogic->getLogicalId()]);
-                log::add('MerosSync', 'debug', 'refresh: '.json_encode($res['result']));
+                log::add('MerosSync', 'debug', 'refresh_stop: '.json_encode($res['result']));
                 MerosSync::syncOneMeross($res['result']);
                 break;
             case "changePosition":
