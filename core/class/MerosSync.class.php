@@ -189,7 +189,7 @@ class MerosSync extends eqLogic {
       }
       else
       {
-        log::add('MerosSync','info','Il me manque le champ internal_id: '.json_encode($device))
+        log::add('MerosSync','info','Il me manque le champ internal_id: '.json_encode($device));
         log::add('MerosSync', 'error', 'Information reçue inattendue ! Consultez la log.');
       }
     }
