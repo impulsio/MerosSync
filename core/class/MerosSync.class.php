@@ -243,183 +243,187 @@ class MerosSync extends eqLogic {
         $order = 1;
         $family = $_device['famille'];
         log::add('MerosSync', 'debug', 'syncMeross: - Famille '.$family);
+
         # Switch
-        $nb_switch = count($_device['onoff']);
-        foreach ($_device['onoff'] as $key=>$value)
+        if (is_array($_device['onoff']))
         {
-          #l'interrupteur global ne fonctionne pas avec les portes de garage
-            if(  $i==0 && $nb_switch>1 && $family != 'GenericGarageDoorOpener')
-            {
-                # All On
-                $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
-                if (!is_object($cmd)) {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=on_'.$i);
-                    $cmd = new MerosSyncCmd();
-                    $cmd->setType('action');
-                    $cmd->setSubType('other');
-                    $cmd->setTemplate('dashboard', 'default');
-                    $cmd->setTemplate('mobile', 'default');
-                    $cmd->setIsVisible(1);
-                    $cmd->setLogicalId('on_'.$i);
-                    $cmd->setEqLogic_id($_eqLogic->getId());
-                } else {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
-                }
-                $cmd->setName('Marche '.$value);
-                $cmd->setOrder($order);
-                $cmd->save();
-                $order++;
-                # All off
-                $cmd = $_eqLogic->getCmd(null, 'off_'.$i);
-                if (!is_object($cmd)) {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=off_'.$i);
-                    $cmd = new MerosSyncCmd();
-                    $cmd->setType('action');
-                    $cmd->setSubType('other');
-                    $cmd->setTemplate('dashboard', 'default');
-                    $cmd->setTemplate('mobile', 'default');
-                    $cmd->setIsVisible(1);
-                    $cmd->setLogicalId('off_'.$i);
-                    $cmd->setEqLogic_id($_eqLogic->getId());
-                } else {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
-                }
-                $cmd->setName('Arrêt '.$value);
-                $cmd->setOrder($order);
-                $cmd->save();
-                $order++;
-                $i++;
-            }
-            else
-            {
-                # status
-                $cmd = $_eqLogic->getCmd(null, 'onoff_'.$i);
-                if (!is_object($cmd))
-                {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=onoff_'.$i);
-                    $cmd = new MerosSyncCmd();
-                    $cmd->setType('info');
-                    $cmd->setSubType('binary');
-                    if( $family == 'GenericGarageDoorOpener' )
-                    {
-                        $cmd->setGeneric_type('GARAGE_STATE');
-                    } elseif( $family == 'GenericBulb' )
-                    {
-                        $cmd->setGeneric_type('LIGHT_STATE');
-                    } else
-                    {
-                        $cmd->setGeneric_type('ENERGY_STATE');
-                    }
-                    $cmd->setIsVisible(0);
-                    $cmd->setIsHistorized(0);
-                    $cmd->setLogicalId('onoff_'.$i);
-                    $cmd->setEqLogic_id($_eqLogic->getId());
-                } else {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=onoff_'.$i);
-                }
-                $cmd->setConfiguration('repeatEventManagement','always');
-                $cmd->setName($value);
-                $cmd->setOrder($order);
-                $cmd->save();
-                $status_id = $cmd->getId();
-                $order++;
-                # off
-                $cmd = $_eqLogic->getCmd(null, 'off_'.$i);
-                if (!is_object($cmd))
-                {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=off_'.$i);
-                    $cmd = new MerosSyncCmd();
-                    $cmd->setType('action');
-                    $cmd->setSubType('other');
-                    if( $family == 'GenericGarageDoorOpener' )
-                    {
-                        $cmd->setTemplate('dashboard', 'garage');
-                        $cmd->setTemplate('mobile', 'garage');
-                        $cmd->setGeneric_type('GB_CLOSE');
-                    }
-                    elseif( $family == 'GenericBulb' )
-                    {
-                        $cmd->setTemplate('dashboard', 'light');
-                        $cmd->setTemplate('mobile', 'light');
-                        $cmd->setGeneric_type('LIGHT_OFF');
-                    }
-                    else
-                    {
-                        $cmd->setTemplate('dashboard', 'prise');
-                        $cmd->setTemplate('mobile', 'prise');
-                        $cmd->setGeneric_type('ENERGY_OFF');
-                    }
-                    $cmd->setIsVisible(1);
-                    $cmd->setLogicalId('off_'.$i);
-                    $cmd->setEqLogic_id($_eqLogic->getId());
-                } else {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
-                }
-                if ($nb_switch==1)
-                {
-                  if( $family == 'GenericGarageDoorOpener' )
+          $nb_switch = count($_device['onoff']);
+          foreach ($_device['onoff'] as $key=>$value)
+          {
+            #l'interrupteur global ne fonctionne pas avec les portes de garage
+              if(  $i==0 && $nb_switch>1 && $family != 'GenericGarageDoorOpener')
+              {
+                  # All On
+                  $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
+                  if (!is_object($cmd)) {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=on_'.$i);
+                      $cmd = new MerosSyncCmd();
+                      $cmd->setType('action');
+                      $cmd->setSubType('other');
+                      $cmd->setTemplate('dashboard', 'default');
+                      $cmd->setTemplate('mobile', 'default');
+                      $cmd->setIsVisible(1);
+                      $cmd->setLogicalId('on_'.$i);
+                      $cmd->setEqLogic_id($_eqLogic->getId());
+                  } else {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
+                  }
+                  $cmd->setName('Marche '.$value);
+                  $cmd->setOrder($order);
+                  $cmd->save();
+                  $order++;
+                  # All off
+                  $cmd = $_eqLogic->getCmd(null, 'off_'.$i);
+                  if (!is_object($cmd)) {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=off_'.$i);
+                      $cmd = new MerosSyncCmd();
+                      $cmd->setType('action');
+                      $cmd->setSubType('other');
+                      $cmd->setTemplate('dashboard', 'default');
+                      $cmd->setTemplate('mobile', 'default');
+                      $cmd->setIsVisible(1);
+                      $cmd->setLogicalId('off_'.$i);
+                      $cmd->setEqLogic_id($_eqLogic->getId());
+                  } else {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
+                  }
+                  $cmd->setName('Arrêt '.$value);
+                  $cmd->setOrder($order);
+                  $cmd->save();
+                  $order++;
+                  $i++;
+              }
+              else
+              {
+                  # status
+                  $cmd = $_eqLogic->getCmd(null, 'onoff_'.$i);
+                  if (!is_object($cmd))
                   {
-                    $cmd->setName('Fermer');
+                      log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=onoff_'.$i);
+                      $cmd = new MerosSyncCmd();
+                      $cmd->setType('info');
+                      $cmd->setSubType('binary');
+                      if( $family == 'GenericGarageDoorOpener' )
+                      {
+                          $cmd->setGeneric_type('GARAGE_STATE');
+                      } elseif( $family == 'GenericBulb' )
+                      {
+                          $cmd->setGeneric_type('LIGHT_STATE');
+                      } else
+                      {
+                          $cmd->setGeneric_type('ENERGY_STATE');
+                      }
+                      $cmd->setIsVisible(0);
+                      $cmd->setIsHistorized(0);
+                      $cmd->setLogicalId('onoff_'.$i);
+                      $cmd->setEqLogic_id($_eqLogic->getId());
+                  } else {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=onoff_'.$i);
                   }
-                  else {
-                    $cmd->setName('Arrêt');
+                  $cmd->setConfiguration('repeatEventManagement','always');
+                  $cmd->setName($value);
+                  $cmd->setOrder($order);
+                  $cmd->save();
+                  $status_id = $cmd->getId();
+                  $order++;
+                  # off
+                  $cmd = $_eqLogic->getCmd(null, 'off_'.$i);
+                  if (!is_object($cmd))
+                  {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=off_'.$i);
+                      $cmd = new MerosSyncCmd();
+                      $cmd->setType('action');
+                      $cmd->setSubType('other');
+                      if( $family == 'GenericGarageDoorOpener' )
+                      {
+                          $cmd->setTemplate('dashboard', 'garage');
+                          $cmd->setTemplate('mobile', 'garage');
+                          $cmd->setGeneric_type('GB_CLOSE');
+                      }
+                      elseif( $family == 'GenericBulb' )
+                      {
+                          $cmd->setTemplate('dashboard', 'light');
+                          $cmd->setTemplate('mobile', 'light');
+                          $cmd->setGeneric_type('LIGHT_OFF');
+                      }
+                      else
+                      {
+                          $cmd->setTemplate('dashboard', 'prise');
+                          $cmd->setTemplate('mobile', 'prise');
+                          $cmd->setGeneric_type('ENERGY_OFF');
+                      }
+                      $cmd->setIsVisible(1);
+                      $cmd->setLogicalId('off_'.$i);
+                      $cmd->setEqLogic_id($_eqLogic->getId());
+                  } else {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=off_'.$i);
                   }
-                }
-                else
-                {
-                  $cmd->setName(__('Arrêt', __FILE__).' '.$value);
-                }
-                $cmd->setOrder($order);
-                $cmd->save();
-                $cmd->setValue($status_id);
-                $cmd->save();
-                $order++;
-                # on
-                $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
-                if (!is_object($cmd)) {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=on_'.$i);
-                    $cmd = new MerosSyncCmd();
-                    $cmd->setType('action');
-                    $cmd->setSubType('other');
-                    if( $family == 'GenericGarageDoorOpener' ) {
-                        $cmd->setTemplate('dashboard', 'garage');
-                        $cmd->setTemplate('mobile', 'garage');
-                        $cmd->setGeneric_type('GB_OPEN');
-                    } elseif( $family == 'GenericBulb' ) {
-                        $cmd->setTemplate('dashboard', 'light');
-                        $cmd->setTemplate('mobile', 'light');
-                        $cmd->setGeneric_type('LIGHT_ON');
-                    } else {
-                        $cmd->setTemplate('dashboard', 'prise');
-                        $cmd->setTemplate('mobile', 'prise');
-                        $cmd->setGeneric_type('ENERGY_ON');
+                  if ($nb_switch==1)
+                  {
+                    if( $family == 'GenericGarageDoorOpener' )
+                    {
+                      $cmd->setName('Fermer');
                     }
-                    $cmd->setIsVisible(1);
-                    $cmd->setLogicalId('on_'.$i);
-                    $cmd->setEqLogic_id($_eqLogic->getId());
-                } else {
-                    log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
-                }
-                if ($nb_switch==1)
-                {
-                  if( $family == 'GenericGarageDoorOpener' ) {
-                    $cmd->setName('Ouvrir');
+                    else {
+                      $cmd->setName('Arrêt');
+                    }
                   }
-                  else {
-                    $cmd->setName('Marche');
+                  else
+                  {
+                    $cmd->setName(__('Arrêt', __FILE__).' '.$value);
                   }
-                }
-                else
-                {
-                  $cmd->setName(__('Marche', __FILE__).' '.$value);
-                }
-                $cmd->setOrder($order);
-                $cmd->save();
-                $cmd->setValue($status_id);
-                $cmd->save();
-                $order++;
-                $i++;
-            }
+                  $cmd->setOrder($order);
+                  $cmd->save();
+                  $cmd->setValue($status_id);
+                  $cmd->save();
+                  $order++;
+                  # on
+                  $cmd = $_eqLogic->getCmd(null, 'on_'.$i);
+                  if (!is_object($cmd)) {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Add cmd=on_'.$i);
+                      $cmd = new MerosSyncCmd();
+                      $cmd->setType('action');
+                      $cmd->setSubType('other');
+                      if( $family == 'GenericGarageDoorOpener' ) {
+                          $cmd->setTemplate('dashboard', 'garage');
+                          $cmd->setTemplate('mobile', 'garage');
+                          $cmd->setGeneric_type('GB_OPEN');
+                      } elseif( $family == 'GenericBulb' ) {
+                          $cmd->setTemplate('dashboard', 'light');
+                          $cmd->setTemplate('mobile', 'light');
+                          $cmd->setGeneric_type('LIGHT_ON');
+                      } else {
+                          $cmd->setTemplate('dashboard', 'prise');
+                          $cmd->setTemplate('mobile', 'prise');
+                          $cmd->setGeneric_type('ENERGY_ON');
+                      }
+                      $cmd->setIsVisible(1);
+                      $cmd->setLogicalId('on_'.$i);
+                      $cmd->setEqLogic_id($_eqLogic->getId());
+                  } else {
+                      log::add('MerosSync', 'debug', 'syncMeross: - Update cmd=on_'.$i);
+                  }
+                  if ($nb_switch==1)
+                  {
+                    if( $family == 'GenericGarageDoorOpener' ) {
+                      $cmd->setName('Ouvrir');
+                    }
+                    else {
+                      $cmd->setName('Marche');
+                    }
+                  }
+                  else
+                  {
+                    $cmd->setName(__('Marche', __FILE__).' '.$value);
+                  }
+                  $cmd->setOrder($order);
+                  $cmd->save();
+                  $cmd->setValue($status_id);
+                  $cmd->save();
+                  $order++;
+                  $i++;
+              }
+          }
         }
         # Refresh
         $cmd = $_eqLogic->getCmd(null, 'refresh');
